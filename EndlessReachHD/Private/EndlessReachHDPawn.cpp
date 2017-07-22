@@ -19,10 +19,14 @@
 #include "TimerManager.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
+// AXIS
 const FName AEndlessReachHDPawn::MoveForwardBinding("MoveForward");
 const FName AEndlessReachHDPawn::MoveRightBinding("MoveRight");
 const FName AEndlessReachHDPawn::FireForwardBinding("FireForward");
 const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
+// ACTIONS
+const FName AEndlessReachHDPawn::ForwardGunsBinding("ForwardGuns");
+const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
 
 // Construct pawn
 AEndlessReachHDPawn::AEndlessReachHDPawn()
@@ -30,23 +34,29 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// Ship Default Specs
 	MoveSpeed = 1000.0f;
 	FanSpeed = 50.0f;
+	FuelLevel = 500.0f;
+	FuelEfficiency = 1.0f;
+	bThustersActive = false;
 	// Weapon Default Specs
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
-
+	bForwardGunsActive = false;
+	
 	// Creates a scene component and sets it as the root
-	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	RootComponent = Root;
+	//Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	//RootComponent = Root;
 
 	// Ship Body
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));
 	ShipMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipBody"));
-	ShipMeshComponent->SetupAttachment(Root);
+	RootComponent = ShipMeshComponent;
 	ShipMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	ShipMeshComponent->SetStaticMesh(ShipMesh.Object);
 	ShipMeshComponent->SetRelativeRotation(FRotator(0, -90, 0));
 	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
+	ShipMeshComponent->SetSimulatePhysics(true);
+	ShipMeshComponent->BodyInstance.bLockZTranslation = true;
 	// Gun Attachments
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipGuns(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Attachments.SM_ShipScout_Set1_Attachments"));
 	ShipMeshGuns = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipGuns"));
@@ -89,7 +99,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 	
 	// Cache sound effect
-	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/TwinStick/Audio/TwinStickFire.TwinStickFire"));
+	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/Audio/Guns/PlayerTurret_Pulse1_Cue.PlayerTurret_Pulse1_Cue"));
 	FireSound = FireAudio.Object;
 
 	// Create a camera boom...
@@ -97,7 +107,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->bAbsoluteRotation = true; // Don't want arm to rotate when ship does
 	CameraBoom->TargetArmLength = 1200.f;
-	CameraBoom->RelativeRotation = FRotator(-80.f, 0.f, 0.f);
+	CameraBoom->RelativeRotation = FRotator(-80.0f, 0.0f, 0.0f);
 	CameraBoom->bDoCollisionTest = false; // Don't want to pull camera in when it collides with level
 
 	// Create a camera...
@@ -112,10 +122,16 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	check(PlayerInputComponent);
 
 	// set up gameplay key bindings
+	// AXIS
 	PlayerInputComponent->BindAxis(MoveForwardBinding);
 	PlayerInputComponent->BindAxis(MoveRightBinding);
 	PlayerInputComponent->BindAxis(FireForwardBinding);
 	PlayerInputComponent->BindAxis(FireRightBinding);
+	// ACTIONS
+	PlayerInputComponent->BindAction(ForwardGunsBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireForwardGuns);
+	PlayerInputComponent->BindAction(ForwardGunsBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopForwardGuns);
+	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireThrusters);
+	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
 }
 
 void AEndlessReachHDPawn::Tick(float DeltaSeconds)
@@ -125,7 +141,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	const float RightValue = GetInputAxisValue(MoveRightBinding);
 
 	// Clamp max size so that (X=1, Y=1) doesn't cause faster movement in diagonal directions
-	const FVector MoveDirection = FVector(ForwardValue, RightValue, 0.f).GetClampedToMaxSize(1.0f);
+	const FVector MoveDirection = FVector(ForwardValue, RightValue, 0.0f).GetClampedToMaxSize(1.0f);
 
 	// Calculate  movement
 	const FVector Movement = MoveDirection * MoveSpeed * DeltaSeconds;
@@ -134,8 +150,14 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	if (Movement.SizeSquared() > 0.0f)
 	{
 		const FRotator NewRotation = Movement.Rotation();
+		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll);
 		FHitResult Hit(1.f);
-		RootComponent->MoveComponent(Movement, NewRotation, true, &Hit);
+
+		// We only want to use this movement mode if thrusters are not active
+		if (!bThustersActive)
+		{
+			RootComponent->MoveComponent(Movement, CorrectedRotation, true, &Hit);
+		}		
 		
 		if (Hit.IsValidBlockingHit())
 		{
@@ -164,7 +186,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	const float FireForwardValue = GetInputAxisValue(FireForwardBinding);
 	const float FireRightValue = GetInputAxisValue(FireRightBinding);
 	const FVector FireDirection = FVector(FireForwardValue, FireRightValue, 0.f);
-	//ShipMeshGuns->SetRelativeRotation(FRotationMatrix::MakeFromX(FireDirection).Rotator());  // rotate guns to face firing direction
+	//ShipMeshGuns->SetRelativeRotation(FRotationMatrix::MakeFromX(FireDirection).Rotator());  // rotate guns to face firing direction - removed because it looks weird (ship was not modeled to support a turret feature)
 
 	// Try and fire a shot
 	FireShot(FireDirection);
@@ -187,7 +209,6 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			{
 				// spawn the projectile
 				World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);
-				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Spawned Projectile"));
 			}
 
 			bCanFire = false;
@@ -215,4 +236,31 @@ void AEndlessReachHDPawn::UpdateFanSpeed()
 	RotatingMovement_FanL->RotationRate = FRotator(0, FanSpeed, 0);
 	RotatingMovement_FanR->RotationRate = FRotator(0, (FanSpeed * -1), 0);
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
+}
+
+void AEndlessReachHDPawn::FireForwardGuns()
+{
+	bForwardGunsActive = true;
+}
+
+void AEndlessReachHDPawn::StopForwardGuns()
+{
+	bForwardGunsActive = false;
+}
+
+void AEndlessReachHDPawn::FireThrusters()
+{
+	bThustersActive = true;
+
+	if (FuelLevel > 0)
+	{
+		FuelLevel = (FuelLevel + (FuelEfficiency * -1));  // consume fuel
+		GetShipMeshComponent()->AddForce(FVector(50, 0, 0));
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Fuel Level: %f"), FuelLevel));
+	}
+}
+
+void AEndlessReachHDPawn::StopThrusters()
+{
+	bThustersActive = false;
 }

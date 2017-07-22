@@ -24,8 +24,8 @@ class AEndlessReachHDPawn : public APawn
 	GENERATED_BODY()
 
 	/** The root scene component */
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class USceneComponent* Root;
+	//UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//class USceneComponent* Root;
 
 	/* The mesh component */
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -82,9 +82,25 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float MoveSpeed;
 
+	/* Whether the forward guns are active */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	bool bForwardGunsActive;
+
+	/* Whether the thrusters are active */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	bool bThustersActive;
+
 	/* The ship's fan speed */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float FanSpeed;
+
+	/* The ship's fuel level */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	float FuelLevel;
+
+	/* The rate at which fuel is consumed when using thrusters */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	float FuelEfficiency;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
@@ -104,11 +120,23 @@ public:
 	// Update the fan speed
 	void UpdateFanSpeed();
 
-	// Static names for axis bindings
+	// Forward Gun Control
+	void FireForwardGuns();
+	void StopForwardGuns();
+
+	// Thrusters Control
+	void FireThrusters();
+	void StopThrusters();
+
+	// Static names for input bindings
+	// AXIS
 	static const FName MoveForwardBinding;
 	static const FName MoveRightBinding;
 	static const FName FireForwardBinding;
 	static const FName FireRightBinding;
+	// ACTIONS
+	static const FName ForwardGunsBinding;
+	static const FName ThrustersBinding;
 
 private:
 
