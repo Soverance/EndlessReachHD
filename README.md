@@ -1,12 +1,11 @@
 # ENDLESS REACH HD
 
 #### Published by: 
-## Soverance Studios
+### Soverance Studios
 
-#### Created by:
+###### Created by:
 ### Scott McCutchen
-
-Project Start Date:  07/20/2017
+###### Project Start Date:  07/20/2017
 
 [info@soverance.com](mailto:info@soverance.com)
 
@@ -26,7 +25,7 @@ Project Start Date:  07/20/2017
 
 A complete version history can be found at the following URL:
 
-[soverance.com/category/er-versionhistory/](https://www.soverance.com/category/er-versionhistory/)
+[https://soverance.com/category/er-versionhistory/](https://www.soverance.com/category/er-versionhistory/)
 
 
 ## KEY FEATURES
@@ -38,7 +37,7 @@ A complete version history can be found at the following URL:
 * Numerous upgrades, enemies, and objectives
 
 
-## Disclaimer
+## DISCLAIMER
 
 This module is provided as is, and is not intended to be a complete, working game. Instead, this module is meant to be used as a learning resource for others looking to bring their UE4 games to C++.
 
