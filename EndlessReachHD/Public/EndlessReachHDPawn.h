@@ -23,9 +23,29 @@ class AEndlessReachHDPawn : public APawn
 {
 	GENERATED_BODY()
 
+	/** The root scene component */
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* Root;
+
 	/* The mesh component */
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* ShipMeshComponent;
+
+	// Gun Attachments
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* ShipMeshGuns;
+
+	// Left Fan
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* ShipMeshFanL;
+
+	// Right Fan
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* ShipMeshFanR;
+
+	// Tail Fan
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UStaticMeshComponent* ShipMeshFanT;
 
 	/** The camera */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -34,6 +54,18 @@ class AEndlessReachHDPawn : public APawn
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
+
+	// Rotating Movement Component - Left Fan
+	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class URotatingMovementComponent* RotatingMovement_FanL;
+
+	// Rotating Movement Component - Right Fan
+	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class URotatingMovementComponent* RotatingMovement_FanR;
+
+	// Rotating Movement Component - Tail Fan
+	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class URotatingMovementComponent* RotatingMovement_FanT;
 
 public:
 	AEndlessReachHDPawn();
@@ -50,6 +82,10 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float MoveSpeed;
 
+	/* The ship's fan speed */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	float FanSpeed;
+
 	/** Sound to play each time we fire */
 	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
 	class USoundBase* FireSound;
@@ -64,6 +100,9 @@ public:
 
 	/* Handler for the fire timer expiry */
 	void ShotTimerExpired();
+
+	// Update the fan speed
+	void UpdateFanSpeed();
 
 	// Static names for axis bindings
 	static const FName MoveForwardBinding;

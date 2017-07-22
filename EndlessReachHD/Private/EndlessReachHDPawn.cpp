@@ -27,14 +27,68 @@ const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
 // Construct pawn
 AEndlessReachHDPawn::AEndlessReachHDPawn()
 {	
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/TwinStick/Meshes/TwinStickUFO.TwinStickUFO"));
-	// Create the mesh component
-	ShipMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipMesh"));
-	RootComponent = ShipMeshComponent;
+	// Ship Default Specs
+	MoveSpeed = 1000.0f;
+	FanSpeed = 50.0f;
+	// Weapon Default Specs
+	GunOffset = FVector(140.f, 0.f, 0.f);
+	FireRate = 0.1f;
+	bCanFire = true;
+
+	// Creates a scene component and sets it as the root
+	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = Root;
+
+	// Ship Body
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));
+	ShipMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipBody"));
+	ShipMeshComponent->SetupAttachment(Root);
 	ShipMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	ShipMeshComponent->SetStaticMesh(ShipMesh.Object);
+	ShipMeshComponent->SetRelativeRotation(FRotator(0, -90, 0));
+	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
+	// Gun Attachments
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipGuns(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Attachments.SM_ShipScout_Set1_Attachments"));
+	ShipMeshGuns = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipGuns"));
+	ShipMeshGuns->SetupAttachment(ShipMeshComponent);
+	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));
+	ShipMeshGuns->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	ShipMeshGuns->SetStaticMesh(ShipGuns.Object);
+	// Left Fan
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> LeftFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan.SM_ShipScout_Set1_Fan"));
+	ShipMeshFanL = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftFan"));
+	ShipMeshFanL->SetupAttachment(ShipMeshComponent);
+	ShipMeshFanL->SetRelativeLocation(FVector(240, 30, 30));
+	ShipMeshFanL->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	ShipMeshFanL->SetStaticMesh(LeftFan.Object);
+	// Left Fan Rotation
+	RotatingMovement_FanL = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement_FanL"));
+	RotatingMovement_FanL->SetUpdatedComponent(ShipMeshFanL);  // set the updated component
+	RotatingMovement_FanL->RotationRate = FRotator(0,FanSpeed,0);
+	// Right Fan
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> RightFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan.SM_ShipScout_Set1_Fan"));
+	ShipMeshFanR = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightFan"));
+	ShipMeshFanR->SetupAttachment(ShipMeshComponent);
+	ShipMeshFanR->SetRelativeLocation(FVector(-240, 30, 30));
+	ShipMeshFanR->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	ShipMeshFanR->SetStaticMesh(RightFan.Object);
+	// Right Fan Rotation
+	RotatingMovement_FanR = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement_FanR"));
+	RotatingMovement_FanR->SetUpdatedComponent(ShipMeshFanR);  // set the updated component
+	RotatingMovement_FanR->RotationRate = FRotator(0, (FanSpeed * -1), 0);
+	// Tail Fan
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> TailFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan_Back.SM_ShipScout_Set1_Fan_Back"));
+	ShipMeshFanT = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TailFan"));
+	ShipMeshFanT->SetupAttachment(ShipMeshComponent);
+	ShipMeshFanT->SetRelativeLocation(FVector(0, -400, 130));
+	ShipMeshFanT->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	ShipMeshFanT->SetStaticMesh(TailFan.Object);
+	// Tail Fan Rotation
+	RotatingMovement_FanT = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement_FanT"));
+	RotatingMovement_FanT->SetUpdatedComponent(ShipMeshFanT);  // set the updated component
+	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 	
-	// Cache our sound effect
+	// Cache sound effect
 	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/TwinStick/Audio/TwinStickFire.TwinStickFire"));
 	FireSound = FireAudio.Object;
 
@@ -51,12 +105,6 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
 
-	// Movement
-	MoveSpeed = 1000.0f;
-	// Weapon
-	GunOffset = FVector(90.f, 0.f, 0.f);
-	FireRate = 0.1f;
-	bCanFire = true;
 }
 
 void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -95,12 +143,28 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 			const FVector Deflection = FVector::VectorPlaneProject(Movement, Normal2D) * (1.f - Hit.Time);
 			RootComponent->MoveComponent(Deflection, NewRotation, true);
 		}
+		// increase fan speed while moving
+		if (FanSpeed < 500)
+		{
+			FanSpeed++;  // increment fan speed
+			UpdateFanSpeed();
+		}
+	}
+	if (Movement.SizeSquared() <= 0.0f)
+	{
+		// decrease fan speed while idling
+		if (FanSpeed > 50)
+		{
+			FanSpeed--;  // decrement fan speed
+			UpdateFanSpeed();
+		}
 	}
 	
 	// Create fire direction vector
 	const float FireForwardValue = GetInputAxisValue(FireForwardBinding);
 	const float FireRightValue = GetInputAxisValue(FireRightBinding);
 	const FVector FireDirection = FVector(FireForwardValue, FireRightValue, 0.f);
+	//ShipMeshGuns->SetRelativeRotation(FRotationMatrix::MakeFromX(FireDirection).Rotator());  // rotate guns to face firing direction
 
 	// Try and fire a shot
 	FireShot(FireDirection);
@@ -123,6 +187,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			{
 				// spawn the projectile
 				World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);
+				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("Spawned Projectile"));
 			}
 
 			bCanFire = false;
@@ -144,3 +209,10 @@ void AEndlessReachHDPawn::ShotTimerExpired()
 	bCanFire = true;
 }
 
+void AEndlessReachHDPawn::UpdateFanSpeed()
+{
+	// apply rotation speed
+	RotatingMovement_FanL->RotationRate = FRotator(0, FanSpeed, 0);
+	RotatingMovement_FanR->RotationRate = FRotator(0, (FanSpeed * -1), 0);
+	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
+}

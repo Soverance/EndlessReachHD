@@ -49,6 +49,7 @@ void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("PROJECTILE HIT OBJECT: " + OtherActor->GetName()));
 	}
 
 	Destroy();
