@@ -1,6 +1,6 @@
 # ENDLESS REACH HD
 
-#### Published by: 
+###### Published by: 
 ### Soverance Studios
 
 ###### Created by:
@@ -23,7 +23,7 @@
 
 ## VERSION HISTORY
 
-A complete version history can be found at the following URL:
+###### A complete version history can be found at the following URL:
 
 [https://soverance.com/category/er-versionhistory/](https://www.soverance.com/category/er-versionhistory/)
 
@@ -36,11 +36,16 @@ A complete version history can be found at the following URL:
 * Power-up chaining and limit break mode
 * Numerous upgrades, enemies, and objectives
 
+## MUSIC BY
+
+###### Complete soundtrack by local Atlanta artist, *Shiny Baubles*!
+
+![Shiny Baubles](http://soverance.com/wp-content/uploads/2015/02/shiny_baubles.png "Shiny Baubles")
 
 ## DISCLAIMER
 
-This module is provided as is, and is not intended to be a complete, working game. Instead, this module is meant to be used as a learning resource for others looking to bring their UE4 games to C++.
+###### This module is provided as is, and is not intended to be a complete, working game. Instead, this module is meant to be used as a learning resource for others looking to bring their UE4 games to C++.
 
-While I'd love to completely open-source *Endless Reach HD*, significant portions of the code used to create the full game is currently within UE4's Blueprint system, and of course I do not have the rights to redistribute any of the assets I've used to create the game. So this repository is the best I can do, providing you with the direct source I've used to build the game's foundation.
+###### While I'd love to completely open-source *Endless Reach HD*, significant portions of the code used to create the full game is currently within UE4's Blueprint system, and of course I do not have the rights to redistribute any of the assets I've used to create the game. So this repository is the best I can do, providing you with the direct source I've used to build the game's foundation.
 
-If you find something in the game that you'd like to add or change, this is the place to start. Feel free to ask me any questions you have about the code you find here, and be sure to make a pull request if you make any changes or fixes and I'll work to integrate it into the game. I'll add your name to the in-game credits in exchange for successful PRs!
+###### If you find something in the game that you'd like to add or change, this is the place to start. Feel free to ask me any questions you have about the code you find here, and be sure to make a pull request if you make any changes or fixes and I'll work to integrate it into the game. I'll add your name to the in-game credits in exchange for successful PRs!
