@@ -150,7 +150,8 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	// If non-zero size, move this actor
 	if (Movement.SizeSquared() > 0.0f)
 	{
-		ShipMeshComponent->SetLinearDamping(0.01f);  // Reset Damping Rate
+		ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
+		ShipMeshComponent->SetAngularDamping(0.01f);  // RESET ANGULAR DAMPING
 		const FRotator NewRotation = Movement.Rotation();
 		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll); 
 		FHitResult Hit(1.0f);
@@ -175,8 +176,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		{
 			if (FuelLevel > 0)
 			{
-				FuelLevel--;  // CONSUME FUEL
-				
+				FuelLevel--;  // CONSUME FUEL				
 				ShipMeshComponent->AddImpulseAtLocation(MoveDirection * 100000, GetActorLocation());  // Apply impulse thrust
 			}
 		}
@@ -190,7 +190,8 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 			UpdateFanSpeed();
 		}
 
-		ShipMeshComponent->SetLinearDamping(1);  // Increase damping to slow down 
+		ShipMeshComponent->SetLinearDamping(0.5f);  // Increase linear damping to slow down translation
+		ShipMeshComponent->SetAngularDamping(0.5f);  // Increase angular damping to slow down rotation
 	}
 	
 	// Create fire direction vector
@@ -218,11 +219,9 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			UWorld* const World = GetWorld();
 			if (World != NULL)
 			{
+				// Spawn Projectile
 				AEndlessReachHDProjectile* Pulse;
-				// spawn the projectile
 				Pulse = World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);
-				//Pulse->GetProjectileMovement()->InitialSpeed = ShipMeshComponent->GetForwardVector().Size();
-				//Pulse->GetProjectileMovement()->MaxSpeed = ShipMeshComponent->GetForwardVector().Size();
 			}
 
 			bCanFire = false;
