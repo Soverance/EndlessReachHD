@@ -82,6 +82,10 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float MoveSpeed;
 
+	/* The maximum speed our ship can move around the level - increased via thrusters */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	float MaxMoveSpeed;
+
 	/* Whether the forward guns are active */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	bool bForwardGunsActive;

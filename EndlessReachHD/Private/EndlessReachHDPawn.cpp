@@ -33,8 +33,9 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 {	
 	// Ship Default Specs
 	MoveSpeed = 1000.0f;
+	MaxMoveSpeed = 4000.0f;
 	FanSpeed = 50.0f;
-	FuelLevel = 500.0f;
+	FuelLevel = 1000.0f;
 	FuelEfficiency = 1.0f;
 	bThustersActive = false;
 	// Weapon Default Specs
@@ -150,19 +151,15 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	if (Movement.SizeSquared() > 0.0f)
 	{
 		const FRotator NewRotation = Movement.Rotation();
-		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll);
-		FHitResult Hit(1.f);
+		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll); 
+		FHitResult Hit(1.0f);
 
-		// We only want to use this movement mode if thrusters are not active
-		if (!bThustersActive)
-		{
-			RootComponent->MoveComponent(Movement, CorrectedRotation, true, &Hit);
-		}		
-		
+		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // MOVE SHIP
+				
 		if (Hit.IsValidBlockingHit())
 		{
 			const FVector Normal2D = Hit.Normal.GetSafeNormal2D();
-			const FVector Deflection = FVector::VectorPlaneProject(Movement, Normal2D) * (1.f - Hit.Time);
+			const FVector Deflection = FVector::VectorPlaneProject(Movement, Normal2D) * (1.0f - Hit.Time);
 			RootComponent->MoveComponent(Deflection, NewRotation, true);
 		}
 		// increase fan speed while moving
@@ -170,6 +167,30 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		{
 			FanSpeed++;  // increment fan speed
 			UpdateFanSpeed();
+		}
+
+		// THRUSTER CONTROL
+		if (bThustersActive)
+		{
+			if (FuelLevel > 0)
+			{
+				FuelLevel--;  // CONSUME FUEL
+				
+				
+				if (MoveSpeed < MaxMoveSpeed)
+				{
+					MoveSpeed++;  // increase movement speed while thrusters are active
+					GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Speed: %f"), MoveSpeed));
+				}
+			}
+			else  // OUT OF FUEL!
+			{
+				// Slow down
+				if (MoveSpeed > 1000)
+				{
+					MoveSpeed--;
+				}				
+			}
 		}
 	}
 	if (Movement.SizeSquared() <= 0.0f)
@@ -179,6 +200,11 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		{
 			FanSpeed--;  // decrement fan speed
 			UpdateFanSpeed();
+		}
+		// Slow down
+		if (MoveSpeed > 1000)
+		{
+			MoveSpeed--;
 		}
 	}
 	
@@ -251,13 +277,6 @@ void AEndlessReachHDPawn::StopForwardGuns()
 void AEndlessReachHDPawn::FireThrusters()
 {
 	bThustersActive = true;
-
-	if (FuelLevel > 0)
-	{
-		FuelLevel = (FuelLevel + (FuelEfficiency * -1));  // consume fuel
-		GetShipMeshComponent()->AddForce(FVector(50, 0, 0));
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Fuel Level: %f"), FuelLevel));
-	}
 }
 
 void AEndlessReachHDPawn::StopThrusters()
