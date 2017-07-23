@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include "EndlessReachHD.h"
+#include "EndlessReachHDPawn.h"
 #include "EndlessReachHDProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
@@ -48,8 +49,14 @@ void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("PROJECTILE HIT OBJECT: " + OtherActor->GetName()));
+		AEndlessReachHDPawn* Player = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
+
+		// Proceed with damage functions if you did not hit the player
+		if (!Player)
+		{
+			OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("PROJECTILE HIT OBJECT: " + OtherActor->GetName()));
+		}		
 	}
 
 	Destroy();

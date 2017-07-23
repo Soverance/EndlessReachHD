@@ -33,10 +33,8 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 {	
 	// Ship Default Specs
 	MoveSpeed = 1000.0f;
-	MaxMoveSpeed = 4000.0f;
 	FanSpeed = 50.0f;
-	FuelLevel = 1000.0f;
-	FuelEfficiency = 1.0f;
+	FuelLevel = 1000000.0f;
 	bThustersActive = false;
 	// Weapon Default Specs
 	GunOffset = FVector(140.f, 0.f, 0.f);
@@ -57,7 +55,9 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ShipMeshComponent->SetRelativeRotation(FRotator(0, -90, 0));
 	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
 	ShipMeshComponent->SetSimulatePhysics(true);
-	ShipMeshComponent->BodyInstance.bLockZTranslation = true;
+	ShipMeshComponent->BodyInstance.bLockZTranslation = true;  
+	ShipMeshComponent->BodyInstance.bLockXRotation = true;
+	ShipMeshComponent->BodyInstance.bLockYRotation = true;
 	// Gun Attachments
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipGuns(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Attachments.SM_ShipScout_Set1_Attachments"));
 	ShipMeshGuns = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipGuns"));
@@ -150,11 +150,12 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	// If non-zero size, move this actor
 	if (Movement.SizeSquared() > 0.0f)
 	{
+		ShipMeshComponent->SetLinearDamping(0.01f);  // Reset Damping Rate
 		const FRotator NewRotation = Movement.Rotation();
 		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll); 
 		FHitResult Hit(1.0f);
 
-		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // MOVE SHIP
+		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation
 				
 		if (Hit.IsValidBlockingHit())
 		{
@@ -176,20 +177,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 			{
 				FuelLevel--;  // CONSUME FUEL
 				
-				
-				if (MoveSpeed < MaxMoveSpeed)
-				{
-					MoveSpeed++;  // increase movement speed while thrusters are active
-					GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Speed: %f"), MoveSpeed));
-				}
-			}
-			else  // OUT OF FUEL!
-			{
-				// Slow down
-				if (MoveSpeed > 1000)
-				{
-					MoveSpeed--;
-				}				
+				ShipMeshComponent->AddImpulseAtLocation(MoveDirection * 100000, GetActorLocation());  // Apply impulse thrust
 			}
 		}
 	}
@@ -201,11 +189,8 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 			FanSpeed--;  // decrement fan speed
 			UpdateFanSpeed();
 		}
-		// Slow down
-		if (MoveSpeed > 1000)
-		{
-			MoveSpeed--;
-		}
+
+		ShipMeshComponent->SetLinearDamping(1);  // Increase damping to slow down 
 	}
 	
 	// Create fire direction vector
@@ -233,8 +218,11 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			UWorld* const World = GetWorld();
 			if (World != NULL)
 			{
+				AEndlessReachHDProjectile* Pulse;
 				// spawn the projectile
-				World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);
+				Pulse = World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);
+				//Pulse->GetProjectileMovement()->InitialSpeed = ShipMeshComponent->GetForwardVector().Size();
+				//Pulse->GetProjectileMovement()->MaxSpeed = ShipMeshComponent->GetForwardVector().Size();
 			}
 
 			bCanFire = false;
