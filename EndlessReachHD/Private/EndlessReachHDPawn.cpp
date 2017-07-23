@@ -33,6 +33,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 {	
 	// Ship Default Specs
 	MoveSpeed = 1000.0f;
+	MaxSpeed = 10000.0f;
 	FanSpeed = 50.0f;
 	FuelLevel = 1000000.0f;
 	bThustersActive = false;
@@ -152,6 +153,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	{
 		ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
 		ShipMeshComponent->SetAngularDamping(0.01f);  // RESET ANGULAR DAMPING
+
 		const FRotator NewRotation = Movement.Rotation();
 		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll); 
 		FHitResult Hit(1.0f);
@@ -176,8 +178,13 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		{
 			if (FuelLevel > 0)
 			{
-				FuelLevel--;  // CONSUME FUEL				
-				ShipMeshComponent->AddImpulseAtLocation(MoveDirection * 100000, GetActorLocation());  // Apply impulse thrust
+				FuelLevel--;  // CONSUME FUEL
+
+				// Do not add thrust if ship has already reached maximum speed
+				if (GetVelocity().Size() < MaxSpeed)
+				{
+					ShipMeshComponent->AddImpulseAtLocation(MoveDirection * 10000, GetActorLocation());  // Apply impulse thrust
+				}				
 			}
 		}
 	}
@@ -219,9 +226,15 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			UWorld* const World = GetWorld();
 			if (World != NULL)
 			{
-				// Spawn Projectile
-				AEndlessReachHDProjectile* Pulse;
-				Pulse = World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);
+				// FIRE PROJECTILE
+				AEndlessReachHDProjectile* Pulse = World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);  // spawn projectile
+				// This is velocity inheritance code for the projectile... it seems almost there, but isn't quite perfect
+				//float InheritanceMod = 1.0f;  // set inheritance level to 100%
+				//FVector Inheritance = GetControlRotation().UnrotateVector(GetVelocity());  // unrotate the player's velocity vector
+				//FVector NewVelocity = ((Inheritance * InheritanceMod) * FVector(Pulse->GetProjectileMovement()->InitialSpeed, 0, 0));  // add inherited velocity to the projectile's default velocity
+				//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
+				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("New Velocity: %f"), NewVelocity.Size()));
+				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Velocity from PAWN: %f"), Pulse->GetVelocity().Size()));
 			}
 
 			bCanFire = false;
@@ -230,7 +243,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			// try and play the sound if specified
 			if (FireSound != nullptr)
 			{
-				UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+				UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());  // play sound
 			}
 
 			bCanFire = false;

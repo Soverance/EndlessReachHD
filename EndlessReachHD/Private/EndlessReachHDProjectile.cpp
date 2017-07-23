@@ -24,7 +24,7 @@ AEndlessReachHDProjectile::AEndlessReachHDProjectile()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ProjectileMeshAsset(TEXT("/Game/ShipScout_Upgrades/Ammo/PulseBall.PulseBall"));
 
 	// Create mesh component for the projectile sphere
-	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh0"));
+	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);
 	ProjectileMesh->SetupAttachment(RootComponent);
 	ProjectileMesh->BodyInstance.SetCollisionProfileName("Projectile");
@@ -32,16 +32,21 @@ AEndlessReachHDProjectile::AEndlessReachHDProjectile()
 	RootComponent = ProjectileMesh;
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
-	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement0"));
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = ProjectileMesh;
 	ProjectileMovement->InitialSpeed = 3000.0f;
-	ProjectileMovement->MaxSpeed = 100000.0f;
+	ProjectileMovement->MaxSpeed = 250000.0f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->ProjectileGravityScale = 0.0f; // No gravity
+		
+	InitialLifeSpan = 3.0f;  // Die after 3 seconds by default
+}
 
-	// Die after 3 seconds by default
-	InitialLifeSpan = 3.0f;
+// Called when the game starts or when spawned
+void AEndlessReachHDProjectile::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
