@@ -32,10 +32,11 @@ const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
 AEndlessReachHDPawn::AEndlessReachHDPawn()
 {	
 	// Ship Default Specs
-	MoveSpeed = 1000.0f;
-	MaxSpeed = 10000.0f;
+	MoveSpeed = 50.0f;
+	MaxVelocity = 500.0f;
+	MaxThrustVelocity = 1000.0f;
 	FanSpeed = 50.0f;
-	FuelLevel = 1000000.0f;
+	FuelLevel = 1000.0f;
 	bThustersActive = false;
 	// Weapon Default Specs
 	GunOffset = FVector(140.f, 0.f, 0.f);
@@ -152,14 +153,19 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	if (Movement.SizeSquared() > 0.0f)
 	{
 		ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
-		ShipMeshComponent->SetAngularDamping(0.1f);  // RESET ANGULAR DAMPING
+		ShipMeshComponent->SetAngularDamping(0.01f);  // RESET ANGULAR DAMPING
 
 		const FRotator NewRotation = Movement.Rotation();
-		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll); 
+		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll);   // correct rotation because of the ship's offset pivot point
 		FHitResult Hit(1.0f);
 
-		//RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - OLD (LINEAR) MOVEMENT METHOD
-		ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MoveSpeed, GetActorLocation());  // Apply impulse thrust  - NEW (PHYSICS) MOVEMENT METHOD
+		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - (LINEAR) MOVEMENT METHOD
+		
+		// if the thrusters are not active and the ship is under max velocity, we'll allow light impulse to be applied with the analog stick
+		if (GetVelocity().Size() < MaxVelocity)
+		{
+			ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxVelocity, GetActorLocation());  // Apply impulse thrust  - (PHYSICS) MOVEMENT METHOD
+		}
 
 		if (Hit.IsValidBlockingHit())
 		{
@@ -167,6 +173,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 			const FVector Deflection = FVector::VectorPlaneProject(Movement, Normal2D) * (1.0f - Hit.Time);
 			RootComponent->MoveComponent(Deflection, NewRotation, true);
 		}
+
 		// increase fan speed while moving
 		if (FanSpeed < 500)
 		{
@@ -177,15 +184,24 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		// THRUSTER CONTROL
 		if (bThustersActive)
 		{
+			// if you have fuel available when thrusters are activated
+			// TO DO:  make the controller vibrate, add a visual effect
 			if (FuelLevel > 0)
 			{
 				FuelLevel--;  // CONSUME FUEL
 
-				// Do not add thrust if ship has already reached maximum speed
-				if (GetVelocity().Size() < MaxSpeed)
+				// Do not add thrust if ship has already reached maximum thrust velocity
+				if (GetVelocity().Size() < MaxThrustVelocity)
 				{
-					ShipMeshComponent->AddImpulseAtLocation(MoveDirection * 10000, GetActorLocation());  // Apply impulse thrust
+					ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxThrustVelocity, GetActorLocation());  // Apply impulse thrust
 				}				
+			}
+			// if you're still using thrusters when you're out of fuel, we'll slow you down a lot as you overload the ship
+			// TO DO:  make the controller vibrate, add an overheating visual effect, and maybe allow the ship to explode if you continue thrusting with no fuel
+			if (FuelLevel <= 0)
+			{
+				ShipMeshComponent->SetLinearDamping(2.0f);  // Increase linear damping to slow down translation
+				ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation
 			}
 		}
 	}
@@ -210,6 +226,8 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 
 	// Try and fire a shot
 	FireShot(FireDirection);
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("Velocity: %f"), GetVelocity().Size()));
 }
 
 void AEndlessReachHDPawn::FireShot(FVector FireDirection)

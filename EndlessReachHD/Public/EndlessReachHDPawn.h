@@ -82,9 +82,13 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float MoveSpeed;
 
-	/* The fastest speed our ship can move around the level */
+	/* The maximum velocity our ship can achieve with standard impulse movement */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float MaxSpeed;
+	float MaxVelocity;
+
+	/* The maximum velocity our ship can achieve while under thrust */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	float MaxThrustVelocity;
 
 	/* Whether the forward guns are active */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
