@@ -17,6 +17,7 @@
 #include "EndlessReachHDPawn.h"
 #include "EndlessReachHDProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Environment/Asteroid.h"
 
 AEndlessReachHDProjectile::AEndlessReachHDProjectile() 
 {
@@ -55,12 +56,18 @@ void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && OtherComp->IsSimulatingPhysics())
 	{
 		AEndlessReachHDPawn* Player = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
-
+		
 		// Proceed with damage functions if you did not hit the player
 		if (!Player)
 		{
-			OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("PROJECTILE HIT OBJECT: " + OtherActor->GetName()));
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::White, TEXT("PROJECTILE HIT OBJECT: " + OtherActor->GetName()));
+			OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());  // apply small physics impulse to any object you hit
+
+			AAsteroid* Asteroid = Cast<AAsteroid>(OtherActor);  // if object is an asteroid...
+			if (Asteroid)
+			{
+				Asteroid->OnHitAsteroid.Broadcast();  // Broadcast Asteroid Hit
+			}
 		}		
 	}
 

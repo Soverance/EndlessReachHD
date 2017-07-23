@@ -152,14 +152,15 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	if (Movement.SizeSquared() > 0.0f)
 	{
 		ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
-		ShipMeshComponent->SetAngularDamping(0.01f);  // RESET ANGULAR DAMPING
+		ShipMeshComponent->SetAngularDamping(0.1f);  // RESET ANGULAR DAMPING
 
 		const FRotator NewRotation = Movement.Rotation();
 		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll); 
 		FHitResult Hit(1.0f);
 
-		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation
-				
+		//RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - OLD (LINEAR) MOVEMENT METHOD
+		ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MoveSpeed, GetActorLocation());  // Apply impulse thrust  - NEW (PHYSICS) MOVEMENT METHOD
+
 		if (Hit.IsValidBlockingHit())
 		{
 			const FVector Normal2D = Hit.Normal.GetSafeNormal2D();
@@ -234,7 +235,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 				//FVector NewVelocity = ((Inheritance * InheritanceMod) * FVector(Pulse->GetProjectileMovement()->InitialSpeed, 0, 0));  // add inherited velocity to the projectile's default velocity
 				//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
 				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("New Velocity: %f"), NewVelocity.Size()));
-				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Velocity from PAWN: %f"), Pulse->GetVelocity().Size()));
+				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Velocity from PAWN: %f"), Pulse->GetVelocity().Size()));
 			}
 
 			bCanFire = false;
