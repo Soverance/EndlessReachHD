@@ -37,7 +37,9 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MaxThrustVelocity = 1000.0f;
 	FanSpeed = 50.0f;
 	FuelLevel = 1000.0f;
+	MaxFuel = 1000.0f;
 	bThustersActive = false;
+	bLowFuel = false;
 	// Weapon Default Specs
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
@@ -101,9 +103,50 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	RotatingMovement_FanT->SetUpdatedComponent(ShipMeshFanT);  // set the updated component
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 	
-	// Cache sound effect
+	// Cache sound effects
 	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/Audio/Guns/PlayerTurret_Pulse1_Cue.PlayerTurret_Pulse1_Cue"));
 	FireSound = FireAudio.Object;
+	static ConstructorHelpers::FObjectFinder<USoundCue> LowFuelAudio(TEXT("/Game/Audio/Ship/PlayerShip_LowFuelWarning_Cue.PlayerShip_LowFuelWarning_Cue"));
+	S_LowFuelWarning = LowFuelAudio.Object;
+	LowFuelWarningSound = CreateDefaultSubobject<UAudioComponent>(TEXT("LowFuelWarningSound"));
+	LowFuelWarningSound->SetupAttachment(RootComponent);
+	LowFuelWarningSound->Sound = S_LowFuelWarning;
+	LowFuelWarningSound->bAutoActivate = false;
+	static ConstructorHelpers::FObjectFinder<USoundCue> EngineIdleAudio(TEXT("/Game/Audio/Ship/PlayerShip_EngineIdle_Cue.PlayerShip_EngineIdle_Cue"));
+	S_EngineIdle = EngineIdleAudio.Object;
+	EngineIdleSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineIdleSound"));
+	EngineIdleSound->SetupAttachment(RootComponent);
+	EngineIdleSound->Sound = S_EngineIdle;
+	EngineIdleSound->bAutoActivate = true;
+	EngineIdleSound->VolumeMultiplier = 0.4f;
+	static ConstructorHelpers::FObjectFinder<USoundCue> EngineThrustAudio(TEXT("/Game/Audio/Ship/PlayerShip_EngineThrust_Cue.PlayerShip_EngineThrust_Cue"));
+	S_EngineThrust = EngineThrustAudio.Object;
+	EngineThrustSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineThrustSound"));
+	EngineThrustSound->SetupAttachment(RootComponent);
+	EngineThrustSound->Sound = S_EngineThrust;
+	EngineThrustSound->bAutoActivate = false;
+
+	// Thruster Visual Effect
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ThrusterParticleObject(TEXT("/Game/Particles/Emitter/P_BlossomJet.P_BlossomJet"));
+	P_ThrusterFX = ThrusterParticleObject.Object;
+	ThrusterFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ThrusterFX"));
+	ThrusterFX->SetupAttachment(ShipMeshComponent, FName("ThrusterEffectSocket"));
+	ThrusterFX->Template = P_ThrusterFX;
+	ThrusterFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
+	ThrusterFX->bAutoActivate = false;
+
+	// Distortion Visual Effect
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> DistortionParticleObject(TEXT("/Game/Particles/Emitter/DistortionWave.DistortionWave"));
+	P_DistortionFX = DistortionParticleObject.Object;
+	DistortionFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DistortionFX"));
+	DistortionFX->SetupAttachment(ShipMeshComponent, FName("DistortionEffectSocket"));
+	DistortionFX->Template = P_DistortionFX;
+	DistortionFX->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
+	DistortionFX->bAutoActivate = true;
+
+	// Thruster Force Feedback
+	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> ThrustFeedback(TEXT("/Game/ForceFeedback/Ship_Thruster.Ship_Thruster"));
+	ThrusterFeedback = ThrustFeedback.Object;
 
 	// Create a camera boom...
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -117,7 +160,6 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
-
 }
 
 void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -149,7 +191,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	// Calculate  movement
 	const FVector Movement = MoveDirection * MoveSpeed * DeltaSeconds;
 
-	// If non-zero size, move this actor
+	// If stick is being pressed, MOVE 
 	if (Movement.SizeSquared() > 0.0f)
 	{
 		ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
@@ -158,7 +200,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		const FRotator NewRotation = Movement.Rotation();
 		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll);   // correct rotation because of the ship's offset pivot point
 		FHitResult Hit(1.0f);
-
+		EngineIdleSound->VolumeMultiplier = 0.75f;  // increase engine noise
 		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - (LINEAR) MOVEMENT METHOD
 		
 		// if the thrusters are not active and the ship is under max velocity, we'll allow light impulse to be applied with the analog stick
@@ -197,21 +239,35 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 				}				
 			}
 			// if you're still using thrusters when you're out of fuel, we'll slow you down a lot as you overload the ship
-			// TO DO:  make the controller vibrate, add an overheating visual effect, and maybe allow the ship to explode if you continue thrusting with no fuel
+			// TO DO:  maybe add an overheating visual effect, and maybe allow the ship to explode if you continue thrusting with no fuel
+			if (FuelLevel <= (MaxFuel * 0.1f))
+			{
+				if (!bLowFuel)
+				{
+					LowFuelSafety();
+				}				
+			}
 			if (FuelLevel <= 0)
 			{
-				ShipMeshComponent->SetLinearDamping(2.0f);  // Increase linear damping to slow down translation
-				ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation
+				StopThrusters();  // if you completely run out of fuel, call full stop on thrusters
 			}
 		}
 	}
+	// When analog stick is no longer being pressed, STOP
 	if (Movement.SizeSquared() <= 0.0f)
 	{
+		EngineIdleSound->VolumeMultiplier = 0.4f;  // decrease engine noise
+
 		// decrease fan speed while idling
 		if (FanSpeed > 50)
 		{
 			FanSpeed--;  // decrement fan speed
 			UpdateFanSpeed();
+		}
+
+		if (bLowFuel)
+		{
+			StopThrusters();  // if you stopped moving while low on fuel, then we call full stop on the thrusters (to disable audio and reset bLowFuel)
 		}
 
 		ShipMeshComponent->SetLinearDamping(0.5f);  // Increase linear damping to slow down translation
@@ -227,7 +283,10 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	// Try and fire a shot
 	FireShot(FireDirection);
 
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("Velocity: %f"), GetVelocity().Size()));
+	// DEBUG: WRITE VELOCITY TO SCREEN EACH FRAME
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("Velocity: %f"), GetVelocity().Size()));
+	// DEBUG: WRITE FUEL LEVEL TO SCREEN EACH FRAME
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Fuel Level: %f"), FuelLevel));
 }
 
 void AEndlessReachHDPawn::FireShot(FVector FireDirection)
@@ -247,13 +306,14 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			{
 				// FIRE PROJECTILE
 				AEndlessReachHDProjectile* Pulse = World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);  // spawn projectile
-				// This is velocity inheritance code for the projectile... it seems almost there, but isn't quite perfect
+
+				// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
+
 				//float InheritanceMod = 1.0f;  // set inheritance level to 100%
 				//FVector Inheritance = GetControlRotation().UnrotateVector(GetVelocity());  // unrotate the player's velocity vector
-				//FVector NewVelocity = ((Inheritance * InheritanceMod) * FVector(Pulse->GetProjectileMovement()->InitialSpeed, 0, 0));  // add inherited velocity to the projectile's default velocity
+				//FVector NewVelocity = (Inheritance * InheritanceMod);  // add inherited velocity to the projectile's default velocity
 				//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
-				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("New Velocity: %f"), NewVelocity.Size()));
-				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Velocity from PAWN: %f"), Pulse->GetVelocity().Size()));
+				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Projectile Velocity: %f"), Pulse->GetVelocity().Size()));
 			}
 
 			bCanFire = false;
@@ -296,9 +356,34 @@ void AEndlessReachHDPawn::StopForwardGuns()
 void AEndlessReachHDPawn::FireThrusters()
 {
 	bThustersActive = true;
+	if (FuelLevel > 0)
+	{
+		EngineThrustSound->Play();
+		ThrusterFX->Activate();
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+		PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
+	}	
 }
 
 void AEndlessReachHDPawn::StopThrusters()
 {
 	bThustersActive = false;
+	bLowFuel = false;
+	ThrusterFX->Deactivate();
+	EngineThrustSound->FadeOut(0.25f, 0);
+	LowFuelWarningSound->FadeOut(0.05f, 0);
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+	PlayerController->ClientStopForceFeedback(ThrusterFeedback, FName(TEXT("Thruster")));  // Stop Thruster Feedback
+}
+
+// This feature makes it harder to completely run out of fuel, and plays an audio warning when near empty
+void AEndlessReachHDPawn::LowFuelSafety()
+{
+	if (FuelLevel > 0)
+	{
+		bLowFuel = true;
+		LowFuelWarningSound->Play();  // play audio
+		ShipMeshComponent->SetLinearDamping(2.0f);  // Increase linear damping to slow down translation
+		ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation	
+	}	
 }

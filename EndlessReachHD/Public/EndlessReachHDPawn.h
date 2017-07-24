@@ -67,6 +67,18 @@ class AEndlessReachHDPawn : public APawn
 	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class URotatingMovementComponent* RotatingMovement_FanT;
 
+	/** Thruster Force Feedback */
+	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UForceFeedbackEffect* ThrusterFeedback;
+
+	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UParticleSystemComponent* ThrusterFX;
+	UParticleSystem* P_ThrusterFX;
+
+	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UParticleSystemComponent* DistortionFX;
+	UParticleSystem* P_DistortionFX;
+
 public:
 	AEndlessReachHDPawn();
 
@@ -98,17 +110,40 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	bool bThustersActive;
 
+	/* Whether the ship is low on fuel */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	bool bLowFuel;
+
 	/* The ship's fan speed */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float FanSpeed;
 
-	/* The ship's fuel level */
+	/* The ship's current fuel level */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float FuelLevel;
+
+	/* The ship's maximum fuel level */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	float MaxFuel;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
 	class USoundBase* FireSound;
+
+	/** Sound to play when we're out of fuel */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_LowFuelWarning;
+	UAudioComponent* LowFuelWarningSound;
+
+	/** Engine Idle Sound */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_EngineIdle;
+	UAudioComponent* EngineIdleSound;
+
+	/** Sound to play when thrusters are active */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_EngineThrust;
+	UAudioComponent* EngineThrustSound;
 
 	// Begin Actor Interface
 	virtual void Tick(float DeltaSeconds) override;
@@ -131,6 +166,7 @@ public:
 	// Thrusters Control
 	void FireThrusters();
 	void StopThrusters();
+	void LowFuelSafety();
 
 	// Static names for input bindings
 	// AXIS
