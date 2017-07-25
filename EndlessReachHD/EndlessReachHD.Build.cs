@@ -19,6 +19,47 @@ public class EndlessReachHD : ModuleRules
 {
 	public EndlessReachHD(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" });
-	}
+        PublicDependencyModuleNames.AddRange(
+            new string[] {
+                "Core",
+                "CoreUObject",
+                "Engine",
+                "OnlineSubsystem",
+                "OnlineSubsystemUtils",
+                "AssetRegistry",
+                "AIModule",
+                "GameplayTasks",
+                "UMG",
+            }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+            new string[] {
+                "InputCore",
+                "Slate",
+                "SlateCore",
+            }
+        );
+
+        DynamicallyLoadedModuleNames.AddRange(
+            new string[] {
+                "OnlineSubsystemNull",
+                "NetworkReplayStreaming",
+                "NullNetworkReplayStreaming",
+                "HttpNetworkReplayStreaming"
+            }
+        );
+
+        PrivateIncludePathModuleNames.AddRange(
+            new string[] {
+                "NetworkReplayStreaming"
+            }
+        );
+
+        // Steam Integration
+        if ((Target.Platform == UnrealTargetPlatform.Win32) || (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Linux))
+        {
+            DynamicallyLoadedModuleNames.Add("OnlineSubsystemSteam");
+        }
+    }
 }

@@ -57,8 +57,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ShipMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	ShipMeshComponent->SetStaticMesh(ShipMesh.Object);
 	ShipMeshComponent->SetRelativeRotation(FRotator(0, -90, 0));
-	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
-	ShipMeshComponent->SetSimulatePhysics(true);
+	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));	
 	ShipMeshComponent->BodyInstance.bLockZTranslation = true;  
 	ShipMeshComponent->BodyInstance.bLockXRotation = true;
 	ShipMeshComponent->BodyInstance.bLockYRotation = true;
@@ -177,6 +176,15 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction(ForwardGunsBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopForwardGuns);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireThrusters);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
+}
+
+// Called when the game starts or when spawned
+void AEndlessReachHDPawn::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// enable ship physics - this cannot be in the constructor because the world is not yet valid when this class is spawned, and therefore will throw PLocalPose.isValid() errors
+	ShipMeshComponent->SetSimulatePhysics(true);  
 }
 
 void AEndlessReachHDPawn::Tick(float DeltaSeconds)
@@ -311,7 +319,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 
 				//float InheritanceMod = 1.0f;  // set inheritance level to 100%
 				//FVector Inheritance = GetControlRotation().UnrotateVector(GetVelocity());  // unrotate the player's velocity vector
-				//FVector NewVelocity = (Inheritance * InheritanceMod);  // add inherited velocity to the projectile's default velocity
+				//FVector NewVelocity = ((Inheritance * InheritanceMod) + ProjectileDefaultVelocity);  // add inherited velocity to the projectile's default velocity - THIS LINE IS INCORRECT
 				//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
 				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Projectile Velocity: %f"), Pulse->GetVelocity().Size()));
 			}

@@ -79,6 +79,10 @@ class AEndlessReachHDPawn : public APawn
 	class UParticleSystemComponent* DistortionFX;
 	UParticleSystem* P_DistortionFX;
 
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
 public:
 	AEndlessReachHDPawn();
 
