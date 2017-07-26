@@ -16,6 +16,8 @@
 #pragma once
 
 #include "GameFramework/Character.h"
+#include "Management/CommonLibrary.h"
+#include "Widgets/PlayerHUD.h"
 #include "EndlessReachHDPawn.generated.h"
 
 UCLASS(Blueprintable)
@@ -39,13 +41,25 @@ class AEndlessReachHDPawn : public APawn
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* ShipMeshFanL;
 
+	// Left Fan Physics Constraint
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UPhysicsConstraintComponent* ShipConstraintFanL;
+
 	// Right Fan
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* ShipMeshFanR;
 
+	// Right Fan Physics Constraint
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UPhysicsConstraintComponent* ShipConstraintFanR;
+
 	// Tail Fan
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* ShipMeshFanT;
+
+	// Tail Fan Physics Constraint
+	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UPhysicsConstraintComponent* ShipConstraintFanT;
 
 	/** The camera */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -149,6 +163,11 @@ public:
 	USoundCue* S_EngineThrust;
 	UAudioComponent* EngineThrustSound;
 
+	// Player HUD Widget.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	TSubclassOf<UUserWidget> W_PlayerHUD;
+	UPlayerHUD* PlayerHUD;
+
 	// Begin Actor Interface
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
@@ -171,6 +190,10 @@ public:
 	void FireThrusters();
 	void StopThrusters();
 	void LowFuelSafety();
+
+	// Configure the player ship with default settings
+	// (for configs that can only occur after the world comes online)
+	void ConfigureShip();
 
 	// Static names for input bindings
 	// AXIS

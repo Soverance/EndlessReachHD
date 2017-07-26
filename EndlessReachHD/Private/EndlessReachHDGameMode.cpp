@@ -19,7 +19,7 @@
 
 AEndlessReachHDGameMode::AEndlessReachHDGameMode()
 {
-	// set default pawn class to our character class
-	DefaultPawnClass = AEndlessReachHDPawn::StaticClass();
+	// set default pawn
+	DefaultPawnClass = AEndlessReachHDPawn::StaticClass();	
 }
 

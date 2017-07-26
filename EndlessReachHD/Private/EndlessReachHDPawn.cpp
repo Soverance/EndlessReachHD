@@ -57,8 +57,9 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ShipMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
 	ShipMeshComponent->SetStaticMesh(ShipMesh.Object);
 	ShipMeshComponent->SetRelativeRotation(FRotator(0, -90, 0));
-	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));	
-	ShipMeshComponent->BodyInstance.bLockZTranslation = true;  
+	ShipMeshComponent->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
+	ShipMeshComponent->SetSimulatePhysics(true);
+	ShipMeshComponent->BodyInstance.bLockZTranslation = true;
 	ShipMeshComponent->BodyInstance.bLockXRotation = true;
 	ShipMeshComponent->BodyInstance.bLockYRotation = true;
 	// Gun Attachments
@@ -134,6 +135,10 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ThrusterFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
 	ThrusterFX->bAutoActivate = false;
 
+	// Thruster Force Feedback
+	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> ThrustFeedback(TEXT("/Game/ForceFeedback/Ship_Thruster.Ship_Thruster"));
+	ThrusterFeedback = ThrustFeedback.Object;
+
 	// Distortion Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> DistortionParticleObject(TEXT("/Game/Particles/Emitter/DistortionWave.DistortionWave"));
 	P_DistortionFX = DistortionParticleObject.Object;
@@ -143,10 +148,10 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	DistortionFX->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
 	DistortionFX->bAutoActivate = true;
 
-	// Thruster Force Feedback
-	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> ThrustFeedback(TEXT("/Game/ForceFeedback/Ship_Thruster.Ship_Thruster"));
-	ThrusterFeedback = ThrustFeedback.Object;
-
+	// Player HUD Widget
+	static ConstructorHelpers::FClassFinder<UUserWidget> HUDWidget(TEXT("/Game/Widgets/BP_PlayerHUD.BP_PlayerHUD_C"));
+	W_PlayerHUD = HUDWidget.Class;
+	
 	// Create a camera boom...
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -183,8 +188,10 @@ void AEndlessReachHDPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// enable ship physics - this cannot be in the constructor because the world is not yet valid when this class is spawned, and therefore will throw PLocalPose.isValid() errors
-	ShipMeshComponent->SetSimulatePhysics(true);  
+	
+	// Open chest during the kick animation
+	FTimerHandle ConfigDelay;
+	GetWorldTimerManager().SetTimer(ConfigDelay, this, &AEndlessReachHDPawn::ConfigureShip, 0.25f, false);
 }
 
 void AEndlessReachHDPawn::Tick(float DeltaSeconds)
@@ -335,6 +342,17 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 
 			bCanFire = false;
 		}
+	}
+}
+
+void AEndlessReachHDPawn::ConfigureShip()
+{
+	FConstraintInstance ConstraintInstance_Fan;
+
+	if (!PlayerHUD)
+	{
+		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the hud widget
+		PlayerHUD->AddToViewport();
 	}
 }
 

@@ -19,6 +19,12 @@ public class EndlessReachHD : ModuleRules
 {
 	public EndlessReachHD(TargetInfo Target)
 	{
+        PrivateIncludePaths.AddRange(
+           new string[] {
+                "EndlessReachHD/Private/Management",
+           }
+        );
+
         PublicDependencyModuleNames.AddRange(
             new string[] {
                 "Core",
