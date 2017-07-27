@@ -32,11 +32,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Default, meta = (HidePin = "WorldContextObject", DefaultToSelf = "WorldContextObject"))
 	static AActor* SpawnActorIntoLevel(UObject* WorldContextObject, TSubclassOf<AActor> ActorClass, FName Level = NAME_None, FVector Location = FVector::ZeroVector, FRotator Rotation = FRotator::ZeroRotator, bool SpawnEvenIfColliding = true);
 	
+	//////////////////////////////////////////////////
 	// SetAngularLimits for Physics Constraints
-	// THE PROPERTIES FOR CONSTRAINTS HAVE BEEN DEPRECATED WITHOUT DOCUMENTATION!
+	//
+	// THE VARIABLES FOR CONSTRAINT PROPERTIES HAVE BEEN DEPRECATED WITHOUT DOCUMENTATION!
+	//
+	// Despite appearing correct, I'm not entirely certain these updated functions are being correctly used, so this function may change without warning
+	/////////////////////////////////////////////////
 	static FORCEINLINE void SetAngularLimits(
 		FConstraintInstance& Constraint,
-		const uint8 S1Lim, const uint8 S2Lim, const uint8 TLim,
+		const uint8 Swing1Limit, const uint8 Swing2Limit, const uint8 TwistLimit,
 		const float Swing1LimitAngle,
 		const float Swing2LimitAngle,
 		const float TwistLimitAngle,
@@ -46,86 +51,125 @@ public:
 		const float TwistStiff = 0, const float TwistDamp = 0
 	)
 	{
-		switch (S1Lim)
+		switch (Swing1Limit)
 		{
-		case 0: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
-		case 1: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
-		case 2: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
+			//case 0: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
+			case 0: Constraint.SetAngularSwing1Motion(EAngularConstraintMotion::ACM_Free); break;
+			//case 1: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
+			case 1: Constraint.SetAngularSwing1Motion( EAngularConstraintMotion::ACM_Limited); break;
+			//case 2: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
+			case 2: Constraint.SetAngularSwing1Motion(EAngularConstraintMotion::ACM_Locked); break;
 		}
-		switch (S2Lim)
+		switch (Swing2Limit)
 		{
-		case 0: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
-		case 1: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
-		case 2: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
+			//case 0: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
+			case 0: Constraint.SetAngularSwing2Motion(EAngularConstraintMotion::ACM_Free); break;
+			//case 1: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
+			case 1: Constraint.SetAngularSwing2Motion(EAngularConstraintMotion::ACM_Limited); break;
+			//case 2: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
+			case 2: Constraint.SetAngularSwing2Motion(EAngularConstraintMotion::ACM_Locked); break;
 		}
-		switch (TLim)
+		switch (TwistLimit)
 		{
-		case 0: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
-		case 1: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
-		case 2: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
+			//case 0: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
+			case 0: Constraint.SetAngularTwistMotion(EAngularConstraintMotion::ACM_Free); break;
+			//case 1: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
+			case 1: Constraint.SetAngularTwistMotion(EAngularConstraintMotion::ACM_Limited); break;
+			//case 2: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
+			case 2: Constraint.SetAngularTwistMotion(EAngularConstraintMotion::ACM_Locked); break;
 		}
-		//~~~~~~~~~~
 
-		//Soft Lmit?
-		if (SoftSwingLimit) Constraint.bSwingLimitSoft_DEPRECATED = 1;
-		else Constraint.bSwingLimitSoft_DEPRECATED = 0;
+		// Soft Limit?
+		//if (SoftSwingLimit) Constraint.bSwingLimitSoft_DEPRECATED = 1;
+		if (SoftSwingLimit) Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 1;
+		//else Constraint.bSwingLimitSoft_DEPRECATED = 0;
+		else Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 0;
 
-		if (SoftTwistLimit) Constraint.bTwistLimitSoft_DEPRECATED = 1;
-		else Constraint.bTwistLimitSoft_DEPRECATED = 0;
+		//if (SoftTwistLimit) Constraint.bTwistLimitSoft_DEPRECATED = 1;
+		if (SoftTwistLimit) Constraint.ProfileInstance.TwistLimit.bSoftConstraint = 1;
+		//else Constraint.bTwistLimitSoft_DEPRECATED = 0;
+		else Constraint.ProfileInstance.TwistLimit.bSoftConstraint = 0;
 
-		//Limit Angles
-		Constraint.Swing1LimitAngle_DEPRECATED = Swing1LimitAngle;
-		Constraint.Swing2LimitAngle_DEPRECATED = Swing2LimitAngle;
-		Constraint.TwistLimitAngle_DEPRECATED = TwistLimitAngle;
+		// Limit Angles
+		//Constraint.Swing1LimitAngle_DEPRECATED = Swing1LimitAngle;
+		Constraint.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Free, Swing1LimitAngle);
+		//Constraint.Swing2LimitAngle_DEPRECATED = Swing2LimitAngle;
+		Constraint.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Free, Swing2LimitAngle);
+		//Constraint.TwistLimitAngle_DEPRECATED = TwistLimitAngle;
+		Constraint.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Free, TwistLimitAngle);
 
-		Constraint.SwingLimitStiffness_DEPRECATED = SwingStiff;
-		Constraint.SwingLimitDamping_DEPRECATED = SwingDamp;
-		Constraint.TwistLimitStiffness_DEPRECATED = TwistStiff;
-		Constraint.TwistLimitDamping_DEPRECATED = TwistDamp;
+		//Constraint.SwingLimitStiffness_DEPRECATED = SwingStiff;
+		Constraint.ProfileInstance.LinearLimit.Stiffness = SwingStiff;
+		//Constraint.SwingLimitDamping_DEPRECATED = SwingDamp;
+		Constraint.ProfileInstance.LinearLimit.Damping = SwingDamp;
+		//Constraint.TwistLimitStiffness_DEPRECATED = TwistStiff;
+		Constraint.ProfileInstance.TwistLimit.Stiffness = TwistStiff;
+		//Constraint.TwistLimitDamping_DEPRECATED = TwistDamp;
+		Constraint.ProfileInstance.TwistLimit.Damping = TwistDamp;
 	}
 
+	//////////////////////////////////////////////////
 	// SetLinearLimits for Physics Constraints
-	// THE PROPERTIES FOR CONSTRAINTS HAVE BEEN DEPRECATED WITHOUT DOCUMENTATION!
+	//
+	// THE VARIABLES FOR CONSTRAINT PROPERTIES HAVE BEEN DEPRECATED WITHOUT DOCUMENTATION!
+	//
+	// Despite appearing correct, I'm not entirely certain these updated functions are being correctly used, so this function may change without warning
+	/////////////////////////////////////////////////
 	static FORCEINLINE void SetLinearLimits(
 		FConstraintInstance& Constraint,
 		bool bDisableCollision,
-		const uint8 XLim, const uint8 YLim, const uint8 ZLim,
+		const uint8 XLimit, const uint8 YLimit, const uint8 ZLimit,
 		const float Size,
 		bool SoftLimit = true,
 		const float SoftStiffness = 0,
 		const float SoftDampening = 0
 	)
 	{
-		//Collision
-		Constraint.bDisableCollision_DEPRECATED = bDisableCollision;
+		// Collision
+		//Constraint.bDisableCollision_DEPRECATED = bDisableCollision;
+		Constraint.ProfileInstance.bDisableCollision = bDisableCollision;
 
-		switch (XLim)
+		switch (XLimit)
 		{
-		case 0: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
-		case 1: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
-		case 2: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
+			//case 0: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
+			case 0: Constraint.SetLinearXMotion(ELinearConstraintMotion::LCM_Free); break;
+			//case 1: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
+			case 1: Constraint.SetLinearXMotion(ELinearConstraintMotion::LCM_Limited); break;
+			//case 2: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
+			case 2: Constraint.SetLinearXMotion(ELinearConstraintMotion::LCM_Locked); break;
 		}
-		switch (YLim)
+		switch (YLimit)
 		{
-		case 0: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
-		case 1: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
-		case 2: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
+			//case 0: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
+			case 0: Constraint.SetLinearYMotion(ELinearConstraintMotion::LCM_Free); break;
+			//case 1: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
+			case 1: Constraint.SetLinearYMotion(ELinearConstraintMotion::LCM_Limited); break;
+			//case 2: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
+			case 2: Constraint.SetLinearYMotion(ELinearConstraintMotion::LCM_Locked); break;
 		}
-		switch (ZLim)
+		switch (ZLimit)
 		{
-		case 0: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
-		case 1: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
-		case 2: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
+			//case 0: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
+			case 0: Constraint.SetLinearZMotion(ELinearConstraintMotion::LCM_Free); break;
+			//case 1: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
+			case 1: Constraint.SetLinearZMotion(ELinearConstraintMotion::LCM_Limited); break;
+			//case 2: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
+			case 2: Constraint.SetLinearZMotion(ELinearConstraintMotion::LCM_Locked); break;
 		}
-		//~~~~~~~~~~
 
-		Constraint.LinearLimitSize_DEPRECATED = Size;
+		//Constraint.LinearLimitSize_DEPRECATED = Size;
+		Constraint.SetLinearLimitSize(Size);
 
-		if (SoftLimit) Constraint.bLinearLimitSoft_DEPRECATED = 1;
-		else Constraint.bLinearLimitSoft_DEPRECATED = 0;
+		// Soft Limit?
+		//if (SoftLimit) Constraint.bLinearLimitSoft_DEPRECATED = 1;
+		if (SoftLimit) Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 1;
+		//else Constraint.bLinearLimitSoft_DEPRECATED = 0;
+		else Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 0;
 
-		Constraint.LinearLimitStiffness_DEPRECATED = SoftStiffness;
-		Constraint.LinearLimitDamping_DEPRECATED = SoftDampening;
+		//Constraint.LinearLimitStiffness_DEPRECATED = SoftStiffness;
+		Constraint.ProfileInstance.LinearLimit.Stiffness = SoftStiffness;
+		//Constraint.LinearLimitDamping_DEPRECATED = SoftDampening;
+		Constraint.ProfileInstance.LinearLimit.Damping = SoftDampening;
 	}
 
 	// Configure Skeletal Meshes
