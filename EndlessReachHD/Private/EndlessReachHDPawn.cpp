@@ -65,15 +65,11 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// Gun Attachments
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipGuns(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Attachments.SM_ShipScout_Set1_Attachments"));
 	ShipMeshGuns = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipGuns"));
-	ShipMeshGuns->SetupAttachment(ShipMeshComponent);
-	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));
 	ShipMeshGuns->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshGuns->SetStaticMesh(ShipGuns.Object);
 	// Left Fan
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> LeftFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan.SM_ShipScout_Set1_Fan"));
 	ShipMeshFanL = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftFan"));
-	ShipMeshFanL->SetupAttachment(ShipMeshComponent);
-	ShipMeshFanL->SetRelativeLocation(FVector(240, 30, 30));
 	ShipMeshFanL->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshFanL->SetStaticMesh(LeftFan.Object);
 	// Left Fan Rotation
@@ -83,8 +79,6 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// Right Fan
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RightFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan.SM_ShipScout_Set1_Fan"));
 	ShipMeshFanR = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightFan"));
-	ShipMeshFanR->SetupAttachment(ShipMeshComponent);
-	ShipMeshFanR->SetRelativeLocation(FVector(-240, 30, 30));
 	ShipMeshFanR->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshFanR->SetStaticMesh(RightFan.Object);
 	// Right Fan Rotation
@@ -94,8 +88,6 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// Tail Fan
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> TailFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan_Back.SM_ShipScout_Set1_Fan_Back"));
 	ShipMeshFanT = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TailFan"));
-	ShipMeshFanT->SetupAttachment(ShipMeshComponent);
-	ShipMeshFanT->SetRelativeLocation(FVector(0, -400, 130));
 	ShipMeshFanT->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshFanT->SetStaticMesh(TailFan.Object);
 	// Tail Fan Rotation
@@ -345,14 +337,69 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 	}
 }
 
+// Configure the Ship's default settings - mostly finishing up attaching actors that require the world to have been brought online
 void AEndlessReachHDPawn::ConfigureShip()
 {
-	FConstraintInstance ConstraintInstance_Fan;
+	// Configure Physics Constraint Components to maintain attachment of the ship's fans
+	// we need to use constraints because the ship's body is simulating physics
+	FConstraintInstance ConstraintInstance_Guns;  // gun attachments
+	FConstraintInstance ConstraintInstance_FanL;  // left fan
+	FConstraintInstance ConstraintInstance_FanR;  // right fan
+	FConstraintInstance ConstraintInstance_FanT;  // tail fan
 
+	// We want stationary guns and fans that stay exactly where they're attached and only rotate in place, which sort of defeats the purpose of these physics constraints...
+	// but I don't know of another way to attach meshes to actors simulating physics.
+	// the rotating movement components take care of rotation... not physics.
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_Guns, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanL, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanR, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanT, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_Guns, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanR, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	// Gun Attachment Constraint
+	ShipConstraintGuns = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create gun attachment constraint
+	ShipConstraintGuns->ConstraintInstance = ConstraintInstance_Guns;  // set constraint instance
+	ShipConstraintGuns->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintGuns->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	ShipConstraintGuns->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshGuns, NAME_None);  // constrain the guns to the ship body
+	ShipMeshGuns->AttachToComponent(ShipConstraintGuns, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach guns to constraint
+	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));  // reset gun location
+
+	// Left Fan Constraint
+	ShipConstraintFanL = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create left fan constraint
+	ShipConstraintFanL->ConstraintInstance = ConstraintInstance_FanL;  // set constraint instance
+	ShipConstraintFanL->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintFanL->SetRelativeLocation(FVector(240, 30, 30));  // set default location of constraint
+	ShipConstraintFanL->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanL, NAME_None);  // constrain the left fan to the ship body
+	ShipMeshFanL->AttachToComponent(ShipConstraintFanL, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
+	ShipMeshFanL->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Right Fan Constraint
+	ShipConstraintFanR = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create right fan constraint
+	ShipConstraintFanR->ConstraintInstance = ConstraintInstance_FanR;  // set constraint instance
+	ShipConstraintFanR->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintFanR->SetRelativeLocation(FVector(-240, 30, 30));  // set default location of constraint
+	ShipConstraintFanR->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanR, NAME_None);  // constrain the right fan to the ship body
+	ShipMeshFanR->AttachToComponent(ShipConstraintFanR, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
+	ShipMeshFanR->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Tail Fan Constraint
+	ShipConstraintFanT = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create tail fan constraint
+	ShipConstraintFanT->ConstraintInstance = ConstraintInstance_FanT;  // set constraint instance
+	ShipConstraintFanT->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintFanT->SetRelativeLocation(FVector(0, -400, 130));  // set default location of constraint
+	ShipConstraintFanT->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanT, NAME_None);  // constrain the tail fan to the ship body
+	ShipMeshFanT->AttachToComponent(ShipConstraintFanT, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
+	ShipMeshFanT->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Spawn and attach the PlayerHUD
 	if (!PlayerHUD)
 	{
 		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the hud widget
-		PlayerHUD->AddToViewport();
+		PlayerHUD->AddToViewport();  // add player hud to viewport
 	}
 }
 
