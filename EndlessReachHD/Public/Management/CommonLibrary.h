@@ -1,4 +1,4 @@
-// Â© 2014 - 2017 Soverance Studios
+// 2014 - 2017 Soverance Studios
 // http://www.soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,58 +53,38 @@ public:
 	{
 		switch (Swing1Limit)
 		{
-			//case 0: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
 			case 0: Constraint.SetAngularSwing1Motion(EAngularConstraintMotion::ACM_Free); break;
-			//case 1: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
 			case 1: Constraint.SetAngularSwing1Motion( EAngularConstraintMotion::ACM_Limited); break;
-			//case 2: Constraint.AngularSwing1Motion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
 			case 2: Constraint.SetAngularSwing1Motion(EAngularConstraintMotion::ACM_Locked); break;
 		}
 		switch (Swing2Limit)
 		{
-			//case 0: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
 			case 0: Constraint.SetAngularSwing2Motion(EAngularConstraintMotion::ACM_Free); break;
-			//case 1: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
 			case 1: Constraint.SetAngularSwing2Motion(EAngularConstraintMotion::ACM_Limited); break;
-			//case 2: Constraint.AngularSwing2Motion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
 			case 2: Constraint.SetAngularSwing2Motion(EAngularConstraintMotion::ACM_Locked); break;
 		}
 		switch (TwistLimit)
 		{
-			//case 0: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Free; break;
 			case 0: Constraint.SetAngularTwistMotion(EAngularConstraintMotion::ACM_Free); break;
-			//case 1: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Limited; break;
 			case 1: Constraint.SetAngularTwistMotion(EAngularConstraintMotion::ACM_Limited); break;
-			//case 2: Constraint.AngularTwistMotion_DEPRECATED = EAngularConstraintMotion::ACM_Locked; break;
 			case 2: Constraint.SetAngularTwistMotion(EAngularConstraintMotion::ACM_Locked); break;
 		}
 
 		// Soft Limit?
-		//if (SoftSwingLimit) Constraint.bSwingLimitSoft_DEPRECATED = 1;
 		if (SoftSwingLimit) Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 1;
-		//else Constraint.bSwingLimitSoft_DEPRECATED = 0;
 		else Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 0;
 
-		//if (SoftTwistLimit) Constraint.bTwistLimitSoft_DEPRECATED = 1;
 		if (SoftTwistLimit) Constraint.ProfileInstance.TwistLimit.bSoftConstraint = 1;
-		//else Constraint.bTwistLimitSoft_DEPRECATED = 0;
 		else Constraint.ProfileInstance.TwistLimit.bSoftConstraint = 0;
 
 		// Limit Angles
-		//Constraint.Swing1LimitAngle_DEPRECATED = Swing1LimitAngle;
 		Constraint.SetAngularSwing1Limit(EAngularConstraintMotion::ACM_Free, Swing1LimitAngle);
-		//Constraint.Swing2LimitAngle_DEPRECATED = Swing2LimitAngle;
 		Constraint.SetAngularSwing2Limit(EAngularConstraintMotion::ACM_Free, Swing2LimitAngle);
-		//Constraint.TwistLimitAngle_DEPRECATED = TwistLimitAngle;
 		Constraint.SetAngularTwistLimit(EAngularConstraintMotion::ACM_Free, TwistLimitAngle);
 
-		//Constraint.SwingLimitStiffness_DEPRECATED = SwingStiff;
 		Constraint.ProfileInstance.LinearLimit.Stiffness = SwingStiff;
-		//Constraint.SwingLimitDamping_DEPRECATED = SwingDamp;
 		Constraint.ProfileInstance.LinearLimit.Damping = SwingDamp;
-		//Constraint.TwistLimitStiffness_DEPRECATED = TwistStiff;
 		Constraint.ProfileInstance.TwistLimit.Stiffness = TwistStiff;
-		//Constraint.TwistLimitDamping_DEPRECATED = TwistDamp;
 		Constraint.ProfileInstance.TwistLimit.Damping = TwistDamp;
 	}
 
@@ -126,49 +106,34 @@ public:
 	)
 	{
 		// Collision
-		//Constraint.bDisableCollision_DEPRECATED = bDisableCollision;
 		Constraint.ProfileInstance.bDisableCollision = bDisableCollision;
 
 		switch (XLimit)
 		{
-			//case 0: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
 			case 0: Constraint.SetLinearXMotion(ELinearConstraintMotion::LCM_Free); break;
-			//case 1: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
 			case 1: Constraint.SetLinearXMotion(ELinearConstraintMotion::LCM_Limited); break;
-			//case 2: Constraint.LinearXMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
 			case 2: Constraint.SetLinearXMotion(ELinearConstraintMotion::LCM_Locked); break;
 		}
 		switch (YLimit)
 		{
-			//case 0: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
 			case 0: Constraint.SetLinearYMotion(ELinearConstraintMotion::LCM_Free); break;
-			//case 1: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
 			case 1: Constraint.SetLinearYMotion(ELinearConstraintMotion::LCM_Limited); break;
-			//case 2: Constraint.LinearYMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
 			case 2: Constraint.SetLinearYMotion(ELinearConstraintMotion::LCM_Locked); break;
 		}
 		switch (ZLimit)
 		{
-			//case 0: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Free; break;
 			case 0: Constraint.SetLinearZMotion(ELinearConstraintMotion::LCM_Free); break;
-			//case 1: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Limited; break;
 			case 1: Constraint.SetLinearZMotion(ELinearConstraintMotion::LCM_Limited); break;
-			//case 2: Constraint.LinearZMotion_DEPRECATED = ELinearConstraintMotion::LCM_Locked; break;
 			case 2: Constraint.SetLinearZMotion(ELinearConstraintMotion::LCM_Locked); break;
 		}
 
-		//Constraint.LinearLimitSize_DEPRECATED = Size;
 		Constraint.SetLinearLimitSize(Size);
 
 		// Soft Limit?
-		//if (SoftLimit) Constraint.bLinearLimitSoft_DEPRECATED = 1;
 		if (SoftLimit) Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 1;
-		//else Constraint.bLinearLimitSoft_DEPRECATED = 0;
 		else Constraint.ProfileInstance.LinearLimit.bSoftConstraint = 0;
 
-		//Constraint.LinearLimitStiffness_DEPRECATED = SoftStiffness;
 		Constraint.ProfileInstance.LinearLimit.Stiffness = SoftStiffness;
-		//Constraint.LinearLimitDamping_DEPRECATED = SoftDampening;
 		Constraint.ProfileInstance.LinearLimit.Damping = SoftDampening;
 	}
 

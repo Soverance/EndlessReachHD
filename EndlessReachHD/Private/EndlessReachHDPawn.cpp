@@ -32,6 +32,9 @@ const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
 AEndlessReachHDPawn::AEndlessReachHDPawn()
 {	
 	// Ship Default Specs
+	CurrentHP = 1000;
+	MaxHP = 1000;
+	OrbCount = 0;
 	MoveSpeed = 50.0f;
 	MaxVelocity = 500.0f;
 	MaxThrustVelocity = 1000.0f;
@@ -180,8 +183,7 @@ void AEndlessReachHDPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
-	// Open chest during the kick animation
+	// delay configuration of some components so that the world can be brought online first
 	FTimerHandle ConfigDelay;
 	GetWorldTimerManager().SetTimer(ConfigDelay, this, &AEndlessReachHDPawn::ConfigureShip, 0.25f, false);
 }
@@ -234,7 +236,6 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		if (bThustersActive)
 		{
 			// if you have fuel available when thrusters are activated
-			// TO DO:  make the controller vibrate, add a visual effect
 			if (FuelLevel > 0)
 			{
 				FuelLevel--;  // CONSUME FUEL
@@ -290,10 +291,26 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	// Try and fire a shot
 	FireShot(FireDirection);
 
+	// Update Player HUD with new information
+	UpdatePlayerHUD();
+
 	// DEBUG: WRITE VELOCITY TO SCREEN EACH FRAME
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("Velocity: %f"), GetVelocity().Size()));
 	// DEBUG: WRITE FUEL LEVEL TO SCREEN EACH FRAME
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Fuel Level: %f"), FuelLevel));
+}
+
+// Update the HUD with new information each frame
+void AEndlessReachHDPawn::UpdatePlayerHUD()
+{
+	if (PlayerHUD)
+	{
+		PlayerHUD->Player_CurrentHP = CurrentHP;  // set current hp
+		PlayerHUD->Player_MaxHP = MaxHP;  // set max hp
+		PlayerHUD->Player_CurrentFuel = FuelLevel;  // set fuel level
+		PlayerHUD->Player_MaxFuel = MaxFuel;  // set max fuel level
+		PlayerHUD->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
+	}	
 }
 
 void AEndlessReachHDPawn::FireShot(FVector FireDirection)
