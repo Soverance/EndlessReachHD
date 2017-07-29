@@ -190,28 +190,38 @@ public:
 	// End Actor Interface
 
 	// Update the player hud
+	UFUNCTION(BlueprintCallable, Category = HUD)
 	void UpdatePlayerHUD();
 
 	/* Fire a shot in the specified direction */
+	UFUNCTION(BlueprintCallable, Category = Weapons)
 	void FireShot(FVector FireDirection);
 
 	/* Handler for the fire timer expiry */
+	UFUNCTION(BlueprintCallable, Category = Weapons)
 	void ShotTimerExpired();
 
 	// Update the fan speed
+	UFUNCTION(BlueprintCallable, Category = Ship)
 	void UpdateFanSpeed();
 
 	// Forward Gun Control
+	UFUNCTION(BlueprintCallable, Category = Weapons)
 	void FireForwardGuns();
+	UFUNCTION(BlueprintCallable, Category = Weapons)
 	void StopForwardGuns();
 
 	// Thrusters Control
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
 	void FireThrusters();
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
 	void StopThrusters();
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
 	void LowFuelSafety();
 
 	// Configure the player ship with default settings
 	// (for configs that can only occur after the world comes online)
+	UFUNCTION(BlueprintCallable, Category = Ship)
 	void ConfigureShip();
 
 	// Static names for input bindings
