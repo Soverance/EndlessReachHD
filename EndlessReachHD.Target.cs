@@ -21,7 +21,8 @@ public class EndlessReachHDTarget : TargetRules
 	public EndlessReachHDTarget(TargetInfo Target)
 	{
 		Type = TargetType.Game;
-	}
+        bUsesSteam = true;
+    }
 
 	//
 	// TargetRules interface.
