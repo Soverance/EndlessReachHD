@@ -26,6 +26,35 @@ class AEndlessReachHDGameMode : public AGameModeBase
 
 public:
 	AEndlessReachHDGameMode();
+
+	// Loads a streaming level into the persistent map.
+	// param MapName - the name of the map we want to move
+	// param Position - the index of the Transforms array we want to use
+	UFUNCTION(Exec, Category = LevelStreaming)
+	void ReloadMap(FString MapName, int32 Position);
+
+	// Unloads a streaming level.
+	// param MapName - the name of the map we want to move
+	// param Position - the index of the Transforms array we want to use
+	UFUNCTION(Exec, Category = LevelStreaming)
+	void UnloadMap(FString MapName, int32 Position);
+
+	virtual void BeginPlay() override;
+
+private:
+
+	/** Contains all the available transforms of LevelMovePointActors. */
+	TArray<FTransform> Transforms;
+
+	/** Map name to spawn */
+	FString MapName;
+
+	/** The desired transform of our map */
+	FTransform MapTransform;
+
+	/** Loads the desired streaming level based on the MapName and the MapTransform */
+	UFUNCTION()
+	void LoadMap();
 };
 
 
