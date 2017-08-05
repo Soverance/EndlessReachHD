@@ -37,8 +37,11 @@ void AEndlessReachHDGameMode::BeginPlay()
 		// Store the transform of each node
 		Transforms.Add(Node->GetTransform());
 	}
+
+	ReloadMap("00-AlphaSector", 0);  // load the alpha sector map... I'll change this method later to be more professional.
 }
 
+// load a streaming map - DO NOT CALL THIS FUNCTION DIRECTLY!  call ReloadMap() instead.
 void AEndlessReachHDGameMode::LoadMap()
 {
 	FLatentActionInfo info;
