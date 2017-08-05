@@ -16,6 +16,7 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
+#include "Management/Maps/LevelNode.h"
 #include "EndlessReachHDGameMode.generated.h"
 
 
@@ -24,30 +25,13 @@ class AEndlessReachHDGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
-public:
-	AEndlessReachHDGameMode();
-
-	// Loads a streaming level into the persistent map.
-	// param MapName - the name of the map we want to move
-	// param Position - the index of the Transforms array we want to use
-	UFUNCTION(Exec, Category = LevelStreaming)
-	void ReloadMap(FString MapName, int32 Position);
-
-	// Unloads a streaming level.
-	// param MapName - the name of the map we want to move
-	// param Position - the index of the Transforms array we want to use
-	UFUNCTION(Exec, Category = LevelStreaming)
-	void UnloadMap(FString MapName, int32 Position);
-
-	virtual void BeginPlay() override;
-
 private:
 
 	/** Contains all the available transforms of LevelMovePointActors. */
-	TArray<FTransform> Transforms;
+	TArray<FTransform> NodeTransforms;
 
 	/** Map name to spawn */
-	FString MapName;
+	FName MapName;
 
 	/** The desired transform of our map */
 	FTransform MapTransform;
@@ -55,6 +39,36 @@ private:
 	/** Loads the desired streaming level based on the MapName and the MapTransform */
 	UFUNCTION()
 	void LoadMap();
+
+public:
+	AEndlessReachHDGameMode();
+
+	// Loads a streaming level into the persistent map.
+	// param MapName - the name of the map we want to move
+	// param Position - the index of the Transforms array we want to use
+	UFUNCTION(Exec, Category = LevelStreaming)
+	void ReloadMap(FName MapName, int32 Position);
+
+	// Unloads a streaming level.
+	// param MapName - the name of the map we want to move
+	// param Position - the index of the Transforms array we want to use
+	UFUNCTION(Exec, Category = LevelStreaming)
+	void UnloadMap(FName MapName, int32 Position);
+
+	// Get the streaming name of the specified map
+	// param Position - the index of the Transforms array we want to use
+	UFUNCTION(Exec, Category = LevelStreaming)
+	FName GetMapName(int32 Position);
+
+	/** The number of the currently loaded map */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Data)
+	int32 CurrentMap;
+
+	/** An array of level nodes */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Data)
+	TArray<ALevelNode*> LevelNodes;
+
+	virtual void BeginPlay() override;
 };
 
 

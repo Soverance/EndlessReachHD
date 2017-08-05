@@ -14,9 +14,8 @@
 // limitations under the License.
 
 #include "EndlessReachHD.h"
-#include "EndlessReachHDGameMode.h"
-#include "Management/Maps/LevelNode.h"
 #include "EndlessReachHDPawn.h"
+#include "EndlessReachHDGameMode.h"
 
 AEndlessReachHDGameMode::AEndlessReachHDGameMode()
 {
@@ -34,11 +33,17 @@ void AEndlessReachHDGameMode::BeginPlay()
 
 	for (auto Node : OutNodes)
 	{
-		// Store the transform of each node
-		Transforms.Add(Node->GetTransform());
+		ALevelNode* LevelNode = Cast<ALevelNode>(Node);  // cast to the level node class to ensure validity and grant node functionality
+
+		if (LevelNode)  // validity check
+		{
+			LevelNodes.Add(LevelNode);  // add the node to the LevelNodes array for later usage
+			NodeTransforms.Add(LevelNode->GetTransform());  // add the node transforms to the transform array
+		}		
 	}
 
-	ReloadMap("00-AlphaSector", 0);  // load the alpha sector map... I'll change this method later to be more professional.
+	ReloadMap("00-AlphaSector", 0);  // load the alpha sector map... hacky way to get the game started until I build main menus, loading screens and whatnot.
+	CurrentMap = 0;  // set current map to alpha sector
 }
 
 // load a streaming map - DO NOT CALL THIS FUNCTION DIRECTLY!  call ReloadMap() instead.
@@ -47,10 +52,8 @@ void AEndlessReachHDGameMode::LoadMap()
 	FLatentActionInfo info;
 
 	//We load the stream level but we make sure not to make it visible before we assign a transform to it
-	//The reason we use *MapName in the parameters is because the name param requires an FName so
-	//essentially we're type casting the FString input to FName
-	UGameplayStatics::LoadStreamLevel(GetWorld(), *MapName, false, false, info);
-	ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), *MapName);
+	UGameplayStatics::LoadStreamLevel(GetWorld(), MapName, false, false, info);
+	ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapName);
 
 	//Assign a new transform to our level
 	level->LevelTransform = MapTransform;
@@ -59,15 +62,15 @@ void AEndlessReachHDGameMode::LoadMap()
 	level->bShouldBeVisible = true;
 }
 
-void AEndlessReachHDGameMode::ReloadMap(FString MapName, int32 Position)
+void AEndlessReachHDGameMode::ReloadMap(FName MapName, int32 Position)
 {
-	if (Transforms.IsValidIndex(Position))
+	if (NodeTransforms.IsValidIndex(Position))
 	{
-		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), *MapName);
+		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapName);
 
 		//store the new map name and the new transform
 		this->MapName = MapName;
-		MapTransform = Transforms[Position];
+		MapTransform = NodeTransforms[Position];
 
 		if (level->IsLevelVisible())
 		{
@@ -83,22 +86,22 @@ void AEndlessReachHDGameMode::ReloadMap(FString MapName, int32 Position)
 			info.UUID = 0;
 			info.Linkage = 0;
 
-			UGameplayStatics::UnloadStreamLevel(GetWorld(), *MapName, info);
+			UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
 		}
 		//If the level is not visible just load the map
 		else LoadMap();
 	}
 }
 
-void AEndlessReachHDGameMode::UnloadMap(FString MapName, int32 Position)
+void AEndlessReachHDGameMode::UnloadMap(FName MapName, int32 Position)
 {
-	if (Transforms.IsValidIndex(Position))
+	if (NodeTransforms.IsValidIndex(Position))
 	{
-		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), *MapName);
+		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapName);
 
 		//store the new map name and the new transform
 		this->MapName = MapName;
-		MapTransform = Transforms[Position];
+		MapTransform = NodeTransforms[Position];
 
 		if (level->IsLevelVisible())
 		{
@@ -115,7 +118,22 @@ void AEndlessReachHDGameMode::UnloadMap(FString MapName, int32 Position)
 			info.Linkage = 0;
 
 			// for now we're simply unloading the map, but we might eventually do something in-game when this occurs.
-			UGameplayStatics::UnloadStreamLevel(GetWorld(), *MapName, info);
+			UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
+
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("UNLOADING MAP!"));
 		}
+	}
+}
+
+FName AEndlessReachHDGameMode::GetMapName(int32 Position)
+{
+	if (LevelNodes.IsValidIndex(Position))
+	{
+		return LevelNodes[Position]->LevelConfig.MapName;
+	}
+	else
+	{
+		FName Name = "LEVEL NODE INVALID - MAP NAME NOT FOUND!";
+		return Name;
 	}
 }
