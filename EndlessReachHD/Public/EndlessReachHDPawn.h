@@ -108,6 +108,10 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float FireRate;
 
+	/* Whether the ship is capable of moving */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	bool bCanMove;
+
 	/* The speed our ship moves around the level */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	float MoveSpeed;
@@ -237,13 +241,5 @@ private:
 
 	/** Handle for efficient management of ShotTimerExpired timer */
 	FTimerHandle TimerHandle_ShotTimerExpired;
-
-public:
-	/** Returns ShipMeshComponent subobject **/
-	//FORCEINLINE class UStaticMeshComponent* GetShipMeshComponent() const { return ShipMeshComponent; }
-	/** Returns CameraComponent subobject **/
-	//FORCEINLINE class UCameraComponent* GetCameraComponent() const { return CameraComponent; }
-	/** Returns CameraBoom subobject **/
-	//FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 };
 

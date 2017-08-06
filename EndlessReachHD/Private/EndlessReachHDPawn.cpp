@@ -35,6 +35,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	CurrentHP = 1000;
 	MaxHP = 1000;
 	OrbCount = 0;
+	bCanMove = true;
 	MoveSpeed = 50.0f;
 	MaxVelocity = 500.0f;
 	MaxThrustVelocity = 1000.0f;
@@ -200,65 +201,82 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	// Calculate  movement
 	const FVector Movement = MoveDirection * MoveSpeed * DeltaSeconds;
 
+	if (bCanMove)
+	{
+		
+	}
+
 	// If stick is being pressed, MOVE 
 	if (Movement.SizeSquared() > 0.0f)
 	{
-		ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
-		ShipMeshComponent->SetAngularDamping(0.01f);  // RESET ANGULAR DAMPING
-
-		const FRotator NewRotation = Movement.Rotation();
-		const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll);   // correct rotation because of the ship's offset pivot point
-		FHitResult Hit(1.0f);
-		EngineIdleSound->VolumeMultiplier = 0.75f;  // increase engine noise
-		RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - (LINEAR) MOVEMENT METHOD
-		
-		// if the thrusters are not active and the ship is under max velocity, we'll allow light impulse to be applied with the analog stick
-		if (GetVelocity().Size() < MaxVelocity)
+		// verify that movement is possible 
+		// We don't bother to make this check when the stick is not being pressed
+		if (bCanMove)
 		{
-			ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxVelocity, GetActorLocation());  // Apply impulse thrust  - (PHYSICS) MOVEMENT METHOD
-		}
+			ShipMeshComponent->SetLinearDamping(0.01f);  // RESET LINEAR DAMPING
+			ShipMeshComponent->SetAngularDamping(0.01f);  // RESET ANGULAR DAMPING
 
-		if (Hit.IsValidBlockingHit())
-		{
-			const FVector Normal2D = Hit.Normal.GetSafeNormal2D();
-			const FVector Deflection = FVector::VectorPlaneProject(Movement, Normal2D) * (1.0f - Hit.Time);
-			RootComponent->MoveComponent(Deflection, NewRotation, true);
-		}
+			const FRotator NewRotation = Movement.Rotation();
+			const FRotator CorrectedRotation = FRotator(NewRotation.Pitch, (NewRotation.Yaw - 90), NewRotation.Roll);   // correct rotation because of the ship's offset pivot point
+			FHitResult Hit(1.0f);
+			EngineIdleSound->VolumeMultiplier = 0.75f;  // increase engine noise
+			RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - (LINEAR) MOVEMENT METHOD
 
-		// increase fan speed while moving
-		if (FanSpeed < 500)
-		{
-			FanSpeed++;  // increment fan speed
-			UpdateFanSpeed();
-		}
-
-		// THRUSTER CONTROL
-		if (bThustersActive)
-		{
-			// if you have fuel available when thrusters are activated
-			if (FuelLevel > 0)
+																															// if the thrusters are not active and the ship is under max velocity, we'll allow light impulse to be applied with the analog stick
+			if (GetVelocity().Size() < MaxVelocity)
 			{
-				FuelLevel--;  // CONSUME FUEL
+				ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxVelocity, GetActorLocation());  // Apply impulse thrust  - (PHYSICS) MOVEMENT METHOD
+			}
 
-				// Do not add thrust if ship has already reached maximum thrust velocity
-				if (GetVelocity().Size() < MaxThrustVelocity)
+			if (Hit.IsValidBlockingHit())
+			{
+				const FVector Normal2D = Hit.Normal.GetSafeNormal2D();
+				const FVector Deflection = FVector::VectorPlaneProject(Movement, Normal2D) * (1.0f - Hit.Time);
+				RootComponent->MoveComponent(Deflection, NewRotation, true);
+			}
+
+			// increase fan speed while moving
+			if (FanSpeed < 500)
+			{
+				FanSpeed++;  // increment fan speed
+				UpdateFanSpeed();
+			}
+
+			// THRUSTER CONTROL
+			if (bThustersActive)
+			{
+				// if you have fuel available when thrusters are activated
+				if (FuelLevel > 0)
 				{
-					ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxThrustVelocity, GetActorLocation());  // Apply impulse thrust
-				}				
-			}
-			// if you're still using thrusters when you're out of fuel, we'll slow you down a lot as you overload the ship
-			// TO DO:  maybe add an overheating visual effect, and maybe allow the ship to explode if you continue thrusting with no fuel
-			if (FuelLevel <= (MaxFuel * 0.1f))
-			{
-				if (!bLowFuel)
+					FuelLevel--;  // CONSUME FUEL
+
+								  // Do not add thrust if ship has already reached maximum thrust velocity
+					if (GetVelocity().Size() < MaxThrustVelocity)
+					{
+						ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxThrustVelocity, GetActorLocation());  // Apply impulse thrust
+					}
+				}
+				// if you're still using thrusters when you're out of fuel, we'll slow you down a lot as you overload the ship
+				// TO DO:  maybe add an overheating visual effect, and maybe allow the ship to explode if you continue thrusting with no fuel
+				if (FuelLevel <= (MaxFuel * 0.1f))
 				{
-					LowFuelSafety();
-				}				
+					if (!bLowFuel)
+					{
+						LowFuelSafety();
+					}
+				}
+				if (FuelLevel <= 0)
+				{
+					StopThrusters();  // if you completely run out of fuel, call full stop on thrusters
+				}
 			}
-			if (FuelLevel <= 0)
-			{
-				StopThrusters();  // if you completely run out of fuel, call full stop on thrusters
-			}
+		}
+		// if bCanMove becomes false
+		else
+		{
+			StopThrusters();  // stop thrusters
+			ShipMeshComponent->SetLinearDamping(2.5f);  // Increase linear damping to slow down translation
+			ShipMeshComponent->SetAngularDamping(2.5f);  // Increase angular damping to slow down rotation
 		}
 	}
 	// When analog stick is no longer being pressed, STOP

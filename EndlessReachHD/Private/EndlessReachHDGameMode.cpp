@@ -28,7 +28,6 @@ void AEndlessReachHDGameMode::BeginPlay()
 	Super::BeginPlay();
 
 	TArray<AActor*> OutNodes;
-
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ALevelNode::StaticClass(), OutNodes);  // get all streaming level location nodes
 
 	for (auto Node : OutNodes)
@@ -72,24 +71,34 @@ void AEndlessReachHDGameMode::ReloadMap(FName MapName, int32 Position)
 		this->MapName = MapName;
 		MapTransform = NodeTransforms[Position];
 
-		if (level->IsLevelVisible())
+		if (level)
 		{
-			//If the level is visible we need to unload it first
-			//and then spawn it in a new location
+			if (level->IsLevelVisible())
+			{
+				//If the level is visible we need to unload it first
+				//and then spawn it in a new location
 
-			//The unload stream level is essentially an async operation
-			//Using the Latent Action Info we're able to create a callback
-			//which is fired when the UnloadStreamLevel finishes its execution
-			FLatentActionInfo info;
-			info.CallbackTarget = this;
-			info.ExecutionFunction = FName("SpawnMap");
-			info.UUID = 0;
-			info.Linkage = 0;
+				//The unload stream level is essentially an async operation
+				//Using the Latent Action Info we're able to create a callback
+				//which is fired when the UnloadStreamLevel finishes its execution
+				FLatentActionInfo info;
+				info.CallbackTarget = this;
+				info.ExecutionFunction = FName("SpawnMap");
+				info.UUID = 0;
+				info.Linkage = 0;
 
-			UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
+				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
+			}
+			//If the level is not visible just load the map
+			else
+			{
+				LoadMap();
+			}
 		}
-		//If the level is not visible just load the map
-		else LoadMap();
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("RELOAD ERROR: LEVEL NOT FOUND! - " + MapName.ToString()));
+		}
 	}
 }
 
@@ -103,24 +112,29 @@ void AEndlessReachHDGameMode::UnloadMap(FName MapName, int32 Position)
 		this->MapName = MapName;
 		MapTransform = NodeTransforms[Position];
 
-		if (level->IsLevelVisible())
+		if (level)
 		{
-			//If the level is visible we need to unload it first
-			//and then spawn it in a new location
+			if (level->IsLevelVisible())
+			{
+				//If the level is visible we need to unload it first
+				//and then spawn it in a new location
 
-			//The unload stream level is essentially an async operation
-			//Using the Latent Action Info we're able to create a callback
-			//which is fired when the UnloadStreamLevel finishes its execution
-			FLatentActionInfo info;
-			info.CallbackTarget = this;
-			//info.ExecutionFunction = FName("SpawnMap");
-			info.UUID = 0;
-			info.Linkage = 0;
+				//The unload stream level is essentially an async operation
+				//Using the Latent Action Info we're able to create a callback
+				//which is fired when the UnloadStreamLevel finishes its execution
+				FLatentActionInfo info;
+				info.CallbackTarget = this;
+				//info.ExecutionFunction = FName("SpawnMap");
+				info.UUID = 0;
+				info.Linkage = 0;
 
-			// for now we're simply unloading the map, but we might eventually do something in-game when this occurs.
-			UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
-
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("UNLOADING MAP!"));
+				// for now we're simply unloading the map, but we might eventually do something in-game when this occurs.
+				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
+			}
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("UNLOAD ERROR: LEVEL NOT FOUND! - " + MapName.ToString()));
 		}
 	}
 }
