@@ -167,8 +167,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MagnetRadius = CreateDefaultSubobject<USphereComponent>(TEXT("MagnetRadius"));
 	MagnetRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	MagnetRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-	//MagnetRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::OnMagnetOverlap);
-	MagnetRadius->SetSphereRadius(1000);
+	MagnetRadius->SetSphereRadius(1000);  //  3000 seems to be a pretty good max range?  maybe 4000 would work too...
 	MagnetRadius->bHiddenInGame = false;
 }
 
@@ -520,17 +519,3 @@ void AEndlessReachHDPawn::LowFuelSafety()
 		ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation	
 	}	
 }
-
-//void AEndlessReachHDPawn::OnMagnetOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-//{
-//	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
-//	{
-//		APickupMaster* Pickup = Cast<APickupMaster>(OtherActor);  // cast overlapped actor to Pickup class
-//
-//		// if overlapped actor is a pickup
-//		if (Pickup)
-//		{
-//			// MAGNETIZE!
-//		}
-//	}
-//}
