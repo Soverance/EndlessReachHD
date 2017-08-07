@@ -16,6 +16,7 @@
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
 #include "EndlessReachHDProjectile.h"
+#include "Pickups/PickupMaster.h"
 #include "TimerManager.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
@@ -44,6 +45,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MaxFuel = 1000.0f;
 	bThustersActive = false;
 	bLowFuel = false;
+	bMagnetEnabled = true;
 	// Weapon Default Specs
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
@@ -160,6 +162,14 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
+
+	// configure Magnet Radius
+	MagnetRadius = CreateDefaultSubobject<USphereComponent>(TEXT("MagnetRadius"));
+	MagnetRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
+	MagnetRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	//MagnetRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::OnMagnetOverlap);
+	MagnetRadius->SetSphereRadius(1000);
+	MagnetRadius->bHiddenInGame = false;
 }
 
 void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -222,7 +232,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 			EngineIdleSound->VolumeMultiplier = 0.75f;  // increase engine noise
 			RootComponent->MoveComponent(Movement, FMath::Lerp(GetActorRotation(), CorrectedRotation, 0.05f), true, &Hit);  // move ship with smooth rotation - (LINEAR) MOVEMENT METHOD
 
-																															// if the thrusters are not active and the ship is under max velocity, we'll allow light impulse to be applied with the analog stick
+			// if the thrusters are not active and the ship is under max velocity, we'll allow light impulse to be applied with the analog stick
 			if (GetVelocity().Size() < MaxVelocity)
 			{
 				ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxVelocity, GetActorLocation());  // Apply impulse thrust  - (PHYSICS) MOVEMENT METHOD
@@ -250,7 +260,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 				{
 					FuelLevel--;  // CONSUME FUEL
 
-								  // Do not add thrust if ship has already reached maximum thrust velocity
+					 // Do not add thrust if ship has already reached maximum thrust velocity
 					if (GetVelocity().Size() < MaxThrustVelocity)
 					{
 						ShipMeshComponent->AddImpulseAtLocation(MoveDirection * MaxThrustVelocity, GetActorLocation());  // Apply impulse thrust
@@ -375,24 +385,30 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 // Configure the Ship's default settings - mostly finishing up attaching actors that require the world to have been brought online
 void AEndlessReachHDPawn::ConfigureShip()
 {
-	// Configure Physics Constraint Components to maintain attachment of the ship's fans
+	// Configure Physics Constraint Components to maintain attachment of the ship's objects, like fans, magnet, etc
 	// we need to use constraints because the ship's body is simulating physics
 	FConstraintInstance ConstraintInstance_Guns;  // gun attachments
 	FConstraintInstance ConstraintInstance_FanL;  // left fan
 	FConstraintInstance ConstraintInstance_FanR;  // right fan
 	FConstraintInstance ConstraintInstance_FanT;  // tail fan
+	FConstraintInstance ConstraintInstance_Magnet;  // Magnet
 
-	// We want stationary guns and fans that stay exactly where they're attached and only rotate in place, which sort of defeats the purpose of these physics constraints...
-	// but I don't know of another way to attach meshes to actors simulating physics.
-	// the rotating movement components take care of rotation... not physics.
+	// We want the guns, fans, and magnet to be stationary and stay exactly where they're attached, which means we're using them more like simple sockets (which sort of defeats the purpose of these physics constraints...)
+	// GUNS
 	UCommonLibrary::SetLinearLimits(ConstraintInstance_Guns, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanL, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanR, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanT, true, 0, 0, 0, 0, false, 0, 0);
 	UCommonLibrary::SetAngularLimits(ConstraintInstance_Guns, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	// LEFT FAN
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanL, true, 0, 0, 0, 0, false, 0, 0);
 	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	// RIGHT FAN
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanR, true, 0, 0, 0, 0, false, 0, 0);
 	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanR, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	// TAIL FAN
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanT, true, 0, 0, 0, 0, false, 0, 0);
 	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	// MAGNET
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_Magnet, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_Magnet, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 	// Gun Attachment Constraint
 	ShipConstraintGuns = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create gun attachment constraint
@@ -429,6 +445,15 @@ void AEndlessReachHDPawn::ConfigureShip()
 	ShipConstraintFanT->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanT, NAME_None);  // constrain the tail fan to the ship body
 	ShipMeshFanT->AttachToComponent(ShipConstraintFanT, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
 	ShipMeshFanT->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Magnet Constraint
+	MagnetConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create magnet constraint
+	MagnetConstraint->ConstraintInstance = ConstraintInstance_Magnet;  // set constraint instance
+	MagnetConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	MagnetConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	MagnetConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, MagnetRadius, NAME_None);  // constrain the magnet radios to the ship body
+	MagnetRadius->AttachToComponent(MagnetConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach magnet to constraint
+	MagnetRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset magnet location
 
 	// Spawn and attach the PlayerHUD
 	if (!PlayerHUD)
@@ -495,3 +520,17 @@ void AEndlessReachHDPawn::LowFuelSafety()
 		ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation	
 	}	
 }
+
+//void AEndlessReachHDPawn::OnMagnetOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+//{
+//	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+//	{
+//		APickupMaster* Pickup = Cast<APickupMaster>(OtherActor);  // cast overlapped actor to Pickup class
+//
+//		// if overlapped actor is a pickup
+//		if (Pickup)
+//		{
+//			// MAGNETIZE!
+//		}
+//	}
+//}
