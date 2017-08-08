@@ -30,43 +30,105 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	AEndlessReachHDPawn();
+
+	AEndlessReachHDPawn();  // construction
+
+	////////////////////////////////////////////////////
+	//
+	// SHIP
+	//
+	////////////////////////////////////////////////////
+
+	// Configure the player ship with default settings
+	// (for configs that can only occur after the world comes online)
+	UFUNCTION(BlueprintCallable, Category = Ship)
+	void ConfigureShip();
 
 	/* The mesh component */
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Ship, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ShipMeshComponent;
 
-	// Gun Attachments
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* ShipMeshGuns;
+	// Distortion visual effect "hover trail effect"
+	UPROPERTY(Category = Ship, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UParticleSystemComponent* DistortionFX;
+	UParticleSystem* P_DistortionFX;
 
-	// Gun Attachment Physics Constraint
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UPhysicsConstraintComponent* ShipConstraintGuns;
+	/* Whether the ship is capable of moving */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	bool bCanMove;
+
+	/* The speed our ship moves around the level */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	float MoveSpeed;
+
+	/* The ship's current HP level */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	float CurrentHP;
+
+	/* The ship's maximum HP level */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	float MaxHP;
+
+	/** Engine Idle Sound */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_EngineIdle;
+	UAudioComponent* EngineIdleSound;
+
+	////////////////////////////////////////////////////
+	//
+	// FANS
+	//
+	////////////////////////////////////////////////////
 
 	// Left Fan
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ShipMeshFanL;
 
 	// Left Fan Physics Constraint
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UPhysicsConstraintComponent* ShipConstraintFanL;
 
+	// Rotating Movement Component - Left Fan
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	URotatingMovementComponent* RotatingMovement_FanL;
+
 	// Right Fan
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ShipMeshFanR;
 
 	// Right Fan Physics Constraint
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UPhysicsConstraintComponent* ShipConstraintFanR;
 
+	// Rotating Movement Component - Right Fan
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	URotatingMovementComponent* RotatingMovement_FanR;
+
 	// Tail Fan
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ShipMeshFanT;
 
 	// Tail Fan Physics Constraint
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UPhysicsConstraintComponent* ShipConstraintFanT;
+
+	// Rotating Movement Component - Tail Fan
+	UPROPERTY(Category = Fans, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	URotatingMovementComponent* RotatingMovement_FanT;
+
+	/* The ship's fan speed */
+	UPROPERTY(Category = Fans, EditAnywhere, BlueprintReadWrite)
+	float FanSpeed;
+
+	// Update the fan speed
+	UFUNCTION(BlueprintCallable, Category = Fans)
+	void UpdateFanSpeed();
+
+	////////////////////////////////////////////////////
+	//
+	// CAMERA
+	//
+	////////////////////////////////////////////////////
 
 	/** The camera */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -75,114 +137,110 @@ public:
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
-
-	// Rotating Movement Component - Left Fan
-	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	URotatingMovementComponent* RotatingMovement_FanL;
-
-	// Rotating Movement Component - Right Fan
-	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	URotatingMovementComponent* RotatingMovement_FanR;
-
-	// Rotating Movement Component - Tail Fan
-	UPROPERTY(Category = Rotators, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	URotatingMovementComponent* RotatingMovement_FanT;
-
-	/** Thruster Force Feedback */
-	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UForceFeedbackEffect* ThrusterFeedback;
-
-	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UParticleSystemComponent* ThrusterFX;
-	UParticleSystem* P_ThrusterFX;
-
-	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UParticleSystemComponent* DistortionFX;
-	UParticleSystem* P_DistortionFX;
-
+		
+	////////////////////////////////////////////////////
+	//
+	// BASIC GUNS
+	//
+	////////////////////////////////////////////////////
+	
 	/** Offset from the ships location to spawn projectiles */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite )
+	UPROPERTY(Category = BaseGuns, EditAnywhere, BlueprintReadWrite )
 	FVector GunOffset;
 	
 	/* How fast the weapon will fire */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = BaseGuns, EditAnywhere, BlueprintReadWrite)
 	float FireRate;
 
-	/* Whether the ship is capable of moving */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	bool bCanMove;
+	/** Sound to play each time we fire */
+	UPROPERTY(Category = BaseGuns, EditAnywhere, BlueprintReadWrite)
+	class USoundBase* FireSound;
 
-	/* The speed our ship moves around the level */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float MoveSpeed;
+	/* Fire a shot in the specified direction */
+	UFUNCTION(BlueprintCallable, Category = BaseGuns)
+	void FireShot(FVector FireDirection);
 
-	/* The maximum velocity our ship can achieve with standard impulse movement */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float MaxVelocity;
+	/* Handler for the fire timer expiry */
+	UFUNCTION(BlueprintCallable, Category = BaseGuns)
+	void ShotTimerExpired();
 
-	/* The maximum velocity our ship can achieve while under thrust */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float MaxThrustVelocity;
-
-	/* Whether the forward guns are active */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	bool bForwardGunsActive;
-
-	/* Whether the thrusters are active */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	bool bThustersActive;
-
-	/* Whether the ship is low on fuel */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	bool bLowFuel;
-
-	/* The ship's fan speed */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float FanSpeed;
-
-	/* The ship's current HP level */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float CurrentHP;
-
-	/* The ship's maximum HP level */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	float MaxHP;
+	////////////////////////////////////////////////////
+	//
+	// FUEL + THRUSTERS
+	//
+	////////////////////////////////////////////////////
 
 	/* The ship's current fuel level */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
 	float FuelLevel;
 
 	/* The ship's maximum fuel level */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
 	float MaxFuel;
 
-	/* The number of orbs the player has collected since the last time they returned to the outpost */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-	int32 OrbCount;
+	/* The maximum velocity our ship can achieve with standard impulse movement */
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
+	float MaxVelocity;
 
-	/** Sound to play each time we fire */
-	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
-	class USoundBase* FireSound;
+	/* The maximum velocity our ship can achieve while under thrust */
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
+	float MaxThrustVelocity;
+
+	/* Whether the thrusters are active */
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
+	bool bThustersActive;
+
+	/* Whether the ship is low on fuel */
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
+	bool bLowFuel;
+
+	// Thruster visual fx
+	UPROPERTY(Category = Thrusters, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UParticleSystemComponent* ThrusterFX;
+	UParticleSystem* P_ThrusterFX;
+
+	/** Thruster Force Feedback */
+	UPROPERTY(Category = Thrusters, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UForceFeedbackEffect* ThrusterFeedback;
 
 	/** Sound to play when we're out of fuel */
-	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
 	USoundCue* S_LowFuelWarning;
 	UAudioComponent* LowFuelWarningSound;
 
-	/** Engine Idle Sound */
-	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
-	USoundCue* S_EngineIdle;
-	UAudioComponent* EngineIdleSound;
-
 	/** Sound to play when thrusters are active */
-	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = Thrusters, EditAnywhere, BlueprintReadWrite)
 	USoundCue* S_EngineThrust;
 	UAudioComponent* EngineThrustSound;
+
+	// Thrusters Control
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
+	void FireThrusters();
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
+	void StopThrusters();
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
+	void LowFuelSafety();
+
+	////////////////////////////////////////////////////
+	//
+	// HUD
+	//
+	////////////////////////////////////////////////////
 
 	// Player HUD Widget.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
 	TSubclassOf<UUserWidget> W_PlayerHUD;
 	UPlayerHUD* PlayerHUD;
+
+	// Update the player hud
+	UFUNCTION(BlueprintCallable, Category = HUD)
+	void UpdatePlayerHUD();
+
+	////////////////////////////////////////////////////
+	//
+	// MAGNET
+	//
+	////////////////////////////////////////////////////
 
 	// Magnet Physics Constraint
 	UPROPERTY(Category = Magnet, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -196,54 +254,70 @@ public:
 	UPROPERTY(Category = Magnet, EditAnywhere, BlueprintReadWrite)
 	bool bMagnetEnabled;
 
-	// Begin Actor Interface
+	////////////////////////////////////////////////////
+	//
+	// BEAM CANNON
+	//
+	////////////////////////////////////////////////////
+
+	// Gun Attachments
+	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* ShipMeshGuns;
+
+	// Gun Attachment Physics Constraint
+	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPhysicsConstraintComponent* ShipConstraintGuns;
+
+	// Beam Cannon Visual FX
+	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UParticleSystemComponent* BeamCannonFX;
+	UParticleSystem* P_BeamCannonFX;
+
+	// Beam Cannon Physics Constraint
+	UPROPERTY(Category = Magnet, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPhysicsConstraintComponent* BeamCannonConstraint;
+
+	// Beam Cannon Radius Collider
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BeamCannon)
+	UBoxComponent* BeamCannonRadius;
+
+	/* Whether the beam cannon is enabled */
+	UPROPERTY(Category = BeamCannon, EditAnywhere, BlueprintReadWrite)
+	bool bBeamCannonEnabled;
+
+	// Beam Cannon Control Functions
+	UFUNCTION(BlueprintCallable, Category = BeamCannon)
+	void FireBeamCannon();
+	UFUNCTION(BlueprintCallable, Category = BeamCannon)
+	void StopBeamCannon();
+
+	////////////////////////////////////////////////////
+	//
+	// DEFAULTS
+	//
+	////////////////////////////////////////////////////
+
+	// Basic Functions
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
-	// End Actor Interface
 
-	// Update the player hud
-	UFUNCTION(BlueprintCallable, Category = HUD)
-	void UpdatePlayerHUD();
+	/* The number of orbs the player has collected since the last time they returned to the outpost */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	int32 OrbCount;
 
-	/* Fire a shot in the specified direction */
-	UFUNCTION(BlueprintCallable, Category = Weapons)
-	void FireShot(FVector FireDirection);
+	////////////////////////////////////////////////////
+	//
+	// INPUT BINDINGS
+	//
+	////////////////////////////////////////////////////
 
-	/* Handler for the fire timer expiry */
-	UFUNCTION(BlueprintCallable, Category = Weapons)
-	void ShotTimerExpired();
-
-	// Update the fan speed
-	UFUNCTION(BlueprintCallable, Category = Ship)
-	void UpdateFanSpeed();
-
-	// Forward Gun Control
-	UFUNCTION(BlueprintCallable, Category = Weapons)
-	void FireForwardGuns();
-	UFUNCTION(BlueprintCallable, Category = Weapons)
-	void StopForwardGuns();
-
-	// Thrusters Control
-	UFUNCTION(BlueprintCallable, Category = Thrusters)
-	void FireThrusters();
-	UFUNCTION(BlueprintCallable, Category = Thrusters)
-	void StopThrusters();
-	UFUNCTION(BlueprintCallable, Category = Thrusters)
-	void LowFuelSafety();
-
-	// Configure the player ship with default settings
-	// (for configs that can only occur after the world comes online)
-	UFUNCTION(BlueprintCallable, Category = Ship)
-	void ConfigureShip();
-
-	// Static names for input bindings
 	// AXIS
 	static const FName MoveForwardBinding;
 	static const FName MoveRightBinding;
 	static const FName FireForwardBinding;
 	static const FName FireRightBinding;
 	// ACTIONS
-	static const FName ForwardGunsBinding;
+	static const FName BeamCannonBinding;
 	static const FName ThrustersBinding;
 
 private:

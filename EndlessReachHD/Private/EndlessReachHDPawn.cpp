@@ -26,7 +26,7 @@ const FName AEndlessReachHDPawn::MoveRightBinding("MoveRight");
 const FName AEndlessReachHDPawn::FireForwardBinding("FireForward");
 const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
 // ACTIONS
-const FName AEndlessReachHDPawn::ForwardGunsBinding("ForwardGuns");
+const FName AEndlessReachHDPawn::BeamCannonBinding("BeamCannon");
 const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
 
 // Construct pawn
@@ -50,12 +50,8 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
-	bForwardGunsActive = false;
+	bBeamCannonEnabled = false;
 	
-	// Creates a scene component and sets it as the root
-	//Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	//RootComponent = Root;
-
 	// Ship Body
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));
 	ShipMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipBody"));
@@ -169,6 +165,23 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MagnetRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	MagnetRadius->SetSphereRadius(1000);  //  3000 seems to be a pretty good max range?  maybe 4000 would work too...
 	MagnetRadius->bHiddenInGame = false;
+
+	// Beam Cannon Visual Effect
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> BeamCannonParticleObject(TEXT("/Game/ShipScout_Upgrades/Particles/P_GreenBeam.P_GreenBeam"));
+	P_BeamCannonFX = BeamCannonParticleObject.Object;
+	BeamCannonFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BeamCannonFX"));
+	BeamCannonFX->SetupAttachment(ShipMeshComponent, FName("BeamCannonEffectSocket"));
+	BeamCannonFX->Template = P_BeamCannonFX;
+	BeamCannonFX->SetRelativeRotation(FRotator(0, 90, 0));
+	BeamCannonFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
+	BeamCannonFX->bAutoActivate = false;
+
+	// configure Beam Cannon Radius
+	BeamCannonRadius = CreateDefaultSubobject<UBoxComponent>(TEXT("BeamCannonRadius"));
+	BeamCannonRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
+	BeamCannonRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	BeamCannonRadius->SetBoxExtent(FVector(250, 3000, 250));
+	BeamCannonRadius->bHiddenInGame = false;
 }
 
 void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -182,8 +195,8 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAxis(FireForwardBinding);
 	PlayerInputComponent->BindAxis(FireRightBinding);
 	// ACTIONS
-	PlayerInputComponent->BindAction(ForwardGunsBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireForwardGuns);
-	PlayerInputComponent->BindAction(ForwardGunsBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopForwardGuns);
+	PlayerInputComponent->BindAction(BeamCannonBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireBeamCannon);
+	PlayerInputComponent->BindAction(BeamCannonBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopBeamCannon);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireThrusters);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
 }
@@ -386,41 +399,15 @@ void AEndlessReachHDPawn::ConfigureShip()
 {
 	// Configure Physics Constraint Components to maintain attachment of the ship's objects, like fans, magnet, etc
 	// we need to use constraints because the ship's body is simulating physics
-	FConstraintInstance ConstraintInstance_Guns;  // gun attachments
-	FConstraintInstance ConstraintInstance_FanL;  // left fan
-	FConstraintInstance ConstraintInstance_FanR;  // right fan
-	FConstraintInstance ConstraintInstance_FanT;  // tail fan
-	FConstraintInstance ConstraintInstance_Magnet;  // Magnet
-
 	// We want the guns, fans, and magnet to be stationary and stay exactly where they're attached, which means we're using them more like simple sockets (which sort of defeats the purpose of these physics constraints...)
-	// GUNS
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_Guns, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetAngularLimits(ConstraintInstance_Guns, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	// LEFT FAN
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanL, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	// RIGHT FAN
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanR, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanR, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	// TAIL FAN
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_FanT, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetAngularLimits(ConstraintInstance_FanT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	// MAGNET
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_Magnet, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetAngularLimits(ConstraintInstance_Magnet, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	FConstraintInstance ConstraintInstance_Static;  // a basic constraint instance with no intention to move - will function more as a socket than a physics constraint
 
-	// Gun Attachment Constraint
-	ShipConstraintGuns = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create gun attachment constraint
-	ShipConstraintGuns->ConstraintInstance = ConstraintInstance_Guns;  // set constraint instance
-	ShipConstraintGuns->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	ShipConstraintGuns->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
-	ShipConstraintGuns->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshGuns, NAME_None);  // constrain the guns to the ship body
-	ShipMeshGuns->AttachToComponent(ShipConstraintGuns, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach guns to constraint
-	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));  // reset gun location
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_Static, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_Static, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 	// Left Fan Constraint
 	ShipConstraintFanL = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create left fan constraint
-	ShipConstraintFanL->ConstraintInstance = ConstraintInstance_FanL;  // set constraint instance
+	ShipConstraintFanL->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
 	ShipConstraintFanL->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
 	ShipConstraintFanL->SetRelativeLocation(FVector(240, 30, 30));  // set default location of constraint
 	ShipConstraintFanL->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanL, NAME_None);  // constrain the left fan to the ship body
@@ -429,7 +416,7 @@ void AEndlessReachHDPawn::ConfigureShip()
 
 	// Right Fan Constraint
 	ShipConstraintFanR = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create right fan constraint
-	ShipConstraintFanR->ConstraintInstance = ConstraintInstance_FanR;  // set constraint instance
+	ShipConstraintFanR->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
 	ShipConstraintFanR->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
 	ShipConstraintFanR->SetRelativeLocation(FVector(-240, 30, 30));  // set default location of constraint
 	ShipConstraintFanR->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanR, NAME_None);  // constrain the right fan to the ship body
@@ -438,16 +425,34 @@ void AEndlessReachHDPawn::ConfigureShip()
 
 	// Tail Fan Constraint
 	ShipConstraintFanT = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create tail fan constraint
-	ShipConstraintFanT->ConstraintInstance = ConstraintInstance_FanT;  // set constraint instance
+	ShipConstraintFanT->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
 	ShipConstraintFanT->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
 	ShipConstraintFanT->SetRelativeLocation(FVector(0, -400, 130));  // set default location of constraint
 	ShipConstraintFanT->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanT, NAME_None);  // constrain the tail fan to the ship body
 	ShipMeshFanT->AttachToComponent(ShipConstraintFanT, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
 	ShipMeshFanT->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
 
+	// Gun Attachment Constraint
+	ShipConstraintGuns = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create gun attachment constraint
+	ShipConstraintGuns->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	ShipConstraintGuns->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintGuns->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	ShipConstraintGuns->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshGuns, NAME_None);  // constrain the guns to the ship body
+	ShipMeshGuns->AttachToComponent(ShipConstraintGuns, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach guns to constraint
+	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));  // reset gun location
+
+    // Beam Cannon Attachment Constraint
+	BeamCannonConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create beam cannon constraint
+	BeamCannonConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	BeamCannonConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	BeamCannonConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	BeamCannonConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, BeamCannonRadius, NAME_None);  // constrain beam cannon to the ship body
+	BeamCannonRadius->AttachToComponent(BeamCannonConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach beam cannon to constraint
+	BeamCannonRadius->SetRelativeLocation(FVector(0, 2500, 0));  // reset beam cannon location
+
 	// Magnet Constraint
 	MagnetConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create magnet constraint
-	MagnetConstraint->ConstraintInstance = ConstraintInstance_Magnet;  // set constraint instance
+	MagnetConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
 	MagnetConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
 	MagnetConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
 	MagnetConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, MagnetRadius, NAME_None);  // constrain the magnet radios to the ship body
@@ -475,14 +480,22 @@ void AEndlessReachHDPawn::UpdateFanSpeed()
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 }
 
-void AEndlessReachHDPawn::FireForwardGuns()
+void AEndlessReachHDPawn::FireBeamCannon()
 {
-	bForwardGunsActive = true;
+	if (!bBeamCannonEnabled)
+	{
+		bBeamCannonEnabled = true;
+		BeamCannonFX->Activate();  // activate beam cannon
+	}	
 }
 
-void AEndlessReachHDPawn::StopForwardGuns()
+void AEndlessReachHDPawn::StopBeamCannon()
 {
-	bForwardGunsActive = false;
+	if (bBeamCannonEnabled)
+	{
+		bBeamCannonEnabled = false;
+		BeamCannonFX->Deactivate();  // deactivate beam cannon
+	}
 }
 
 void AEndlessReachHDPawn::FireThrusters()
