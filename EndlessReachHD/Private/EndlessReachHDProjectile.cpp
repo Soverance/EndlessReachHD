@@ -15,9 +15,9 @@
 
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
+#include "Environment/Asteroid.h"
 #include "EndlessReachHDProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
-#include "Environment/Asteroid.h"
 
 AEndlessReachHDProjectile::AEndlessReachHDProjectile() 
 {
@@ -52,7 +52,6 @@ void AEndlessReachHDProjectile::BeginPlay()
 
 void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only add impulse and destroy projectile if we hit a physics - might also check && OtherComp->IsSimulatingPhysics()
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
 		AEndlessReachHDPawn* Player = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
@@ -60,8 +59,10 @@ void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* Othe
 		// Proceed with damage functions if you did not hit the player
 		if (!Player)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::White, TEXT("PROJECTILE HIT OBJECT: " + OtherActor->GetName()));
-			OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());  // apply small physics impulse to any object you hit
+			if (OtherComp->IsSimulatingPhysics())
+			{
+				OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());  // apply small physics impulse to any object you hit
+			}			
 
 			AAsteroid* Asteroid = Cast<AAsteroid>(OtherActor);  // if object is an asteroid...
 			if (Asteroid)

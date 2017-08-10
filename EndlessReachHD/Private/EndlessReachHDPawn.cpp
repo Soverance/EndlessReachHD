@@ -15,9 +15,10 @@
 
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
-#include "EndlessReachHDProjectile.h"
+#include "Environment/Asteroid.h"
 #include "Pickups/PickupMaster.h"
 #include "TimerManager.h"
+#include "EndlessReachHDProjectile.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
 // AXIS
@@ -97,15 +98,18 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	RotatingMovement_FanT->SetUpdatedComponent(ShipMeshFanT);  // set the updated component
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 	
-	// Cache sound effects
+	// SOUND EFFECTS
+	// basic weapon pulse
 	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/Audio/Guns/PlayerTurret_Pulse1_Cue.PlayerTurret_Pulse1_Cue"));
 	FireSound = FireAudio.Object;
+	// low fuel warning
 	static ConstructorHelpers::FObjectFinder<USoundCue> LowFuelAudio(TEXT("/Game/Audio/Ship/PlayerShip_LowFuelWarning_Cue.PlayerShip_LowFuelWarning_Cue"));
 	S_LowFuelWarning = LowFuelAudio.Object;
 	LowFuelWarningSound = CreateDefaultSubobject<UAudioComponent>(TEXT("LowFuelWarningSound"));
 	LowFuelWarningSound->SetupAttachment(RootComponent);
 	LowFuelWarningSound->Sound = S_LowFuelWarning;
 	LowFuelWarningSound->bAutoActivate = false;
+	// engine idle noise
 	static ConstructorHelpers::FObjectFinder<USoundCue> EngineIdleAudio(TEXT("/Game/Audio/Ship/PlayerShip_EngineIdle_Cue.PlayerShip_EngineIdle_Cue"));
 	S_EngineIdle = EngineIdleAudio.Object;
 	EngineIdleSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineIdleSound"));
@@ -113,12 +117,20 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	EngineIdleSound->Sound = S_EngineIdle;
 	EngineIdleSound->bAutoActivate = true;
 	EngineIdleSound->VolumeMultiplier = 0.4f;
+	// engine thrust noise
 	static ConstructorHelpers::FObjectFinder<USoundCue> EngineThrustAudio(TEXT("/Game/Audio/Ship/PlayerShip_EngineThrust_Cue.PlayerShip_EngineThrust_Cue"));
 	S_EngineThrust = EngineThrustAudio.Object;
 	EngineThrustSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineThrustSound"));
 	EngineThrustSound->SetupAttachment(RootComponent);
 	EngineThrustSound->Sound = S_EngineThrust;
 	EngineThrustSound->bAutoActivate = false;
+	// beam cannon noise
+	static ConstructorHelpers::FObjectFinder<USoundCue> BeamCannonAudio(TEXT("/Game/Audio/Guns/ForwardGun_BeamCannon_Cue.ForwardGun_BeamCannon_Cue"));
+	S_BeamCannon = BeamCannonAudio.Object;
+	BeamCannonSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EBeamCannonSound"));
+	BeamCannonSound->SetupAttachment(RootComponent);
+	BeamCannonSound->Sound = S_BeamCannon;
+	BeamCannonSound->bAutoActivate = false;
 
 	// Thruster Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ThrusterParticleObject(TEXT("/Game/Particles/Emitter/P_BlossomJet.P_BlossomJet"));
@@ -130,8 +142,12 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ThrusterFX->bAutoActivate = false;
 
 	// Thruster Force Feedback
-	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> ThrustFeedback(TEXT("/Game/ForceFeedback/Ship_Thruster.Ship_Thruster"));
+	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> ThrustFeedback(TEXT("/Game/ForceFeedback/FF_ShipThrusters.FF_ShipThrusters"));
 	ThrusterFeedback = ThrustFeedback.Object;
+
+	// Beam Cannon Force Feedback
+	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> CannonFeedback(TEXT("/Game/ForceFeedback/FF_BeamCannon.FF_BeamCannon"));
+	BeamCannonFeedback = CannonFeedback.Object;
 
 	// Distortion Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> DistortionParticleObject(TEXT("/Game/Particles/Emitter/DistortionWave.DistortionWave"));
@@ -180,8 +196,17 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	BeamCannonRadius = CreateDefaultSubobject<UBoxComponent>(TEXT("BeamCannonRadius"));
 	BeamCannonRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	BeamCannonRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	BeamCannonRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::BeamCannonBeginOverlap);  // set up a notification for when this component hits something
 	BeamCannonRadius->SetBoxExtent(FVector(250, 3000, 250));
 	BeamCannonRadius->bHiddenInGame = false;
+
+	// configure Beam Cannon Cam shake
+	static ConstructorHelpers::FObjectFinder<UClass> BeamCannonCamShakeObject(TEXT("/Game/CamShakes/CS_BeamCannon.CS_BeamCannon_C"));
+	BeamCannonCamShake = BeamCannonCamShakeObject.Object;
+
+	// configure Thruster Cam shake
+	static ConstructorHelpers::FObjectFinder<UClass> ThrusterCamShakeObject(TEXT("/Game/CamShakes/CS_Thrusters.CS_Thrusters_C"));
+	ThrusterCamShake = ThrusterCamShakeObject.Object;
 }
 
 void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -485,7 +510,11 @@ void AEndlessReachHDPawn::FireBeamCannon()
 	if (!bBeamCannonEnabled)
 	{
 		bBeamCannonEnabled = true;
+		BeamCannonSound->Play();
 		BeamCannonFX->Activate();  // activate beam cannon
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+		PlayerController->ClientPlayForceFeedback(BeamCannonFeedback, false, FName(TEXT("BeamCannon")));  // Play Beam Cannon Force Feedback
+		PlayerController->ClientPlayCameraShake(BeamCannonCamShake);  // play cam shake
 	}	
 }
 
@@ -494,8 +523,32 @@ void AEndlessReachHDPawn::StopBeamCannon()
 	if (bBeamCannonEnabled)
 	{
 		bBeamCannonEnabled = false;
-		BeamCannonFX->Deactivate();  // deactivate beam cannon
+		BeamCannonFX->Deactivate(); 
+		BeamCannonSound->FadeOut(0.5f, 0); 
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+		PlayerController->ClientStopForceFeedback(BeamCannonFeedback, FName(TEXT("BeamCannon")));  // Stop Beam Cannon force feedback
+		//PlayerController->ClientStopCameraShake(BeamCannonCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
 	}
+}
+
+void AEndlessReachHDPawn::BeamCannonBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if (bBeamCannonEnabled)  // verify beam cannon is enabled before proceeding
+	{
+		if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+		{
+			if (OtherComp->IsSimulatingPhysics())
+			{
+				OtherComp->AddImpulseAtLocation(GetVelocity() * 20.0f, GetActorLocation());  // apply small physics impulse to any physics object you hit
+			}
+
+			AAsteroid* Asteroid = Cast<AAsteroid>(OtherActor);  // if object is an asteroid...
+			if (Asteroid)
+			{
+				Asteroid->OnDestroyAsteroid.Broadcast();  // Broadcast Asteroid Destruction
+			}
+		}
+	}	
 }
 
 void AEndlessReachHDPawn::FireThrusters()
@@ -507,6 +560,7 @@ void AEndlessReachHDPawn::FireThrusters()
 		ThrusterFX->Activate();
 		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
 		PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
+		PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
 	}	
 }
 
@@ -519,6 +573,7 @@ void AEndlessReachHDPawn::StopThrusters()
 	LowFuelWarningSound->FadeOut(0.05f, 0);
 	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
 	PlayerController->ClientStopForceFeedback(ThrusterFeedback, FName(TEXT("Thruster")));  // Stop Thruster Feedback
+	//PlayerController->ClientStopCameraShake(ThrusterCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
 }
 
 // This feature makes it harder to completely run out of fuel, and plays an audio warning when near empty

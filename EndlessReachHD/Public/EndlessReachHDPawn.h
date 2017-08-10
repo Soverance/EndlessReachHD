@@ -213,6 +213,10 @@ public:
 	USoundCue* S_EngineThrust;
 	UAudioComponent* EngineThrustSound;
 
+	// Thrusters Cam Shake
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BeamCannon)
+	TSubclassOf<UCameraShake> ThrusterCamShake;
+
 	// Thrusters Control
 	UFUNCTION(BlueprintCallable, Category = Thrusters)
 	void FireThrusters();
@@ -285,11 +289,28 @@ public:
 	UPROPERTY(Category = BeamCannon, EditAnywhere, BlueprintReadWrite)
 	bool bBeamCannonEnabled;
 
+	/** Sound to play when beam cannon is active */
+	UPROPERTY(Category = BeamCannon, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_BeamCannon;
+	UAudioComponent* BeamCannonSound;
+
+	// Beam Cannon Cam Shake
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BeamCannon)
+	TSubclassOf<UCameraShake> BeamCannonCamShake;
+
+	/** Beam Cannon Force Feedback */
+	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UForceFeedbackEffect* BeamCannonFeedback;
+
 	// Beam Cannon Control Functions
 	UFUNCTION(BlueprintCallable, Category = BeamCannon)
 	void FireBeamCannon();
 	UFUNCTION(BlueprintCallable, Category = BeamCannon)
 	void StopBeamCannon();
+
+	/** Function to handle the beam cannon hitting something */
+	UFUNCTION(BlueprintCallable, Category = BeamCannon)
+	void BeamCannonBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	////////////////////////////////////////////////////
 	//
