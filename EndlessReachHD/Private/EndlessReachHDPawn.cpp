@@ -52,6 +52,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	FireRate = 0.1f;
 	bCanFire = true;
 	bLaserEnabled = false;
+	LaserChargeCount = 0;
 	
 	// Ship Body
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));

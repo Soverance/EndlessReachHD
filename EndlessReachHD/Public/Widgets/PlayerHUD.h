@@ -74,4 +74,28 @@ public:
 	// The active item icon
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Save)
 	ESlateVisibility SavingIndicatorVisibility;
+
+	// Destroy them with lasers!
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void ChargeLaser_Stage1();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void ChargeLaser_Stage2();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void ChargeLaser_Stage3();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void ChargeLaser_Stage4();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void ChargeLaser_Stage5();
+
+	// Stop destroying them with lasers!
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void DischargeLaser_Stage1();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void DischargeLaser_Stage2();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void DischargeLaser_Stage3();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void DischargeLaser_Stage4();
+	UFUNCTION(BlueprintImplementableEvent, Category = Laser)
+	void DischargeLaser_Stage5();
 };

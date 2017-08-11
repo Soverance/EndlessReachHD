@@ -25,3 +25,28 @@ UPlayerHUD::UPlayerHUD(const FObjectInitializer& ObjectInitializer)
 }
 
 #undef LOCTEXT_NAMESPACE
+
+//void UPlayerHUD::ChargeLaser_Stage1()
+//{
+//
+//}
+//
+//void UPlayerHUD::ChargeLaser_Stage2()
+//{
+//
+//}
+//
+//void UPlayerHUD::ChargeLaser_Stage3()
+//{
+//
+//}
+//
+//void UPlayerHUD::ChargeLaser_Stage4()
+//{
+//
+//}
+//
+//void UPlayerHUD::ChargeLaser_Stage5()
+//{
+//
+//}
