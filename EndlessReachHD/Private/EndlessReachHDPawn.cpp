@@ -27,7 +27,7 @@ const FName AEndlessReachHDPawn::MoveRightBinding("MoveRight");
 const FName AEndlessReachHDPawn::FireForwardBinding("FireForward");
 const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
 // ACTIONS
-const FName AEndlessReachHDPawn::BeamCannonBinding("BeamCannon");
+const FName AEndlessReachHDPawn::LaserBinding("Laser");
 const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
 
 // Construct pawn
@@ -51,7 +51,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
-	bBeamCannonEnabled = false;
+	bLaserEnabled = false;
 	
 	// Ship Body
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));
@@ -125,12 +125,12 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	EngineThrustSound->Sound = S_EngineThrust;
 	EngineThrustSound->bAutoActivate = false;
 	// beam cannon noise
-	static ConstructorHelpers::FObjectFinder<USoundCue> BeamCannonAudio(TEXT("/Game/Audio/Guns/ForwardGun_BeamCannon_Cue.ForwardGun_BeamCannon_Cue"));
-	S_BeamCannon = BeamCannonAudio.Object;
-	BeamCannonSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EBeamCannonSound"));
-	BeamCannonSound->SetupAttachment(RootComponent);
-	BeamCannonSound->Sound = S_BeamCannon;
-	BeamCannonSound->bAutoActivate = false;
+	static ConstructorHelpers::FObjectFinder<USoundCue> LaserAudio(TEXT("/Game/Audio/Guns/ForwardGun_Laser_Cue.ForwardGun_Laser_Cue"));
+	S_Laser = LaserAudio.Object;
+	LaserSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ELaserSound"));
+	LaserSound->SetupAttachment(RootComponent);
+	LaserSound->Sound = S_Laser;
+	LaserSound->bAutoActivate = false;
 
 	// Thruster Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ThrusterParticleObject(TEXT("/Game/Particles/Emitter/P_BlossomJet.P_BlossomJet"));
@@ -146,8 +146,8 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ThrusterFeedback = ThrustFeedback.Object;
 
 	// Beam Cannon Force Feedback
-	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> CannonFeedback(TEXT("/Game/ForceFeedback/FF_BeamCannon.FF_BeamCannon"));
-	BeamCannonFeedback = CannonFeedback.Object;
+	static ConstructorHelpers::FObjectFinder<UForceFeedbackEffect> CannonFeedback(TEXT("/Game/ForceFeedback/FF_Laser.FF_Laser"));
+	LaserFeedback = CannonFeedback.Object;
 
 	// Distortion Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> DistortionParticleObject(TEXT("/Game/Particles/Emitter/DistortionWave.DistortionWave"));
@@ -183,26 +183,26 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MagnetRadius->bHiddenInGame = false;
 
 	// Beam Cannon Visual Effect
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> BeamCannonParticleObject(TEXT("/Game/ShipScout_Upgrades/Particles/P_GreenBeam.P_GreenBeam"));
-	P_BeamCannonFX = BeamCannonParticleObject.Object;
-	BeamCannonFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("BeamCannonFX"));
-	BeamCannonFX->SetupAttachment(ShipMeshComponent, FName("BeamCannonEffectSocket"));
-	BeamCannonFX->Template = P_BeamCannonFX;
-	BeamCannonFX->SetRelativeRotation(FRotator(0, 90, 0));
-	BeamCannonFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
-	BeamCannonFX->bAutoActivate = false;
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> LaserParticleObject(TEXT("/Game/ShipScout_Upgrades/Particles/P_GreenBeam.P_GreenBeam"));
+	P_LaserFX = LaserParticleObject.Object;
+	LaserFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LaserFX"));
+	LaserFX->SetupAttachment(ShipMeshComponent, FName("LaserEffectSocket"));
+	LaserFX->Template = P_LaserFX;
+	LaserFX->SetRelativeRotation(FRotator(0, 90, 0));
+	LaserFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
+	LaserFX->bAutoActivate = false;
 
 	// configure Beam Cannon Radius
-	BeamCannonRadius = CreateDefaultSubobject<UBoxComponent>(TEXT("BeamCannonRadius"));
-	BeamCannonRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
-	BeamCannonRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
-	BeamCannonRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::BeamCannonBeginOverlap);  // set up a notification for when this component hits something
-	BeamCannonRadius->SetBoxExtent(FVector(250, 3000, 250));
-	BeamCannonRadius->bHiddenInGame = false;
+	LaserRadius = CreateDefaultSubobject<UBoxComponent>(TEXT("LaserRadius"));
+	LaserRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
+	LaserRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	LaserRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::LaserBeginOverlap);  // set up a notification for when this component hits something
+	LaserRadius->SetBoxExtent(FVector(250, 3000, 250));
+	LaserRadius->bHiddenInGame = false;
 
 	// configure Beam Cannon Cam shake
-	static ConstructorHelpers::FObjectFinder<UClass> BeamCannonCamShakeObject(TEXT("/Game/CamShakes/CS_BeamCannon.CS_BeamCannon_C"));
-	BeamCannonCamShake = BeamCannonCamShakeObject.Object;
+	static ConstructorHelpers::FObjectFinder<UClass> LaserCamShakeObject(TEXT("/Game/CamShakes/CS_Laser.CS_Laser_C"));
+	LaserCamShake = LaserCamShakeObject.Object;
 
 	// configure Thruster Cam shake
 	static ConstructorHelpers::FObjectFinder<UClass> ThrusterCamShakeObject(TEXT("/Game/CamShakes/CS_Thrusters.CS_Thrusters_C"));
@@ -220,8 +220,8 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAxis(FireForwardBinding);
 	PlayerInputComponent->BindAxis(FireRightBinding);
 	// ACTIONS
-	PlayerInputComponent->BindAction(BeamCannonBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireBeamCannon);
-	PlayerInputComponent->BindAction(BeamCannonBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopBeamCannon);
+	PlayerInputComponent->BindAction(LaserBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireLaser);
+	PlayerInputComponent->BindAction(LaserBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopLaser);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireThrusters);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
 }
@@ -467,13 +467,13 @@ void AEndlessReachHDPawn::ConfigureShip()
 	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));  // reset gun location
 
     // Beam Cannon Attachment Constraint
-	BeamCannonConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create beam cannon constraint
-	BeamCannonConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	BeamCannonConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	BeamCannonConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
-	BeamCannonConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, BeamCannonRadius, NAME_None);  // constrain beam cannon to the ship body
-	BeamCannonRadius->AttachToComponent(BeamCannonConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach beam cannon to constraint
-	BeamCannonRadius->SetRelativeLocation(FVector(0, 2500, 0));  // reset beam cannon location
+	LaserConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create beam cannon constraint
+	LaserConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	LaserConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	LaserConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	LaserConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, LaserRadius, NAME_None);  // constrain beam cannon to the ship body
+	LaserRadius->AttachToComponent(LaserConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach beam cannon to constraint
+	LaserRadius->SetRelativeLocation(FVector(0, 2500, 0));  // reset beam cannon location
 
 	// Magnet Constraint
 	MagnetConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create magnet constraint
@@ -505,35 +505,35 @@ void AEndlessReachHDPawn::UpdateFanSpeed()
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 }
 
-void AEndlessReachHDPawn::FireBeamCannon()
+void AEndlessReachHDPawn::FireLaser()
 {
-	if (!bBeamCannonEnabled)
+	if (!bLaserEnabled)
 	{
-		bBeamCannonEnabled = true;
-		BeamCannonSound->Play();
-		BeamCannonFX->Activate();  // activate beam cannon
+		bLaserEnabled = true;
+		LaserSound->Play();
+		LaserFX->Activate();  // activate beam cannon
 		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-		PlayerController->ClientPlayForceFeedback(BeamCannonFeedback, false, FName(TEXT("BeamCannon")));  // Play Beam Cannon Force Feedback
-		PlayerController->ClientPlayCameraShake(BeamCannonCamShake);  // play cam shake
+		PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Beam Cannon Force Feedback
+		PlayerController->ClientPlayCameraShake(LaserCamShake);  // play cam shake
 	}	
 }
 
-void AEndlessReachHDPawn::StopBeamCannon()
+void AEndlessReachHDPawn::StopLaser()
 {
-	if (bBeamCannonEnabled)
+	if (bLaserEnabled)
 	{
-		bBeamCannonEnabled = false;
-		BeamCannonFX->Deactivate(); 
-		BeamCannonSound->FadeOut(0.5f, 0); 
+		bLaserEnabled = false;
+		LaserFX->Deactivate(); 
+		LaserSound->FadeOut(0.5f, 0); 
 		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-		PlayerController->ClientStopForceFeedback(BeamCannonFeedback, FName(TEXT("BeamCannon")));  // Stop Beam Cannon force feedback
-		//PlayerController->ClientStopCameraShake(BeamCannonCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
+		PlayerController->ClientStopForceFeedback(LaserFeedback, FName(TEXT("Laser")));  // Stop Beam Cannon force feedback
+		//PlayerController->ClientStopCameraShake(LaserCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
 	}
 }
 
-void AEndlessReachHDPawn::BeamCannonBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	if (bBeamCannonEnabled)  // verify beam cannon is enabled before proceeding
+	if (bLaserEnabled)  // verify beam cannon is enabled before proceeding
 	{
 		if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 		{

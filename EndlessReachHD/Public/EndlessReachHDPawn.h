@@ -214,7 +214,7 @@ public:
 	UAudioComponent* EngineThrustSound;
 
 	// Thrusters Cam Shake
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BeamCannon)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser)
 	TSubclassOf<UCameraShake> ThrusterCamShake;
 
 	// Thrusters Control
@@ -260,57 +260,61 @@ public:
 
 	////////////////////////////////////////////////////
 	//
-	// BEAM CANNON
+	// LASER BEAM CANNON
 	//
 	////////////////////////////////////////////////////
 
 	// Gun Attachments
-	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Laser, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* ShipMeshGuns;
 
 	// Gun Attachment Physics Constraint
-	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Laser, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UPhysicsConstraintComponent* ShipConstraintGuns;
 
 	// Beam Cannon Visual FX
-	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UParticleSystemComponent* BeamCannonFX;
-	UParticleSystem* P_BeamCannonFX;
+	UPROPERTY(Category = Laser, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UParticleSystemComponent* LaserFX;
+	UParticleSystem* P_LaserFX;
 
 	// Beam Cannon Physics Constraint
 	UPROPERTY(Category = Magnet, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UPhysicsConstraintComponent* BeamCannonConstraint;
+	UPhysicsConstraintComponent* LaserConstraint;
 
 	// Beam Cannon Radius Collider
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BeamCannon)
-	UBoxComponent* BeamCannonRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser)
+	UBoxComponent* LaserRadius;
+
+	/* The number of charges for the laser beam cannon - maximum of 5 */
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	int32 LaserChargeCount;
 
 	/* Whether the beam cannon is enabled */
-	UPROPERTY(Category = BeamCannon, EditAnywhere, BlueprintReadWrite)
-	bool bBeamCannonEnabled;
+	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
+	bool bLaserEnabled;
 
 	/** Sound to play when beam cannon is active */
-	UPROPERTY(Category = BeamCannon, EditAnywhere, BlueprintReadWrite)
-	USoundCue* S_BeamCannon;
-	UAudioComponent* BeamCannonSound;
+	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_Laser;
+	UAudioComponent* LaserSound;
 
 	// Beam Cannon Cam Shake
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = BeamCannon)
-	TSubclassOf<UCameraShake> BeamCannonCamShake;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser)
+	TSubclassOf<UCameraShake> LaserCamShake;
 
 	/** Beam Cannon Force Feedback */
-	UPROPERTY(Category = BeamCannon, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UForceFeedbackEffect* BeamCannonFeedback;
+	UPROPERTY(Category = Laser, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UForceFeedbackEffect* LaserFeedback;
 
 	// Beam Cannon Control Functions
-	UFUNCTION(BlueprintCallable, Category = BeamCannon)
-	void FireBeamCannon();
-	UFUNCTION(BlueprintCallable, Category = BeamCannon)
-	void StopBeamCannon();
+	UFUNCTION(BlueprintCallable, Category = Laser)
+	void FireLaser();
+	UFUNCTION(BlueprintCallable, Category = Laser)
+	void StopLaser();
 
 	/** Function to handle the beam cannon hitting something */
-	UFUNCTION(BlueprintCallable, Category = BeamCannon)
-	void BeamCannonBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+	UFUNCTION(BlueprintCallable, Category = Laser)
+	void LaserBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	////////////////////////////////////////////////////
 	//
@@ -338,7 +342,7 @@ public:
 	static const FName FireForwardBinding;
 	static const FName FireRightBinding;
 	// ACTIONS
-	static const FName BeamCannonBinding;
+	static const FName LaserBinding;
 	static const FName ThrustersBinding;
 
 private:
