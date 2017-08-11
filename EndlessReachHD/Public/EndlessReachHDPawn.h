@@ -311,6 +311,10 @@ public:
 	void FireLaser();
 	UFUNCTION(BlueprintCallable, Category = Laser)
 	void StopLaser();
+	UFUNCTION(BlueprintCallable, Category = Laser)
+	void UseLaserCharge();
+	UFUNCTION(BlueprintCallable, Category = Laser)
+	void LaserManualCutoff();
 
 	/** Function to handle the beam cannon hitting something */
 	UFUNCTION(BlueprintCallable, Category = Laser)

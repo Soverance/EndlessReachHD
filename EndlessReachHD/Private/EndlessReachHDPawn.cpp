@@ -508,28 +508,102 @@ void AEndlessReachHDPawn::UpdateFanSpeed()
 
 void AEndlessReachHDPawn::FireLaser()
 {
+	if (bLaserEnabled)  // if the laser is already enabled when this function is called, it means the player was still holding the button and had charges remaining, so we essentially loop the firing mechanism
+	{
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+		PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
+		PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
+
+		UseLaserCharge();  // use a laser charge
+
+		 // laser firing duration
+		FTimerHandle LaserDelay;
+		GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
+	}
+
+	// if the laser has yet to be enabled...
 	if (!bLaserEnabled)
 	{
-		bLaserEnabled = true;
-		LaserSound->Play();
-		LaserFX->Activate();  // activate beam cannon
-		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-		PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Beam Cannon Force Feedback
-		PlayerController->ClientPlayCameraShake(LaserCamShake);  // play cam shake
-	}	
+		if (LaserChargeCount > 0 && LaserChargeCount < 5)  // if laser charges is greater than zero but less than five...
+		{
+			bLaserEnabled = true;  // enable laser
+
+			if (!LaserSound->IsPlaying())  // if the laser sound is not already playing...
+			{
+				LaserSound->Play();  // play laser sfx
+			}
+			
+			LaserFX->Activate();  // play laser vfx
+			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+			PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
+			PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
+
+			UseLaserCharge();  // use a laser charge
+
+			// laser firing duration
+			FTimerHandle LaserDelay;
+			GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
+		}		
+	}
+	
 }
 
 void AEndlessReachHDPawn::StopLaser()
-{
+{	
 	if (bLaserEnabled)
 	{
+		if (LaserChargeCount > 0)
+		{
+			FireLaser();  // fire laser again! (player is still holding the button and still has charges remaining)
+		}
+		else
+		{
+			LaserManualCutoff();  // force laser shutdown if there isn't at least one charge remaining
+		}		
+	}
+	if (!bLaserEnabled)
+	{
 		bLaserEnabled = false;
-		LaserFX->Deactivate(); 
-		LaserSound->FadeOut(0.5f, 0); 
+		LaserFX->Deactivate();
+		LaserSound->FadeOut(0.5f, 0);
 		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
 		PlayerController->ClientStopForceFeedback(LaserFeedback, FName(TEXT("Laser")));  // Stop Beam Cannon force feedback
-		//PlayerController->ClientStopCameraShake(LaserCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
 	}
+}
+
+void AEndlessReachHDPawn::UseLaserCharge()
+{
+	switch (LaserChargeCount)
+	{
+		case 0:  // if none
+			break;
+		case 1:  // if one
+			PlayerHUD->DischargeLaser_Stage1();  // discharge laser stage 1 hud anim
+			break;
+		case 2:  // if two
+			PlayerHUD->DischargeLaser_Stage2();  // discharge laser stage 2 hud anim
+			break;
+		case 3:  // if three
+			PlayerHUD->DischargeLaser_Stage3();  // discharge laser stage 3 hud anim
+			break;
+		case 4:  // if four
+			PlayerHUD->DischargeLaser_Stage4();  // discharge laser stage 4 hud anim
+			break;
+		case 5:  // if five
+			PlayerHUD->DischargeLaser_Stage5();  // discharge laser stage 5 hud anim
+			break;
+	}
+
+	if (LaserChargeCount > 0)  // if one or more laser charges...
+	{
+		LaserChargeCount--;  // decrease laser charge count
+	}
+}
+
+void AEndlessReachHDPawn::LaserManualCutoff()
+{
+	bLaserEnabled = false;
+	StopLaser();  // stop laser
 }
 
 void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
