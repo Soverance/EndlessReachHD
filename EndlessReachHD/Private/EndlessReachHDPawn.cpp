@@ -222,7 +222,7 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAxis(FireRightBinding);
 	// ACTIONS
 	PlayerInputComponent->BindAction(LaserBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireLaser);
-	PlayerInputComponent->BindAction(LaserBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopLaser);
+	PlayerInputComponent->BindAction(LaserBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::LaserManualCutoff);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireThrusters);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
 }
