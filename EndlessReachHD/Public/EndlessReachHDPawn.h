@@ -144,6 +144,10 @@ public:
 	//
 	////////////////////////////////////////////////////
 	
+	/* Whether the main gun can be fired */
+	UPROPERTY(Category = BaseGuns, EditAnywhere, BlueprintReadWrite)
+	bool bCanFire;
+
 	/** Offset from the ships location to spawn projectiles */
 	UPROPERTY(Category = BaseGuns, EditAnywhere, BlueprintReadWrite )
 	FVector GunOffset;
@@ -350,9 +354,6 @@ public:
 	static const FName ThrustersBinding;
 
 private:
-
-	/* Flag to control firing  */
-	uint32 bCanFire : 1;
 
 	/** Handle for efficient management of ShotTimerExpired timer */
 	FTimerHandle TimerHandle_ShotTimerExpired;

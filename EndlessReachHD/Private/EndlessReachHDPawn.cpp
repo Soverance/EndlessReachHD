@@ -248,12 +248,7 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 
 	// Calculate  movement
 	const FVector Movement = MoveDirection * MoveSpeed * DeltaSeconds;
-
-	if (bCanMove)
-	{
-		
-	}
-
+	
 	// If stick is being pressed, MOVE 
 	if (Movement.SizeSquared() > 0.0f)
 	{
