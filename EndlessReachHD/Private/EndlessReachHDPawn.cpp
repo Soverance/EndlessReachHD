@@ -181,7 +181,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MagnetRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	MagnetRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	MagnetRadius->SetSphereRadius(1000);  //  3000 seems to be a pretty good max range?  maybe 4000 would work too...
-	MagnetRadius->bHiddenInGame = false;
+	MagnetRadius->bHiddenInGame = true;
 
 	// Beam Cannon Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> LaserParticleObject(TEXT("/Game/ShipScout_Upgrades/Particles/P_GreenBeam.P_GreenBeam"));
@@ -199,7 +199,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	LaserRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	LaserRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::LaserBeginOverlap);  // set up a notification for when this component hits something
 	LaserRadius->SetBoxExtent(FVector(250, 3000, 250));
-	LaserRadius->bHiddenInGame = false;
+	LaserRadius->bHiddenInGame = true;
 
 	// configure Beam Cannon Cam shake
 	static ConstructorHelpers::FObjectFinder<UClass> LaserCamShakeObject(TEXT("/Game/CamShakes/CS_Laser.CS_Laser_C"));
