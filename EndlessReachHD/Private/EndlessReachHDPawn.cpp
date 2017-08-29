@@ -29,6 +29,8 @@ const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
 // ACTIONS
 const FName AEndlessReachHDPawn::LaserBinding("Laser");
 const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
+const FName AEndlessReachHDPawn::DebugBinding("Debug");
+const FName AEndlessReachHDPawn::MenuBinding("Menu");
 
 // Construct pawn
 AEndlessReachHDPawn::AEndlessReachHDPawn()
@@ -47,12 +49,19 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	bThustersActive = false;
 	bLowFuel = false;
 	bMagnetEnabled = true;
-	// Weapon Default Specs
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
 	bLaserEnabled = false;
 	LaserChargeCount = 0;
+	bIsDocked = false;
+	LookSensitivity = 5.0f;
+	CamRotSpeed = 5.0f;
+	ClampDegreeMin = -40.0f;
+	ClampDegreeMax = 40.0f;
+	RollX = 0;
+	PitchY = 0;
+	YawZ = 0;	
 	
 	// Ship Body
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));
@@ -164,17 +173,30 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	W_PlayerHUD = HUDWidget.Class;
 	
 	// Create a camera boom...
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->bAbsoluteRotation = true; // Don't want arm to rotate when ship does
-	CameraBoom->TargetArmLength = 1200.f;
-	CameraBoom->RelativeRotation = FRotator(-80.0f, 0.0f, 0.0f);
-	CameraBoom->bDoCollisionTest = false; // Don't want to pull camera in when it collides with level
+	CameraBoom_TopDown = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom_TopDown"));
+	CameraBoom_TopDown->SetupAttachment(RootComponent);
+	CameraBoom_TopDown->bAbsoluteRotation = true; // Don't want arm to rotate when ship does
+	CameraBoom_TopDown->TargetArmLength = 1200.f;
+	CameraBoom_TopDown->RelativeRotation = FRotator(-80.0f, 0.0f, 0.0f);
+	CameraBoom_TopDown->bDoCollisionTest = false; // don't want to pull this camera in when it collides with level
 
 	// Create a camera...
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
-	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	CameraComponent->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
+	Camera_TopDown = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
+	Camera_TopDown->SetupAttachment(CameraBoom_TopDown, USpringArmComponent::SocketName);
+	Camera_TopDown->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
+
+	// Create a camera boom...
+	CameraBoom_Rotational = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom_Rotational"));
+	CameraBoom_Rotational->SetupAttachment(RootComponent);
+	CameraBoom_Rotational->bAbsoluteRotation = true; // Don't want arm to rotate when ship does
+	CameraBoom_Rotational->TargetArmLength = 500.f;
+	CameraBoom_Rotational->RelativeRotation = FRotator(0.0f, 0.0f, 0.0f);
+	CameraBoom_Rotational->bDoCollisionTest = false; // I actually did want this camera to collide with the environment, but it was causing issues inside the hangar... it's fine at the short arm length.  I didn't want to make zoom feature anyway...
+
+	// Create a camera...
+	Camera_Rotational = CreateDefaultSubobject<UCameraComponent>(TEXT("RotationalCamera"));
+	Camera_Rotational->SetupAttachment(CameraBoom_Rotational, USpringArmComponent::SocketName);
+	Camera_Rotational->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
 
 	// configure Magnet Radius
 	MagnetRadius = CreateDefaultSubobject<USphereComponent>(TEXT("MagnetRadius"));
@@ -225,6 +247,8 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction(LaserBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::LaserManualCutoff);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::FireThrusters);
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
+	PlayerInputComponent->BindAction(DebugBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::StartDebug);
+	PlayerInputComponent->BindAction(DebugBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopDebug);
 }
 
 // Called when the game starts or when spawned
@@ -235,6 +259,101 @@ void AEndlessReachHDPawn::BeginPlay()
 	// delay configuration of some components so that the world can be brought online first
 	FTimerHandle ConfigDelay;
 	GetWorldTimerManager().SetTimer(ConfigDelay, this, &AEndlessReachHDPawn::ConfigureShip, 0.25f, false);
+}
+
+// Debug Test Function
+void AEndlessReachHDPawn::StartDebug()
+{
+	Camera_TopDown->SetActive(false, false);  // disable top down cam
+	Camera_Rotational->SetActive(true, false);  // enable rotational cam
+	FViewTargetTransitionParams params;
+	APlayerController* Controller = Cast<APlayerController>(GetController());
+	Controller->SetViewTarget(this, params);  // set new camera
+	bIsDocked = true;  // DOCKED
+}
+
+// Debug Test Function
+void AEndlessReachHDPawn::StopDebug()
+{
+	Camera_TopDown->SetActive(true, false);  // enable top down cam
+	Camera_Rotational->SetActive(false, false);  // disable rotational cam
+	FViewTargetTransitionParams params;
+	APlayerController* Controller = Cast<APlayerController>(GetController());
+	Controller->SetViewTarget(this, params);  // set new camera
+	bIsDocked = false;  // UNDOCKED
+}
+
+// Configure the Ship's default settings - mostly finishing up attaching actors that require the world to have been brought online
+void AEndlessReachHDPawn::ConfigureShip()
+{
+	// Configure Physics Constraint Components to maintain attachment of the ship's objects, like fans, magnet, etc
+	// we need to use constraints because the ship's body is simulating physics
+	// We want the guns, fans, and magnet to be stationary and stay exactly where they're attached, which means we're using them more like simple sockets (which sort of defeats the purpose of these physics constraints...)
+	FConstraintInstance ConstraintInstance_Static;  // a basic constraint instance with no intention to move - will function more as a socket than a physics constraint
+
+	UCommonLibrary::SetLinearLimits(ConstraintInstance_Static, true, 0, 0, 0, 0, false, 0, 0);
+	UCommonLibrary::SetAngularLimits(ConstraintInstance_Static, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
+	// Left Fan Constraint
+	ShipConstraintFanL = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create left fan constraint
+	ShipConstraintFanL->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	ShipConstraintFanL->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintFanL->SetRelativeLocation(FVector(240, 30, 30));  // set default location of constraint
+	ShipConstraintFanL->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanL, NAME_None);  // constrain the left fan to the ship body
+	ShipMeshFanL->AttachToComponent(ShipConstraintFanL, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
+	ShipMeshFanL->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Right Fan Constraint
+	ShipConstraintFanR = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create right fan constraint
+	ShipConstraintFanR->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	ShipConstraintFanR->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintFanR->SetRelativeLocation(FVector(-240, 30, 30));  // set default location of constraint
+	ShipConstraintFanR->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanR, NAME_None);  // constrain the right fan to the ship body
+	ShipMeshFanR->AttachToComponent(ShipConstraintFanR, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
+	ShipMeshFanR->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Tail Fan Constraint
+	ShipConstraintFanT = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create tail fan constraint
+	ShipConstraintFanT->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	ShipConstraintFanT->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintFanT->SetRelativeLocation(FVector(0, -400, 130));  // set default location of constraint
+	ShipConstraintFanT->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanT, NAME_None);  // constrain the tail fan to the ship body
+	ShipMeshFanT->AttachToComponent(ShipConstraintFanT, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
+	ShipMeshFanT->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
+
+	// Gun Attachment Constraint
+	ShipConstraintGuns = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create gun attachment constraint
+	ShipConstraintGuns->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	ShipConstraintGuns->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	ShipConstraintGuns->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	ShipConstraintGuns->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshGuns, NAME_None);  // constrain the guns to the ship body
+	ShipMeshGuns->AttachToComponent(ShipConstraintGuns, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach guns to constraint
+	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));  // reset gun location
+
+	// Beam Cannon Attachment Constraint
+	LaserConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create beam cannon constraint
+	LaserConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	LaserConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	LaserConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	LaserConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, LaserRadius, NAME_None);  // constrain beam cannon to the ship body
+	LaserRadius->AttachToComponent(LaserConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach beam cannon to constraint
+	LaserRadius->SetRelativeLocation(FVector(0, 2500, 0));  // reset beam cannon location
+
+	// Magnet Constraint
+	MagnetConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create magnet constraint
+	MagnetConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	MagnetConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	MagnetConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	MagnetConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, MagnetRadius, NAME_None);  // constrain the magnet radios to the ship body
+	MagnetRadius->AttachToComponent(MagnetConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach magnet to constraint
+	MagnetRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset magnet location
+
+	// Spawn and attach the PlayerHUD
+	if (!PlayerHUD)
+	{
+		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the hud widget
+		PlayerHUD->AddToViewport();  // add player hud to viewport
+	}
 }
 
 void AEndlessReachHDPawn::Tick(float DeltaSeconds)
@@ -349,8 +468,19 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	const FVector FireDirection = FVector(FireForwardValue, FireRightValue, 0.f);
 	//ShipMeshGuns->SetRelativeRotation(FRotationMatrix::MakeFromX(FireDirection).Rotator());  // rotate guns to face firing direction - removed because it looks weird (ship was not modeled to support a turret feature)
 
-	// Try and fire a shot
-	FireShot(FireDirection);
+	// If you're undocked, you must be flying, so try firing a shot
+	if (!bIsDocked)
+	{
+		// Try and fire a shot
+		FireShot(FireDirection);
+	}
+	// if you are docked, we'll let you rotate the camera to get a good look at your ship
+	if (bIsDocked)
+	{
+		CameraControl_RotateVertical(GetInputAxisValue(FireForwardBinding));  // update boom vertical rotation
+		CameraControl_RotateHorizontal(GetInputAxisValue(FireRightBinding));  // update boom horizontal rotation
+	}
+	
 
 	// Update Player HUD with new information
 	UpdatePlayerHUD();
@@ -415,76 +545,75 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 	}
 }
 
-// Configure the Ship's default settings - mostly finishing up attaching actors that require the world to have been brought online
-void AEndlessReachHDPawn::ConfigureShip()
+// Rotational Camera Control (only accessible when docked)
+void AEndlessReachHDPawn::CameraControl_RotateHorizontal(float horizontal)
 {
-	// Configure Physics Constraint Components to maintain attachment of the ship's objects, like fans, magnet, etc
-	// we need to use constraints because the ship's body is simulating physics
-	// We want the guns, fans, and magnet to be stationary and stay exactly where they're attached, which means we're using them more like simple sockets (which sort of defeats the purpose of these physics constraints...)
-	FConstraintInstance ConstraintInstance_Static;  // a basic constraint instance with no intention to move - will function more as a socket than a physics constraint
+	bool bLookHorizontalInvert = true;  // for now, we're just defaulting to inverted controls.  in the future, this setting may be changed within the options menu 
 
-	UCommonLibrary::SetLinearLimits(ConstraintInstance_Static, true, 0, 0, 0, 0, false, 0, 0);
-	UCommonLibrary::SetAngularLimits(ConstraintInstance_Static, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-
-	// Left Fan Constraint
-	ShipConstraintFanL = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create left fan constraint
-	ShipConstraintFanL->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	ShipConstraintFanL->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	ShipConstraintFanL->SetRelativeLocation(FVector(240, 30, 30));  // set default location of constraint
-	ShipConstraintFanL->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanL, NAME_None);  // constrain the left fan to the ship body
-	ShipMeshFanL->AttachToComponent(ShipConstraintFanL, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
-	ShipMeshFanL->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
-
-	// Right Fan Constraint
-	ShipConstraintFanR = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create right fan constraint
-	ShipConstraintFanR->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	ShipConstraintFanR->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	ShipConstraintFanR->SetRelativeLocation(FVector(-240, 30, 30));  // set default location of constraint
-	ShipConstraintFanR->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanR, NAME_None);  // constrain the right fan to the ship body
-	ShipMeshFanR->AttachToComponent(ShipConstraintFanR, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
-	ShipMeshFanR->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
-
-	// Tail Fan Constraint
-	ShipConstraintFanT = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create tail fan constraint
-	ShipConstraintFanT->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	ShipConstraintFanT->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	ShipConstraintFanT->SetRelativeLocation(FVector(0, -400, 130));  // set default location of constraint
-	ShipConstraintFanT->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshFanT, NAME_None);  // constrain the tail fan to the ship body
-	ShipMeshFanT->AttachToComponent(ShipConstraintFanT, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach left fan to constraint
-	ShipMeshFanT->SetRelativeLocation(FVector(0, 0, 0));  // reset fan location
-
-	// Gun Attachment Constraint
-	ShipConstraintGuns = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create gun attachment constraint
-	ShipConstraintGuns->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	ShipConstraintGuns->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	ShipConstraintGuns->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
-	ShipConstraintGuns->SetConstrainedComponents(ShipMeshComponent, NAME_None, ShipMeshGuns, NAME_None);  // constrain the guns to the ship body
-	ShipMeshGuns->AttachToComponent(ShipConstraintGuns, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach guns to constraint
-	ShipMeshGuns->SetRelativeLocation(FVector(0, 0, 0));  // reset gun location
-
-    // Beam Cannon Attachment Constraint
-	LaserConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create beam cannon constraint
-	LaserConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	LaserConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	LaserConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
-	LaserConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, LaserRadius, NAME_None);  // constrain beam cannon to the ship body
-	LaserRadius->AttachToComponent(LaserConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach beam cannon to constraint
-	LaserRadius->SetRelativeLocation(FVector(0, 2500, 0));  // reset beam cannon location
-
-	// Magnet Constraint
-	MagnetConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create magnet constraint
-	MagnetConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
-	MagnetConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
-	MagnetConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
-	MagnetConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, MagnetRadius, NAME_None);  // constrain the magnet radios to the ship body
-	MagnetRadius->AttachToComponent(MagnetConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach magnet to constraint
-	MagnetRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset magnet location
-
-	// Spawn and attach the PlayerHUD
-	if (!PlayerHUD)
+	switch (bLookHorizontalInvert)
 	{
-		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the hud widget
-		PlayerHUD->AddToViewport();  // add player hud to viewport
+	case true:
+		LookSensitivity = LookSensitivity * 1;  // do nothing for inverted controls
+		break;
+	case false:
+		LookSensitivity = LookSensitivity * -1;  // multiply by -1 for standard controls
+		break;
+	}
+
+	// I thought I could store this current rotation update block earlier in the tick function, so that it could be used for both the horizontal and vertical rotation functions...
+	// however, when I did that, the camera movement would only update one direction at a time (instead of both horizontal+vertical simultaneously)
+	// therefore, this update block exists in both camera control functions
+	RollX = CameraBoom_Rotational->GetComponentRotation().Roll;  // store current boom roll
+	PitchY = CameraBoom_Rotational->GetComponentRotation().Pitch;  // store current boom pitch
+	YawZ = CameraBoom_Rotational->GetComponentRotation().Yaw;  // store current boom yaw
+
+	// if vertical == 0.0f then do nothing...
+
+	if (horizontal > 0.1f)
+	{
+		CameraBoom_Rotational->SetWorldRotation(FRotator(PitchY, FMath::FInterpTo(YawZ, YawZ + LookSensitivity, GetWorld()->GetDeltaSeconds(), CamRotSpeed), RollX));
+	}
+
+	if (horizontal < -0.1f)
+	{
+		CameraBoom_Rotational->SetWorldRotation(FRotator(PitchY, FMath::FInterpTo(YawZ, YawZ - LookSensitivity, GetWorld()->GetDeltaSeconds(), CamRotSpeed), RollX));
+	}
+}
+
+// Rotational Camera Control (only accessible when docked)
+void AEndlessReachHDPawn::CameraControl_RotateVertical(float vertical)
+{
+	bool bLookVerticalInvert = true;  // for now, we're just defaulting to inverted controls.  in the future, this setting may be changed within the options menu 
+	
+	switch (bLookVerticalInvert)
+	{
+		case true:
+			LookSensitivity = LookSensitivity * 1;  // do nothing for inverted controls
+			break;
+		case false:
+			LookSensitivity = LookSensitivity * -1;  // multiply by -1 for standard controls
+			break;
+	}
+	
+	// I thought I could store this current rotation update block earlier in the tick function, so that it could be used for both the horizontal and vertical rotation functions...
+	// however, when I did that, the camera movement would only update one direction at a time (instead of both horizontal+vertical simultaneously)
+	// therefore, this update block exists in both camera control functions
+	RollX = CameraBoom_Rotational->GetComponentRotation().Roll;  // store current boom roll
+	PitchY = CameraBoom_Rotational->GetComponentRotation().Pitch;  // store current boom pitch
+	YawZ = CameraBoom_Rotational->GetComponentRotation().Yaw;  // store current boom yaw
+
+	// if vertical == 0.0f then do nothing...
+
+	if (vertical > 0.1f)
+	{
+		float ClampedPitchLerp = FMath::Clamp(FMath::FInterpTo(PitchY, PitchY + LookSensitivity, GetWorld()->GetDeltaSeconds(), CamRotSpeed), ClampDegreeMin, ClampDegreeMax);
+		CameraBoom_Rotational->SetWorldRotation(FRotator(ClampedPitchLerp, YawZ, RollX));
+	}
+
+	if (vertical < -0.1f)
+	{
+		float ClampedPitchLerp = FMath::Clamp(FMath::FInterpTo(PitchY, PitchY - LookSensitivity, GetWorld()->GetDeltaSeconds(), CamRotSpeed), ClampDegreeMin, ClampDegreeMax);
+		CameraBoom_Rotational->SetWorldRotation(FRotator(ClampedPitchLerp, YawZ, RollX));
 	}
 }
 
@@ -656,4 +785,30 @@ void AEndlessReachHDPawn::LowFuelSafety()
 		ShipMeshComponent->SetLinearDamping(2.0f);  // Increase linear damping to slow down translation
 		ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation	
 	}	
+}
+
+// Engage Docking Clamps
+void AEndlessReachHDPawn::EngageDockingClamps()
+{
+	Camera_TopDown->SetActive(false, false);  // disable top down cam
+	Camera_Rotational->SetActive(true, false);  // enable rotational cam
+	FViewTargetTransitionParams params;
+	APlayerController* Controller = Cast<APlayerController>(GetController());
+	Controller->SetViewTarget(this, params);  // set new camera
+	bIsDocked = true;  // DOCKED
+	bCanMove = false;  // no movement while docked
+	bCanFire = false;  // no weapons while docked
+}
+
+// Release Docking Clamps
+void AEndlessReachHDPawn::ReleaseDockingClamps()
+{
+	Camera_TopDown->SetActive(true, false);  // enable top down cam
+	Camera_Rotational->SetActive(false, false);  // disable rotational cam
+	FViewTargetTransitionParams params;
+	APlayerController* Controller = Cast<APlayerController>(GetController());
+	Controller->SetViewTarget(this, params);  // set new camera
+	bIsDocked = false;  // UNDOCKED
+	bCanMove = true;  // restore movement
+	bCanFire = true;  // arm weapons
 }

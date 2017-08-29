@@ -126,17 +126,79 @@ public:
 
 	////////////////////////////////////////////////////
 	//
-	// CAMERA
+	// DOCKING CONTROL
 	//
 	////////////////////////////////////////////////////
 
+	/* Whether the player is currently docked in the hangar */
+	UPROPERTY(Category = Docking, EditAnywhere, BlueprintReadWrite)
+	bool bIsDocked;
+
+	/* Engage Docking Clamps */
+	UFUNCTION(BlueprintCallable, Category = Docking)
+	void EngageDockingClamps();
+
+	/* Release Docking Clamps */
+	UFUNCTION(BlueprintCallable, Category = Docking)
+	void ReleaseDockingClamps();
+
+	////////////////////////////////////////////////////
+	//
+	// CAMERAS
+	//
+	////////////////////////////////////////////////////
+
+	/* The Camera Look Sensitivity */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float LookSensitivity;
+
+	/* The Camera Rotation Speed */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float CamRotSpeed;
+
+	/* The Camera Minimum Degree Clamp */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float ClampDegreeMin;
+
+	/* The Camera Maximum Degree Clamp */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float ClampDegreeMax;
+
+	/* The Rotational Camera Boom Roll X Value - Updated Each Frame while docked */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float RollX;
+
+	/* The Rotational Camera Pitch Y Value - Updated Each Frame while docked */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float PitchY;
+
+	/* The Rotational Camera Yaw Z Value - Updated Each Frame while docked */
+	UPROPERTY(Category = Camera, EditAnywhere, BlueprintReadWrite)
+	float YawZ;
+
 	/** The camera */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* CameraComponent;
+	UCameraComponent* Camera_TopDown;
 
 	/** Camera boom positioning the camera above the character */
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+	USpringArmComponent* CameraBoom_TopDown;
+
+	/** The camera */
+	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* Camera_Rotational;
+
+	/** Camera boom positioning the camera above the character */
+	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom_Rotational;
+
+	/* Rotate Camera Vertically */
+	UFUNCTION(BlueprintCallable, Category = Camera)
+	void CameraControl_RotateVertical(float vertical);
+
+	/* Rotate Camera Horizontally */
+	UFUNCTION(BlueprintCallable, Category = Camera)
+	void CameraControl_RotateHorizontal(float horizontal);
 		
 	////////////////////////////////////////////////////
 	//
@@ -340,6 +402,17 @@ public:
 
 	////////////////////////////////////////////////////
 	//
+	// DEBUG
+	//
+	////////////////////////////////////////////////////
+
+	UFUNCTION(BlueprintCallable, Category = Debug)
+	void StartDebug();
+	UFUNCTION(BlueprintCallable, Category = Debug)
+	void StopDebug();
+	
+	////////////////////////////////////////////////////
+	//
 	// INPUT BINDINGS
 	//
 	////////////////////////////////////////////////////
@@ -352,6 +425,8 @@ public:
 	// ACTIONS
 	static const FName LaserBinding;
 	static const FName ThrustersBinding;
+	static const FName DebugBinding;
+	static const FName MenuBinding;
 
 private:
 
