@@ -18,6 +18,7 @@
 #include "GameFramework/Character.h"
 #include "Management/CommonLibrary.h"
 #include "Widgets/PlayerHUD.h"
+#include "Widgets/HangarMenu.h"
 #include "EndlessReachHDPawn.generated.h"
 
 UCLASS(Blueprintable)
@@ -293,18 +294,23 @@ public:
 
 	////////////////////////////////////////////////////
 	//
-	// HUD
+	// WIDGETS
 	//
 	////////////////////////////////////////////////////
 
 	// Player HUD Widget.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	TSubclassOf<UUserWidget> W_PlayerHUD;
 	UPlayerHUD* PlayerHUD;
 
 	// Update the player hud
-	UFUNCTION(BlueprintCallable, Category = HUD)
+	UFUNCTION(BlueprintCallable, Category = Widgets)
 	void UpdatePlayerHUD();
+
+	// Hangar Menu Widget.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
+	TSubclassOf<UUserWidget> W_HangarMenu;
+	UHangarMenu* HangarMenu;
 
 	////////////////////////////////////////////////////
 	//

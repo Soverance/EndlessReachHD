@@ -171,6 +171,10 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// Player HUD Widget
 	static ConstructorHelpers::FClassFinder<UUserWidget> HUDWidget(TEXT("/Game/Widgets/BP_PlayerHUD.BP_PlayerHUD_C"));
 	W_PlayerHUD = HUDWidget.Class;
+
+	// Hangar Menu Widget
+	static ConstructorHelpers::FClassFinder<UUserWidget> HangarMenuWidget(TEXT("/Game/Widgets/BP_HangarMenu.BP_HangarMenu_C"));
+	W_HangarMenu = HangarMenuWidget.Class;
 	
 	// Create a camera boom...
 	CameraBoom_TopDown = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom_TopDown"));
@@ -351,8 +355,12 @@ void AEndlessReachHDPawn::ConfigureShip()
 	// Spawn and attach the PlayerHUD
 	if (!PlayerHUD)
 	{
-		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the hud widget
+		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the player hud widget
 		PlayerHUD->AddToViewport();  // add player hud to viewport
+	}
+	if (!HangarMenu)
+	{
+		HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
 	}
 }
 
@@ -496,11 +504,14 @@ void AEndlessReachHDPawn::UpdatePlayerHUD()
 {
 	if (PlayerHUD)
 	{
-		PlayerHUD->Player_CurrentHP = CurrentHP;  // set current hp
-		PlayerHUD->Player_MaxHP = MaxHP;  // set max hp
-		PlayerHUD->Player_CurrentFuel = FuelLevel;  // set fuel level
-		PlayerHUD->Player_MaxFuel = MaxFuel;  // set max fuel level
-		PlayerHUD->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
+		if (PlayerHUD->IsInViewport())
+		{
+			PlayerHUD->Player_CurrentHP = CurrentHP;  // set current hp
+			PlayerHUD->Player_MaxHP = MaxHP;  // set max hp
+			PlayerHUD->Player_CurrentFuel = FuelLevel;  // set fuel level
+			PlayerHUD->Player_MaxFuel = MaxFuel;  // set max fuel level
+			PlayerHUD->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
+		}
 	}	
 }
 
@@ -798,6 +809,8 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	bIsDocked = true;  // DOCKED
 	bCanMove = false;  // no movement while docked
 	bCanFire = false;  // no weapons while docked
+	PlayerHUD->RemoveFromViewport();  // remove the player hud from the viewport
+	HangarMenu->AddToViewport();  // add the hangar menu to the viewport
 }
 
 // Release Docking Clamps
@@ -811,4 +824,6 @@ void AEndlessReachHDPawn::ReleaseDockingClamps()
 	bIsDocked = false;  // UNDOCKED
 	bCanMove = true;  // restore movement
 	bCanFire = true;  // arm weapons
+	HangarMenu->RemoveFromViewport();  // remove hangar menu from the viewport
+	PlayerHUD->AddToViewport();  // add the player hud to the viewport
 }
