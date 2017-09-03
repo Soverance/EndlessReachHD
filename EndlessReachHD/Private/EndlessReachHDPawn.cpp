@@ -643,44 +643,46 @@ void AEndlessReachHDPawn::UpdateFanSpeed()
 
 void AEndlessReachHDPawn::FireLaser()
 {
-	if (bLaserEnabled)  // if the laser is already enabled when this function is called, it means the player was still holding the button and had charges remaining, so we essentially loop the firing mechanism
+	if (!bIsDocked)
 	{
-		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-		PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
-		PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
-
-		UseLaserCharge();  // use a laser charge
-
-		 // laser firing duration
-		FTimerHandle LaserDelay;
-		GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
-	}
-
-	// if the laser has yet to be enabled...
-	if (!bLaserEnabled)
-	{
-		if (LaserChargeCount > 0 && LaserChargeCount < 5)  // if laser charges is greater than zero but less than five...
+		if (bLaserEnabled)  // if the laser is already enabled when this function is called, it means the player was still holding the button and had charges remaining, so we essentially loop the firing mechanism
 		{
-			bLaserEnabled = true;  // enable laser
-
-			if (!LaserSound->IsPlaying())  // if the laser sound is not already playing...
-			{
-				LaserSound->Play();  // play laser sfx
-			}
-			
-			LaserFX->Activate();  // play laser vfx
 			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
 			PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
 			PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
 
 			UseLaserCharge();  // use a laser charge
 
-			// laser firing duration
+							   // laser firing duration
 			FTimerHandle LaserDelay;
 			GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
-		}		
-	}
-	
+		}
+
+		// if the laser has yet to be enabled...
+		if (!bLaserEnabled)
+		{
+			if (LaserChargeCount > 0 && LaserChargeCount < 5)  // if laser charges is greater than zero but less than five...
+			{
+				bLaserEnabled = true;  // enable laser
+
+				if (!LaserSound->IsPlaying())  // if the laser sound is not already playing...
+				{
+					LaserSound->Play();  // play laser sfx
+				}
+
+				LaserFX->Activate();  // play laser vfx
+				APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+				PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
+				PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
+
+				UseLaserCharge();  // use a laser charge
+
+								   // laser firing duration
+				FTimerHandle LaserDelay;
+				GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
+			}
+		}
+	}	
 }
 
 void AEndlessReachHDPawn::StopLaser()
@@ -763,27 +765,33 @@ void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActo
 
 void AEndlessReachHDPawn::FireThrusters()
 {
-	bThustersActive = true;
-	if (FuelLevel > 0)
+	if (!bIsDocked)
 	{
-		EngineThrustSound->Play();
-		ThrusterFX->Activate();
-		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-		PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
-		PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
+		bThustersActive = true;
+		if (FuelLevel > 0)
+		{
+			EngineThrustSound->Play();
+			ThrusterFX->Activate();
+			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+			PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
+			PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
+		}
 	}	
 }
 
 void AEndlessReachHDPawn::StopThrusters()
 {
-	bThustersActive = false;
-	bLowFuel = false;
-	ThrusterFX->Deactivate();
-	EngineThrustSound->FadeOut(0.25f, 0);
-	LowFuelWarningSound->FadeOut(0.05f, 0);
-	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-	PlayerController->ClientStopForceFeedback(ThrusterFeedback, FName(TEXT("Thruster")));  // Stop Thruster Feedback
-	//PlayerController->ClientStopCameraShake(ThrusterCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
+	if (!bIsDocked)
+	{
+		bThustersActive = false;
+		bLowFuel = false;
+		ThrusterFX->Deactivate();
+		EngineThrustSound->FadeOut(0.25f, 0);
+		LowFuelWarningSound->FadeOut(0.05f, 0);
+		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+		PlayerController->ClientStopForceFeedback(ThrusterFeedback, FName(TEXT("Thruster")));  // Stop Thruster Feedback
+		//PlayerController->ClientStopCameraShake(ThrusterCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
+	}	
 }
 
 // This feature makes it harder to completely run out of fuel, and plays an audio warning when near empty
