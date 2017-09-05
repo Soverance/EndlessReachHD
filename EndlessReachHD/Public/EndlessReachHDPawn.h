@@ -303,6 +303,10 @@ public:
 	TSubclassOf<UUserWidget> W_PlayerHUD;
 	UPlayerHUD* PlayerHUD;
 
+	// Initialize all widget components
+	UFUNCTION(BlueprintCallable, Category = Widgets)
+	void InitializeAllWidgets();
+
 	// Update the player hud
 	UFUNCTION(BlueprintCallable, Category = Widgets)
 	void UpdatePlayerHUD();

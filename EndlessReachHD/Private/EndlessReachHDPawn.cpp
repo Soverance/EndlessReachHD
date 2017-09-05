@@ -352,16 +352,7 @@ void AEndlessReachHDPawn::ConfigureShip()
 	MagnetRadius->AttachToComponent(MagnetConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach magnet to constraint
 	MagnetRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset magnet location
 
-	// Spawn and attach the PlayerHUD
-	if (!PlayerHUD)
-	{
-		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the player hud widget
-		PlayerHUD->AddToViewport();  // add player hud to viewport
-	}
-	if (!HangarMenu)
-	{
-		HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
-	}
+	InitializeAllWidgets();  // init widgets
 }
 
 void AEndlessReachHDPawn::Tick(float DeltaSeconds)
@@ -481,6 +472,8 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	{
 		// Try and fire a shot
 		FireShot(FireDirection);
+		// Update Player HUD with new information
+		UpdatePlayerHUD();
 	}
 	// if you are docked, we'll let you rotate the camera to get a good look at your ship
 	if (bIsDocked)
@@ -488,15 +481,30 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 		CameraControl_RotateVertical(GetInputAxisValue(FireForwardBinding));  // update boom vertical rotation
 		CameraControl_RotateHorizontal(GetInputAxisValue(FireRightBinding));  // update boom horizontal rotation
 	}
-	
-
-	// Update Player HUD with new information
-	UpdatePlayerHUD();
 
 	// DEBUG: WRITE VELOCITY TO SCREEN EACH FRAME
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::Printf(TEXT("Velocity: %f"), GetVelocity().Size()));
 	// DEBUG: WRITE FUEL LEVEL TO SCREEN EACH FRAME
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Fuel Level: %f"), FuelLevel));
+}
+
+// Initialize all widgets
+void AEndlessReachHDPawn::InitializeAllWidgets()
+{
+	// Spawn and attach the PlayerHUD
+	if (!PlayerHUD)
+	{
+		PlayerHUD = CreateWidget<UPlayerHUD>(GetWorld(), W_PlayerHUD);  // creates the player hud widget
+
+		if (!bIsDocked)
+		{
+			PlayerHUD->AddToViewport();  // add player hud to viewport
+		}		
+	}
+	if (!HangarMenu)
+	{
+		HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
+	}
 }
 
 // Update the HUD with new information each frame
@@ -817,8 +825,21 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	bIsDocked = true;  // DOCKED
 	bCanMove = false;  // no movement while docked
 	bCanFire = false;  // no weapons while docked
-	PlayerHUD->RemoveFromViewport();  // remove the player hud from the viewport
-	HangarMenu->AddToViewport();  // add the hangar menu to the viewport
+
+	if (PlayerHUD)  // error checking
+	{
+		PlayerHUD->RemoveFromViewport();  // remove the player hud from the viewport
+	}
+	if (HangarMenu)  // error checking
+	{
+		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
+	}
+	if (!HangarMenu)
+	{
+		InitializeAllWidgets();  // reinitialize widgets, since the hangar menu apparantly failed to load
+		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("WIDGET REINITIALIZATION COMPLETE")));
+	}
 }
 
 // Release Docking Clamps
@@ -832,6 +853,13 @@ void AEndlessReachHDPawn::ReleaseDockingClamps()
 	bIsDocked = false;  // UNDOCKED
 	bCanMove = true;  // restore movement
 	bCanFire = true;  // arm weapons
-	HangarMenu->RemoveFromViewport();  // remove hangar menu from the viewport
-	PlayerHUD->AddToViewport();  // add the player hud to the viewport
+
+	if (HangarMenu)  // error checking
+	{
+		HangarMenu->RemoveFromViewport();  // remove hangar menu from the viewport
+	}
+	if (PlayerHUD)  // error checking
+	{
+		PlayerHUD->AddToViewport();  // add the player hud to the viewport
+	}	
 }
