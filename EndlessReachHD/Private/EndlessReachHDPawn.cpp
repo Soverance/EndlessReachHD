@@ -1,4 +1,4 @@
-// © 2014 - 2017 Soverance Studios
+// Â© 2014 - 2017 Soverance Studios
 // http://www.soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -271,8 +271,8 @@ void AEndlessReachHDPawn::StartDebug()
 	Camera_TopDown->SetActive(false, false);  // disable top down cam
 	Camera_Rotational->SetActive(true, false);  // enable rotational cam
 	FViewTargetTransitionParams params;
-	APlayerController* Controller = Cast<APlayerController>(GetController());
-	Controller->SetViewTarget(this, params);  // set new camera
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	PlayerController->SetViewTarget(this, params);  // set new camera
 	bIsDocked = true;  // DOCKED
 }
 
@@ -282,8 +282,8 @@ void AEndlessReachHDPawn::StopDebug()
 	Camera_TopDown->SetActive(true, false);  // enable top down cam
 	Camera_Rotational->SetActive(false, false);  // disable rotational cam
 	FViewTargetTransitionParams params;
-	APlayerController* Controller = Cast<APlayerController>(GetController());
-	Controller->SetViewTarget(this, params);  // set new camera
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	PlayerController->SetViewTarget(this, params);  // set new camera
 	bIsDocked = false;  // UNDOCKED
 }
 
@@ -656,12 +656,12 @@ void AEndlessReachHDPawn::FireLaser()
 		if (bLaserEnabled)  // if the laser is already enabled when this function is called, it means the player was still holding the button and had charges remaining, so we essentially loop the firing mechanism
 		{
 			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-			PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
+			PlayerController->ClientPlayForceFeedback(LaserFeedback, false, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
 			PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
 
 			UseLaserCharge();  // use a laser charge
 
-							   // laser firing duration
+			 // laser firing duration
 			FTimerHandle LaserDelay;
 			GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
 		}
@@ -680,12 +680,12 @@ void AEndlessReachHDPawn::FireLaser()
 
 				LaserFX->Activate();  // play laser vfx
 				APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-				PlayerController->ClientPlayForceFeedback(LaserFeedback, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
+				PlayerController->ClientPlayForceFeedback(LaserFeedback, false, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
 				PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
 
 				UseLaserCharge();  // use a laser charge
 
-								   // laser firing duration
+				// laser firing duration
 				FTimerHandle LaserDelay;
 				GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
 			}
@@ -781,7 +781,7 @@ void AEndlessReachHDPawn::FireThrusters()
 			EngineThrustSound->Play();
 			ThrusterFX->Activate();
 			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-			PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
+			PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
 			PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
 		}
 	}	
@@ -820,8 +820,8 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	Camera_TopDown->SetActive(false, false);  // disable top down cam
 	Camera_Rotational->SetActive(true, false);  // enable rotational cam
 	FViewTargetTransitionParams params;
-	APlayerController* Controller = Cast<APlayerController>(GetController());
-	Controller->SetViewTarget(this, params);  // set new camera
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	PlayerController->SetViewTarget(this, params);  // set new camera
 	bIsDocked = true;  // DOCKED
 	bCanMove = false;  // no movement while docked
 	bCanFire = false;  // no weapons while docked
@@ -848,8 +848,8 @@ void AEndlessReachHDPawn::ReleaseDockingClamps()
 	Camera_TopDown->SetActive(true, false);  // enable top down cam
 	Camera_Rotational->SetActive(false, false);  // disable rotational cam
 	FViewTargetTransitionParams params;
-	APlayerController* Controller = Cast<APlayerController>(GetController());
-	Controller->SetViewTarget(this, params);  // set new camera
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	PlayerController->SetViewTarget(this, params);  // set new camera
 	bIsDocked = false;  // UNDOCKED
 	bCanMove = true;  // restore movement
 	bCanFire = true;  // arm weapons

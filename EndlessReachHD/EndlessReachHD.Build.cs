@@ -1,4 +1,4 @@
-// © 2014 - 2017 Soverance Studios
+// Â© 2014 - 2017 Soverance Studios
 // http://www.soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,8 @@ using UnrealBuildTool;
 
 public class EndlessReachHD : ModuleRules
 {
-	public EndlessReachHD(TargetInfo Target)
+	public EndlessReachHD(ReadOnlyTargetRules Target)
+		: base (Target)
 	{
         PrivateIncludePaths.AddRange(
            new string[] {
@@ -36,6 +37,7 @@ public class EndlessReachHD : ModuleRules
                 "AIModule",
                 "GameplayTasks",
                 "UMG",
+				"ApexDestruction",
             }
         );
 

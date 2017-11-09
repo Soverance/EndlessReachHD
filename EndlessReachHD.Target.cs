@@ -19,21 +19,10 @@ using System.Collections.Generic;
 public class EndlessReachHDTarget : TargetRules
 {
 	public EndlessReachHDTarget(TargetInfo Target)
-	{
+        : base(Target)
+    {
 		Type = TargetType.Game;
+        ExtraModuleNames.Add("EndlessReachHD");
         bUsesSteam = true;
     }
-
-	//
-	// TargetRules interface.
-	//
-
-	public override void SetupBinaries(
-		TargetInfo Target,
-		ref List<UEBuildBinaryConfiguration> OutBuildBinaryConfigurations,
-		ref List<string> OutExtraModuleNames
-		)
-	{
-		OutExtraModuleNames.Add("EndlessReachHD");
-	}
 }
