@@ -301,19 +301,28 @@ public:
 	// Player HUD Widget.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	TSubclassOf<UUserWidget> W_PlayerHUD;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	UPlayerHUD* PlayerHUD;
 
 	// Initialize all widget components
 	UFUNCTION(BlueprintCallable, Category = Widgets)
 	void InitializeAllWidgets();
 
-	// Update the player hud
+	// Update the HUD with player information
 	UFUNCTION(BlueprintCallable, Category = Widgets)
 	void UpdatePlayerHUD();
+
+	// Update the Hangar Menu with Player information
+	UFUNCTION(BlueprintCallable, Category = Widgets)
+	void UpdateHangarMenu();
 
 	// Hangar Menu Widget.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	TSubclassOf<UUserWidget> W_HangarMenu;
+	// This bug existed for months, until I figued out that UWidgets declared in this manner MUST be marked as a UPROPERTY,
+	// otherwise they get Garbage Collected when they're removed from the viewport... so the widget reference would occasionally be null
+	// by the time the player entered the hangar (because it had been GC'd)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	UHangarMenu* HangarMenu;
 
 	// Menu Control
@@ -424,7 +433,7 @@ public:
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
 	int32 HealthLevel;
 	UFUNCTION(BlueprintCallable, Category = Upgrade)
-	void UpgradeHealth(int32 UpgradeCost, int32 Level);
+	void UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
 	int32 ThrustersLevel;
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)

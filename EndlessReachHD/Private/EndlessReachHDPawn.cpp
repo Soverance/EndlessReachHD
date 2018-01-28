@@ -492,15 +492,15 @@ void AEndlessReachHDPawn::Tick(float DeltaSeconds)
 	if (!bIsDocked)
 	{
 		// Try and fire a shot
-		FireShot(FireDirection);
-		// Update Player HUD with new information
-		UpdatePlayerHUD();
+		FireShot(FireDirection);		
+		UpdatePlayerHUD();  // Update Player HUD with new information
 	}
 	// if you are docked, we'll let you rotate the camera to get a good look at your ship
 	if (bIsDocked)
 	{
 		CameraControl_RotateVertical(GetInputAxisValue(FireForwardBinding));  // update boom vertical rotation
 		CameraControl_RotateHorizontal(GetInputAxisValue(FireRightBinding));  // update boom horizontal rotation
+		//UpdateHangarMenu();  // Update Hangar Menu with new information
 	}
 
 	// DEBUG: WRITE VELOCITY TO SCREEN EACH FRAME
@@ -522,13 +522,15 @@ void AEndlessReachHDPawn::InitializeAllWidgets()
 			PlayerHUD->AddToViewport();  // add player hud to viewport
 		}		
 	}
-	if (!HangarMenu)
-	{
-		HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
 
+	HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
+
+	if (HangarMenu)
+	{
 		if (bIsDocked)
 		{
 			HangarMenu->AddToViewport();  // add hangar menu to viewport
+			UpdateHangarMenu();  // refresh the hangar menu with updated information
 		}
 	}
 }
@@ -546,7 +548,28 @@ void AEndlessReachHDPawn::UpdatePlayerHUD()
 			PlayerHUD->Player_MaxFuel = MaxFuel;  // set max fuel level
 			PlayerHUD->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
 		}
-	}	
+	}
+}
+
+// Update the Hangar Menu with new information each frame
+void AEndlessReachHDPawn::UpdateHangarMenu()
+{
+	if (HangarMenu)
+	{
+		if (HangarMenu->IsInViewport())
+		{
+			HangarMenu->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
+			HangarMenu->Attributes[0].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[0].UpgradeCost, 0, false);  // set Ship Type upgrade cost text
+			HangarMenu->Attributes[1].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[1].UpgradeCost, 0, false);  // set Health upgrade cost text
+			HangarMenu->Attributes[2].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[2].UpgradeCost, 0, false);  // set Thrusters upgrade cost text
+			HangarMenu->Attributes[3].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[3].UpgradeCost, 0, false);  // set Cannon upgrade cost text
+			HangarMenu->Attributes[4].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[4].UpgradeCost, 0, false);  // set Laser upgrade cost text
+			HangarMenu->Attributes[5].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[5].UpgradeCost, 0, false);  // set Magnet upgrade cost text
+			HangarMenu->Attributes[6].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[6].UpgradeCost, 0, false);  // set Missile upgrade cost text
+			HangarMenu->Attributes[7].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[7].UpgradeCost, 0, false);  // set Shield upgrade cost text
+			HangarMenu->Attributes[8].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[8].UpgradeCost, 0, false);  // set Bomb upgrade cost text
+		}
+	}
 }
 
 void AEndlessReachHDPawn::FireShot(FVector FireDirection)
@@ -856,15 +879,14 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	{
 		PlayerHUD->RemoveFromViewport();  // remove the player hud from the viewport
 	}
-	if (!HangarMenu)
+	if (HangarMenu)
 	{
-		InitializeAllWidgets();  // reinitialize widgets, since the hangar menu apparantly failed to load
-		//HangarMenu->AddToViewport();  // add the hangar menu to the viewport
-		//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("WIDGET REINITIALIZATION COMPLETE")));
+		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
+		UpdateHangarMenu();  // refresh the hangar menu with updated information		
 	}
 	else
 	{
-		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
+		InitializeAllWidgets();  // reinitialize widgets, since the hangar menu apparantly failed to load
 	}
 }
 
@@ -921,14 +943,15 @@ void AEndlessReachHDPawn::MenuRight()
 }
 
 // Upgrade Health
-void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level)
+void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost)
 {
 	if (OrbCount > UpgradeCost)
 	{
 		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
 		HealthLevel = Level;  // set health upgrade level
 		MaxHP = (MaxHP + (MaxHP * 0.5f));  // Add 50% of current max HP for each upgrade
-		HangarMenu->SetUpgradeLevel(HealthLevel, UpgradeCost);  // update the hangar menu display
+		HangarMenu->SetUpgradeLevel(HealthLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
+		UpdateHangarMenu();  // update the hangar menu display
 	}
 	else
 	{
@@ -981,23 +1004,23 @@ void AEndlessReachHDPawn::MenuAction()
 						{
 							case 0:
 								UpgradeCost = 250;
-								UpgradeHealth(UpgradeCost, 1);
+								UpgradeHealth(UpgradeCost, 1, 500);
 								break;
 							case 1:
 								UpgradeCost = 500;
-								UpgradeHealth(UpgradeCost, 2);
+								UpgradeHealth(UpgradeCost, 2, 750);
 								break;
 							case 2:
 								UpgradeCost = 750;
-								UpgradeHealth(UpgradeCost, 3);
+								UpgradeHealth(UpgradeCost, 3, 1000);
 								break;
 							case 3:
 								UpgradeCost = 1000;
-								UpgradeHealth(UpgradeCost, 4);
+								UpgradeHealth(UpgradeCost, 4, 1500);
 								break;
 							case 4:
 								UpgradeCost = 1500;
-								UpgradeHealth(UpgradeCost, 5);
+								UpgradeHealth(UpgradeCost, 5, 99999);
 								break;
 							case 5:
 								UpgradeCost = 10000;

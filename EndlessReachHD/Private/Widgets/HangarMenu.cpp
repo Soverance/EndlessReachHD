@@ -34,10 +34,12 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	static ConstructorHelpers::FObjectFinder<UTexture2D> ShieldIcon(TEXT("Texture2D'/Game/Widgets/Images/Artifact_Shield.Artifact_Shield'"));
 	static ConstructorHelpers::FObjectFinder<UTexture2D> BombIcon(TEXT("Texture2D'/Game/Widgets/Images/Artifact_Bomb.Artifact_Bomb'"));
 	
-	// PANEL DESCRIPTIONS
+	// PANEL DESCRIPTION DEFAULTS
+
 	// Ship Type - INDEX 0
 	ShipType.Name = LOCTEXT("AttributeName_ShipType", "Type");
 	ShipType.Locked = false;
+	ShipType.UpgradeCostText = LOCTEXT("AttributeCost_ShipTypeUpgradeCost", "1000");
 	ShipType.UpgradeCost = 1000;
 	ShipType.CurrentPower = 0;
 	ShipType.UnlockDescription = LOCTEXT("AttributeDescription_UnlockShipType", "Improve the starship model.");
@@ -46,6 +48,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Health - INDEX 1
 	Health.Name = LOCTEXT("AttributeName_Health", "Health");
 	Health.Locked = false;
+	Health.UpgradeCostText = LOCTEXT("AttributeCost_HealthUpgradeCost", "250");
 	Health.UpgradeCost = 250;
 	Health.CurrentPower = 0;
 	Health.UnlockDescription = LOCTEXT("AttributeDescription_UnlockHealth", "Increase the amount of damage the ship can take before destruction.");
@@ -55,6 +58,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Thrusters - INDEX 2
 	Thruster.Name = LOCTEXT("AttributeName_Thruster", "Thruster");
 	Thruster.Locked = false;
+	Thruster.UpgradeCostText = LOCTEXT("AttributeCost_ThrusterUpgradeCost", "250");
 	Thruster.UpgradeCost = 250;
 	Thruster.CurrentPower = 0;
 	Thruster.UnlockDescription = LOCTEXT("AttributeDescription_UnlockThruster", "Increase the ship's fuel economy.");
@@ -64,6 +68,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Cannon - INDEX 3
 	Cannon.Name = LOCTEXT("AttributeName_Cannon", "Cannon");
 	Cannon.Locked = false;
+	Cannon.UpgradeCostText = LOCTEXT("AttributeCost_CannonUpgradeCost", "250");
 	Cannon.UpgradeCost = 250;
 	Cannon.CurrentPower = 0;
 	Cannon.UnlockDescription = LOCTEXT("AttributeDescription_UnlockCannon", "Increase the firing rate of the main cannon.");
@@ -73,6 +78,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Laser - INDEX 4
 	Laser.Name = LOCTEXT("AttributeName_Laser", "Laser");
 	Laser.Locked = false;
+	Laser.UpgradeCostText = LOCTEXT("AttributeCost_LaserUpgradeCost", "500");
 	Laser.UpgradeCost = 500;
 	Laser.CurrentPower = 0;
 	Laser.UnlockDescription = LOCTEXT("AttributeDescription_UnlockLaser", "Unlock the laser, a heavy damage weapon. Can only be fired in the forward direction, and only if one of more charges is available.");
@@ -82,6 +88,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Magnet - INDEX 5
 	Magnet.Name = LOCTEXT("AttributeName_Magnet", "Magnet");
 	Magnet.Locked = false;
+	Magnet.UpgradeCostText = LOCTEXT("AttributeCost_MagnetUpgradeCost", "500");
 	Magnet.UpgradeCost = 500;
 	Magnet.CurrentPower = 0;
 	Magnet.UnlockDescription = LOCTEXT("AttributeDescription_UnlockMagnet", "Unlock the magnet, which automatically draws in pickups, making them easier to collect.");
@@ -91,6 +98,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Missiles - INDEX 6
 	Missiles.Name = LOCTEXT("AttributeName_Missiles", "Missiles");
 	Missiles.Locked = false;
+	Missiles.UpgradeCostText = LOCTEXT("AttributeCost_MissilesUpgradeCost", "750");
 	Missiles.UpgradeCost = 750;
 	Missiles.CurrentPower = 0;
 	Missiles.UnlockDescription = LOCTEXT("AttributeDescription_UnlockMissiles", "Unlock homing missiles, which are fired automatically.");
@@ -100,6 +108,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Shield - INDEX 7
 	Shield.Name = LOCTEXT("AttributeName_Shield", "Shield");
 	Shield.Locked = false;
+	Shield.UpgradeCostText = LOCTEXT("AttributeCost_ShieldUpgradeCost", "750");
 	Shield.UpgradeCost = 750;
 	Shield.CurrentPower = 0;
 	Shield.UnlockDescription = LOCTEXT("AttributeDescription_UnlockShield", "Unlock the energy shield, which will help protect your ship from damage.");
@@ -109,6 +118,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	// Bomb - INDEX 8
 	Bomb.Name = LOCTEXT("AttributeName_Bomb", "Bomb");
 	Bomb.Locked = false;
+	Bomb.UpgradeCostText = LOCTEXT("AttributeCost_BombUpgradeCost", "1000");
 	Bomb.UpgradeCost = 1000;
 	Bomb.CurrentPower = 0;
 	Bomb.UnlockDescription = LOCTEXT("AttributeDescription_UnlockBomb", "Unlock atomic bombs, which immediately destroy all targets in range (excluding bosses).");
@@ -144,6 +154,11 @@ void UHangarMenu::SetMenuIndex_Implementation()
 
 }
 
+void UHangarMenu::PlayUpgradeAnim_Implementation(int32 Level, int32 NewCost)
+{
+
+}
+
 void UHangarMenu::NotifyError()
 {
 	PlaySound(S_ErrorNotify);
@@ -151,7 +166,8 @@ void UHangarMenu::NotifyError()
 
 void UHangarMenu::SetUpgradeLevel(int32 Level, int32 UpgradeCost)
 {
-	PlaySound(S_UpgradeNotify);
+	PlaySound(S_UpgradeNotify);  // play the upgrade UI audio
+	PlayUpgradeAnim(Level, UpgradeCost);  // do the upgrade UI animation
 
 	switch (MenuIndex)
 	{

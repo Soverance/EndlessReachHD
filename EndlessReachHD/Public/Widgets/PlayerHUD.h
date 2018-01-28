@@ -44,7 +44,7 @@ public:
 	float Player_MaxFuel;
 
 	// The number of orbs the player has collected since the last time they returned to the outpost
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Player)
 	FText Player_OrbCount;
 
 	// The name of current target

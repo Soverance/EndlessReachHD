@@ -68,6 +68,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attributes)
 	FPlayerStatAttribute Bomb;
 
+	// The number of orbs the player has collected since the last time they returned to the outpost
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Player)
+	FText Player_OrbCount;
+
 	// The index of the menu, indicating which panel is currently active
 	UPROPERTY(Category = Controls, EditAnywhere, BlueprintReadWrite)
 	int32 MenuIndex;
@@ -91,6 +95,10 @@ public:
 	// Reconfigures the display of the corresponding feature to match the current upgrade level
 	UFUNCTION(BlueprintCallable, Category = Controls)
 	void SetUpgradeLevel(int32 Level, int32 UpgradeCost);
+
+	// Plays the appropriate upgrade UI animation
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Controls)
+	void PlayUpgradeAnim(int32 Level, int32 NewCost);
 
 	// Called to notify the user if the menu experiences an error
 	UFUNCTION(BlueprintCallable, Category = Controls)

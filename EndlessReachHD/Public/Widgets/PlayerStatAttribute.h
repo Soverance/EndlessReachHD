@@ -30,6 +30,10 @@ struct FPlayerStatAttribute
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
 	bool Locked;
 
+	// The upgrade cost stored in text form.  Updated with subsequent upgrades.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
+	FText UpgradeCostText;
+
 	// The orb cost to improve this attribute by one
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
 	int32 UpgradeCost;
