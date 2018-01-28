@@ -1,4 +1,4 @@
-// © 2014 - 2017 Soverance Studios
+// Â© 2014 - 2017 Soverance Studios
 // http://www.soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -316,6 +316,14 @@ public:
 	TSubclassOf<UUserWidget> W_HangarMenu;
 	UHangarMenu* HangarMenu;
 
+	// Menu Control
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void MenuLeft();
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void MenuRight();
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void MenuAction();
+
 	////////////////////////////////////////////////////
 	//
 	// MAGNET
@@ -329,6 +337,10 @@ public:
 	// Magnet Radius Collider
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Magnet)
 	USphereComponent* MagnetRadius;
+
+	/* Whether the magnet is unlocked */
+	UPROPERTY(Category = Magnet, EditAnywhere, BlueprintReadWrite)
+	bool bMagnetUnlocked;
 
 	/* Whether the magnet is enabled */
 	UPROPERTY(Category = Magnet, EditAnywhere, BlueprintReadWrite)
@@ -365,6 +377,10 @@ public:
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	int32 LaserChargeCount;
 
+	/* Whether the beam cannon is unlocked */
+	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
+	bool bLaserUnlocked;
+
 	/* Whether the beam cannon is enabled */
 	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
 	bool bLaserEnabled;
@@ -398,6 +414,34 @@ public:
 
 	////////////////////////////////////////////////////
 	//
+	// UPGRADE LEVELS
+	//
+	////////////////////////////////////////////////////
+
+	/* These values represent the current upgrade level of a specific feature */
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 ShipTypeLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 HealthLevel;
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeHealth(int32 UpgradeCost, int32 Level);
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 ThrustersLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 CannonLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 LaserLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 MagnetLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 MissilesLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 ShieldLevel;
+	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
+	int32 BombLevel;
+
+	////////////////////////////////////////////////////
+	//
 	// DEFAULTS
 	//
 	////////////////////////////////////////////////////
@@ -420,7 +464,7 @@ public:
 	void StartDebug();
 	UFUNCTION(BlueprintCallable, Category = Debug)
 	void StopDebug();
-	
+
 	////////////////////////////////////////////////////
 	//
 	// INPUT BINDINGS
@@ -435,8 +479,11 @@ public:
 	// ACTIONS
 	static const FName LaserBinding;
 	static const FName ThrustersBinding;
+	static const FName ActionBinding;
 	static const FName DebugBinding;
 	static const FName MenuBinding;
+	static const FName LeftBinding;
+	static const FName RightBinding;
 
 private:
 

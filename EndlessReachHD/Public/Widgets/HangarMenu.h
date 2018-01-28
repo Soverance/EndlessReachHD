@@ -67,4 +67,44 @@ public:
 	// The Bomb Attribute - used to upgrade the ship's nuclear bomb
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attributes)
 	FPlayerStatAttribute Bomb;
+
+	// The index of the menu, indicating which panel is currently active
+	UPROPERTY(Category = Controls, EditAnywhere, BlueprintReadWrite)
+	int32 MenuIndex;
+
+	/* Whether the hanger menu can be navigated; i.e., the player is allowed to press left or right to move the menu panels in that direction */
+	UPROPERTY(Category = Controls, EditAnywhere, BlueprintReadWrite)
+	bool bCanNavigate;
+
+	// Move the menu index to the left by one
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Controls)
+	void MoveLeft();
+
+	// Move the menu index to the right by one
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Controls)
+	void MoveRight();
+
+	// Move the menu to the appropriate index
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Controls)
+	void SetMenuIndex();
+
+	// Reconfigures the display of the corresponding feature to match the current upgrade level
+	UFUNCTION(BlueprintCallable, Category = Controls)
+	void SetUpgradeLevel(int32 Level, int32 UpgradeCost);
+
+	// Called to notify the user if the menu experiences an error
+	UFUNCTION(BlueprintCallable, Category = Controls)
+	void NotifyError();
+
+	/** Sound to play when the menu encounters an error */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_ErrorNotify;
+
+	/** Sound to play when the menu switches panels */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_CursorNotify;
+
+	/** Sound to play when an upgrade occurs */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	USoundCue* S_UpgradeNotify;
 };

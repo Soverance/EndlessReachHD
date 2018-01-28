@@ -35,13 +35,13 @@ AAsteroid::AAsteroid()
 	static ConstructorHelpers::FObjectFinder<UMaterialInstance> RedInst(TEXT("/Game/Environment/Materials/Rock/M_AsteroidHit_Inst.M_AsteroidHit_Inst"));
 	RedColor = RedInst.Object;
 
-	// Asteroid Body
-	static ConstructorHelpers::FObjectFinder<UDestructibleMesh> AsteroidMeshObject(TEXT("/Game/Environment/Meshes/Rocks/SM_Cave_Rock_Med_01a_DM.SM_Cave_Rock_Med_01a_DM"));
+	// Asteroid
+	static ConstructorHelpers::FObjectFinder<UDestructibleMesh> AsteroidMeshObject(TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"));
 	DM_Asteroid = AsteroidMeshObject.Object;
 	Asteroid = CreateDefaultSubobject<UDestructibleComponent>(TEXT("AsteroidBody"));
 	Asteroid->SetupAttachment(RootComponent);
+	Asteroid->SetDestructibleMesh(DM_Asteroid);
 	Asteroid->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
-	Asteroid->SetDestructibleMesh(AsteroidMeshObject.Object);
 	//Asteroid->SetMaterial(0, RockColor);  // outside color
 	//Asteroid->SetMaterial(1, RedColor);  // inside color
 	Asteroid->SetSimulatePhysics(true);
@@ -74,19 +74,21 @@ void AAsteroid::BeginPlay()
 	Super::BeginPlay();
 	OnHitAsteroid.AddDynamic(this, &AAsteroid::HitAsteroid);  // bind asteroid hit function
 	OnDestroyAsteroid.AddDynamic(this, &AAsteroid::DestroyAsteroid);  // bind asteroid hit function
+
+	//DM_Asteroid = LoadObject<UDestructibleMesh>(GetOuter(), TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"), NULL, LOAD_None, NULL);	
 }
 
 // Called every frame
 void AAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // Called when the asteroid is hit with player bullets
 void AAsteroid::HitAsteroid()
 {
-	Asteroid->SetMaterial(0, RedColor);  // show damaged
+	Asteroid->SetMaterial(0, RedColor);  // outside color
+	Asteroid->SetMaterial(1, RedColor);  // inside color
 
 	if (HitCount < 5)  // if less than 5 hits
 	{
@@ -122,7 +124,7 @@ void AAsteroid::DestroyAsteroid()
 		Params.OverrideLevel = GetLevel();  // make pickups spawn within the streaming level so they can be properly unloaded
 
 		//int32 DroppedOrbCount = FMath::RandRange(0, 9);  // drop a random amount of orbs
-		int32 DroppedOrbCount = 10;  // drop a static amount of orbs
+		int32 DroppedOrbCount = 100;  // drop a static amount of orbs
 		const FTransform Settings = FTransform(GetActorRotation(), GetActorLocation(), FVector(1,1,1));  // cache transform settings
 
 		for (int32 i = 0; i < DroppedOrbCount; i++)

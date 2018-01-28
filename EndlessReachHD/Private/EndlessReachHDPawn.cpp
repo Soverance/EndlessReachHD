@@ -19,6 +19,7 @@
 #include "Pickups/PickupMaster.h"
 #include "TimerManager.h"
 #include "EndlessReachHDProjectile.h"
+//#include "Widgets/HangarMenu.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
 // AXIS
@@ -29,8 +30,11 @@ const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
 // ACTIONS
 const FName AEndlessReachHDPawn::LaserBinding("Laser");
 const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
+const FName AEndlessReachHDPawn::ActionBinding("Action");
 const FName AEndlessReachHDPawn::DebugBinding("Debug");
 const FName AEndlessReachHDPawn::MenuBinding("Menu");
+const FName AEndlessReachHDPawn::LeftBinding("Left");
+const FName AEndlessReachHDPawn::RightBinding("Right");
 
 // Construct pawn
 AEndlessReachHDPawn::AEndlessReachHDPawn()
@@ -61,7 +65,18 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ClampDegreeMax = 40.0f;
 	RollX = 0;
 	PitchY = 0;
-	YawZ = 0;	
+	YawZ = 0;
+
+	// Upgrade Level Initialization
+	ShipTypeLevel = 0;
+	HealthLevel = 0;
+	ThrustersLevel = 0;
+	CannonLevel = 0;
+	LaserLevel = 0;
+	MagnetLevel = 0;
+	MissilesLevel = 0;
+	ShieldLevel = 0;
+	BombLevel = 0;
 	
 	// Ship Body
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipMesh(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Body.SM_ShipScout_Set1_Body"));
@@ -253,6 +268,12 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAction(ThrustersBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopThrusters);
 	PlayerInputComponent->BindAction(DebugBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::StartDebug);
 	PlayerInputComponent->BindAction(DebugBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::StopDebug);
+	PlayerInputComponent->BindAction(LeftBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::MenuLeft);
+	//PlayerInputComponent->BindAction(LeftBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuLeft);
+	PlayerInputComponent->BindAction(RightBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::MenuRight);
+	//PlayerInputComponent->BindAction(RightBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuRight);
+	PlayerInputComponent->BindAction(ActionBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::MenuAction);
+	//PlayerInputComponent->BindAction(ActionBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuAction);
 }
 
 // Called when the game starts or when spawned
@@ -504,6 +525,11 @@ void AEndlessReachHDPawn::InitializeAllWidgets()
 	if (!HangarMenu)
 	{
 		HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
+
+		if (bIsDocked)
+		{
+			HangarMenu->AddToViewport();  // add hangar menu to viewport
+		}
 	}
 }
 
@@ -830,15 +856,15 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	{
 		PlayerHUD->RemoveFromViewport();  // remove the player hud from the viewport
 	}
-	if (HangarMenu)  // error checking
-	{
-		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
-	}
 	if (!HangarMenu)
 	{
 		InitializeAllWidgets();  // reinitialize widgets, since the hangar menu apparantly failed to load
+		//HangarMenu->AddToViewport();  // add the hangar menu to the viewport
+		//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("WIDGET REINITIALIZATION COMPLETE")));
+	}
+	else
+	{
 		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("WIDGET REINITIALIZATION COMPLETE")));
 	}
 }
 
@@ -862,4 +888,292 @@ void AEndlessReachHDPawn::ReleaseDockingClamps()
 	{
 		PlayerHUD->AddToViewport();  // add the player hud to the viewport
 	}	
+}
+
+// Menu Left Control
+void AEndlessReachHDPawn::MenuLeft()
+{
+	if (bIsDocked)
+	{
+		if(HangarMenu)
+		{
+			if (HangarMenu->IsInViewport())
+			{
+				HangarMenu->MoveLeft();
+			}
+		}
+	}
+}
+
+// Menu Right Control
+void AEndlessReachHDPawn::MenuRight()
+{
+	if (bIsDocked)
+	{
+		if (HangarMenu)
+		{
+			if (HangarMenu->IsInViewport())
+			{
+				HangarMenu->MoveRight();
+			}
+		}
+	}
+}
+
+// Upgrade Health
+void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level)
+{
+	if (OrbCount > UpgradeCost)
+	{
+		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
+		HealthLevel = Level;  // set health upgrade level
+		MaxHP = (MaxHP + (MaxHP * 0.5f));  // Add 50% of current max HP for each upgrade
+		HangarMenu->SetUpgradeLevel(HealthLevel, UpgradeCost);  // update the hangar menu display
+	}
+	else
+	{
+		HangarMenu->NotifyError();
+	}
+}
+
+// Menu Action Control
+void AEndlessReachHDPawn::MenuAction()
+{
+	if (bIsDocked)
+	{
+		if (HangarMenu)
+		{
+			if (HangarMenu->IsInViewport())
+			{
+				switch (HangarMenu->MenuIndex)
+				{
+					// cost of the upgrade for the specified level
+					int32 UpgradeCost;
+
+					// SHIP TYPE UPGRADE
+					case 0:
+						switch (ShipTypeLevel)
+						{
+							case 0:
+								UpgradeCost = 1750;
+								break;
+							case 1:
+								UpgradeCost = 2500;
+								break;
+							case 2:
+								UpgradeCost = 3250;
+								break;
+							case 3:
+								UpgradeCost = 4500;
+								break;
+							case 4:
+								UpgradeCost = 6000;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						HangarMenu->SetUpgradeLevel(ShipTypeLevel, UpgradeCost);  // update the hangar menu display
+						break;
+					// HEALTH UPGRADE
+					case 1:
+						switch (HealthLevel)
+						{
+							case 0:
+								UpgradeCost = 250;
+								UpgradeHealth(UpgradeCost, 1);
+								break;
+							case 1:
+								UpgradeCost = 500;
+								UpgradeHealth(UpgradeCost, 2);
+								break;
+							case 2:
+								UpgradeCost = 750;
+								UpgradeHealth(UpgradeCost, 3);
+								break;
+							case 3:
+								UpgradeCost = 1000;
+								UpgradeHealth(UpgradeCost, 4);
+								break;
+							case 4:
+								UpgradeCost = 1500;
+								UpgradeHealth(UpgradeCost, 5);
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+					// THURSTERS UPGRADE
+					case 2:
+						switch (ThrustersLevel)
+						{
+							case 0:
+								UpgradeCost = 500;
+								break;
+							case 1:
+								UpgradeCost = 750;
+								break;
+							case 2:
+								UpgradeCost = 1000;
+								break;
+							case 3:
+								UpgradeCost = 1250;
+								break;
+							case 4:
+								UpgradeCost = 1500;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+					// MAIN CANNON UPGRADE
+					case 3:
+						switch (CannonLevel)
+						{
+							case 0:
+								UpgradeCost = 500;
+								break;
+							case 1:
+								UpgradeCost = 750;
+								break;
+							case 2:
+								UpgradeCost = 1000;
+								break;
+							case 3:
+								UpgradeCost = 1250;
+								break;
+							case 4:
+								UpgradeCost = 1500;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+					// LASER UPGRADE
+					case 4:
+						switch (LaserLevel)
+						{
+							case 0:
+								UpgradeCost = 1000;
+								break;
+							case 1:
+								UpgradeCost = 1500;
+								break;
+							case 2:
+								UpgradeCost = 2000;
+								break;
+							case 3:
+								UpgradeCost = 2500;
+								break;
+							case 4:
+								UpgradeCost = 3000;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+					// MAGNET UPGRADE
+					case 5:
+						switch (MagnetLevel)
+						{
+						case 0:
+							UpgradeCost = 1000;
+							break;
+						case 1:
+							UpgradeCost = 1500;
+							break;
+						case 2:
+							UpgradeCost = 2000;
+							break;
+						case 3:
+							UpgradeCost = 2500;
+							break;
+						case 4:
+							UpgradeCost = 3000;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
+						}
+						break;
+					// MISSILES UPGRADE
+					case 6:
+						switch (MissilesLevel)
+						{
+							case 0:
+								UpgradeCost = 1500;
+								break;
+							case 1:
+								UpgradeCost = 2250;
+								break;
+							case 2:
+								UpgradeCost = 3000;
+								break;
+							case 3:
+								UpgradeCost = 3750;
+								break;
+							case 4:
+								UpgradeCost = 4500;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+					// ENERGY SHIELD UPGRADE
+					case 7:
+						switch (ShieldLevel)
+						{
+							case 0:
+								UpgradeCost = 1500;
+								break;
+							case 1:
+								UpgradeCost = 2250;
+								break;
+							case 2:
+								UpgradeCost = 3000;
+								break;
+							case 3:
+								UpgradeCost = 3750;
+								break;
+							case 4:
+								UpgradeCost = 4500;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+					// BOMB LEVEL
+					case 8:
+						switch (BombLevel)
+						{
+							case 0:
+								UpgradeCost = 2000;
+								break;
+							case 1:
+								UpgradeCost = 3000;
+								break;
+							case 2:
+								UpgradeCost = 4000;
+								break;
+							case 3:
+								UpgradeCost = 5000;
+								break;
+							case 4:
+								UpgradeCost = 6000;
+								break;
+							case 5:
+								UpgradeCost = 10000;
+								break;
+						}
+						break;
+				}
+			}
+		}
+	}
 }

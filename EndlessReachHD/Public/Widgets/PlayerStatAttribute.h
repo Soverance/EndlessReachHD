@@ -38,6 +38,10 @@ struct FPlayerStatAttribute
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
 	int32 CurrentPower;
 
+	// Attribute Unlock Description
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
+	FText UnlockDescription;
+
 	// Attribute Description
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
 	FText Description;

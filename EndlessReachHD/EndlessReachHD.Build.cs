@@ -22,7 +22,7 @@ public class EndlessReachHD : ModuleRules
 	{
         PrivateIncludePaths.AddRange(
            new string[] {
-                "EndlessReachHD/Private/Management",
+                "EndlessReachHD/Private/Management"
            }
         );
 

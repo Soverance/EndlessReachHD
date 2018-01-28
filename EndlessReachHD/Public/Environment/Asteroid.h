@@ -16,7 +16,6 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-// Apex Destruction was moved to a plugin in 4.18
 #include "DestructibleComponent.h"
 #include "DestructibleMesh.h"
 #include "Asteroid.generated.h"
