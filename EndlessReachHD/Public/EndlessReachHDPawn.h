@@ -325,14 +325,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	UHangarMenu* HangarMenu;
 
-	// Menu Control
-	UFUNCTION(BlueprintCallable, Category = Menu)
-	void MenuLeft();
-	UFUNCTION(BlueprintCallable, Category = Menu)
-	void MenuRight();
-	UFUNCTION(BlueprintCallable, Category = Menu)
-	void MenuAction();
-
 	////////////////////////////////////////////////////
 	//
 	// MAGNET
@@ -489,10 +481,21 @@ public:
 	static const FName LaserBinding;
 	static const FName ThrustersBinding;
 	static const FName ActionBinding;
+	static const FName BackBinding;
 	static const FName DebugBinding;
 	static const FName MenuBinding;
 	static const FName LeftBinding;
 	static const FName RightBinding;
+
+	// Input Control
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void MenuLeft();
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void MenuRight();
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void ActionInput();
+	UFUNCTION(BlueprintCallable, Category = Menu)
+	void BackInput();
 
 private:
 

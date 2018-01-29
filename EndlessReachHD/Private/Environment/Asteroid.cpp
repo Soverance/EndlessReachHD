@@ -124,7 +124,7 @@ void AAsteroid::DestroyAsteroid()
 		Params.OverrideLevel = GetLevel();  // make pickups spawn within the streaming level so they can be properly unloaded
 
 		//int32 DroppedOrbCount = FMath::RandRange(0, 9);  // drop a random amount of orbs
-		int32 DroppedOrbCount = 100;  // drop a static amount of orbs
+		int32 DroppedOrbCount = 250;  // drop a static amount of orbs
 		const FTransform Settings = FTransform(GetActorRotation(), GetActorLocation(), FVector(1,1,1));  // cache transform settings
 
 		for (int32 i = 0; i < DroppedOrbCount; i++)

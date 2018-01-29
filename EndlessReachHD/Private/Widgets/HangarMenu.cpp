@@ -23,6 +23,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 {
 	// DEFAULTS
 	MenuIndex = 0;
+	ExitPromptIndex = 0;
 
 	// ICONS
 	static ConstructorHelpers::FObjectFinder<UTexture2D> HealthIcon(TEXT("Texture2D'/Game/Widgets/Images/Artifact_Health.Artifact_Health'"));
@@ -141,27 +142,44 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 
 void UHangarMenu::MoveLeft_Implementation()
 {
-
 }
 
 void UHangarMenu::MoveRight_Implementation()
 {
-
 }
 
 void UHangarMenu::SetMenuIndex_Implementation()
 {
-
 }
 
 void UHangarMenu::PlayUpgradeAnim_Implementation(int32 Level, int32 NewCost)
 {
+}
 
+void UHangarMenu::PromptExit_Implementation()
+{
+}
+
+void UHangarMenu::ReturnToUpgradeMenu_Implementation()
+{
 }
 
 void UHangarMenu::NotifyError()
 {
 	PlaySound(S_ErrorNotify);
+}
+
+void UHangarMenu::InitLaunchSequence()
+{
+	for (TActorIterator<AHangar> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		Hangar = *ActorItr; // get the instance of the Hangar
+	}
+
+	if (Hangar)
+	{
+		Hangar->Launch();
+	}
 }
 
 void UHangarMenu::SetUpgradeLevel(int32 Level, int32 UpgradeCost)

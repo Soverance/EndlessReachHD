@@ -17,6 +17,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "PlayerStatAttribute.h"
+#include "Environment/Hangar.h"
 #include "HangarMenu.generated.h"
 
 UCLASS()
@@ -115,4 +116,28 @@ public:
 	/** Sound to play when an upgrade occurs */
 	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
 	USoundCue* S_UpgradeNotify;
+
+	/** Reference to the Hangar object itself in game */
+	UPROPERTY(Category = Audio, EditAnywhere, BlueprintReadWrite)
+	AHangar* Hangar;
+
+	// Prompt the player to exit the hangar
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Controls)
+	void PromptExit();
+
+	// Returns to the upgrade menu from the exit prompt, when the player selects "NO"
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = Controls)
+	void ReturnToUpgradeMenu();
+
+	// The index of the exit prompt menu - basically just yes or no, so it's binary  (0 = yes, 1 = no)
+	UPROPERTY(Category = Controls, EditAnywhere, BlueprintReadWrite)
+	int32 ExitPromptIndex;
+
+	/* Whether the hanger menu is prompting for exit */
+	UPROPERTY(Category = Controls, EditAnywhere, BlueprintReadWrite)
+	bool bIsPromptingExit;
+
+	// Begin the launch sequence to exit the hangar
+	UFUNCTION(BlueprintCallable, Category = Controls)
+	void InitLaunchSequence();
 };

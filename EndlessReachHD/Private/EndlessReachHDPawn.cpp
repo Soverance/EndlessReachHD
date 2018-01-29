@@ -31,6 +31,7 @@ const FName AEndlessReachHDPawn::FireRightBinding("FireRight");
 const FName AEndlessReachHDPawn::LaserBinding("Laser");
 const FName AEndlessReachHDPawn::ThrustersBinding("Thrusters");
 const FName AEndlessReachHDPawn::ActionBinding("Action");
+const FName AEndlessReachHDPawn::BackBinding("Back");
 const FName AEndlessReachHDPawn::DebugBinding("Debug");
 const FName AEndlessReachHDPawn::MenuBinding("Menu");
 const FName AEndlessReachHDPawn::LeftBinding("Left");
@@ -272,8 +273,10 @@ void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* Playe
 	//PlayerInputComponent->BindAction(LeftBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuLeft);
 	PlayerInputComponent->BindAction(RightBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::MenuRight);
 	//PlayerInputComponent->BindAction(RightBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuRight);
-	PlayerInputComponent->BindAction(ActionBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::MenuAction);
+	PlayerInputComponent->BindAction(ActionBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::ActionInput);
 	//PlayerInputComponent->BindAction(ActionBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuAction);
+	PlayerInputComponent->BindAction(BackBinding, EInputEvent::IE_Pressed, this, &AEndlessReachHDPawn::BackInput);
+	//PlayerInputComponent->BindAction(BackBinding, EInputEvent::IE_Released, this, &AEndlessReachHDPawn::MenuBack);
 }
 
 // Called when the game starts or when spawned
@@ -959,8 +962,8 @@ void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level, int32 Ne
 	}
 }
 
-// Menu Action Control
-void AEndlessReachHDPawn::MenuAction()
+// Action Button Control
+void AEndlessReachHDPawn::ActionInput()
 {
 	if (bIsDocked)
 	{
@@ -968,138 +971,140 @@ void AEndlessReachHDPawn::MenuAction()
 		{
 			if (HangarMenu->IsInViewport())
 			{
-				switch (HangarMenu->MenuIndex)
+				if (!HangarMenu->bIsPromptingExit)
 				{
-					// cost of the upgrade for the specified level
-					int32 UpgradeCost;
+					switch (HangarMenu->MenuIndex)
+					{
+						// cost of the upgrade for the specified level
+						int32 UpgradeCost;
 
-					// SHIP TYPE UPGRADE
+						// SHIP TYPE UPGRADE
 					case 0:
 						switch (ShipTypeLevel)
 						{
-							case 0:
-								UpgradeCost = 1750;
-								break;
-							case 1:
-								UpgradeCost = 2500;
-								break;
-							case 2:
-								UpgradeCost = 3250;
-								break;
-							case 3:
-								UpgradeCost = 4500;
-								break;
-							case 4:
-								UpgradeCost = 6000;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 1750;
+							break;
+						case 1:
+							UpgradeCost = 2500;
+							break;
+						case 2:
+							UpgradeCost = 3250;
+							break;
+						case 3:
+							UpgradeCost = 4500;
+							break;
+						case 4:
+							UpgradeCost = 6000;
+							break;
+						case 5:
+							UpgradeCost = 99999;
+							break;
 						}
 						HangarMenu->SetUpgradeLevel(ShipTypeLevel, UpgradeCost);  // update the hangar menu display
 						break;
-					// HEALTH UPGRADE
+						// HEALTH UPGRADE
 					case 1:
 						switch (HealthLevel)
 						{
-							case 0:
-								UpgradeCost = 250;
-								UpgradeHealth(UpgradeCost, 1, 500);
-								break;
-							case 1:
-								UpgradeCost = 500;
-								UpgradeHealth(UpgradeCost, 2, 750);
-								break;
-							case 2:
-								UpgradeCost = 750;
-								UpgradeHealth(UpgradeCost, 3, 1000);
-								break;
-							case 3:
-								UpgradeCost = 1000;
-								UpgradeHealth(UpgradeCost, 4, 1500);
-								break;
-							case 4:
-								UpgradeCost = 1500;
-								UpgradeHealth(UpgradeCost, 5, 99999);
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 250;
+							UpgradeHealth(UpgradeCost, 1, 500);
+							break;
+						case 1:
+							UpgradeCost = 500;
+							UpgradeHealth(UpgradeCost, 2, 750);
+							break;
+						case 2:
+							UpgradeCost = 750;
+							UpgradeHealth(UpgradeCost, 3, 1000);
+							break;
+						case 3:
+							UpgradeCost = 1000;
+							UpgradeHealth(UpgradeCost, 4, 1500);
+							break;
+						case 4:
+							UpgradeCost = 1500;
+							UpgradeHealth(UpgradeCost, 5, 99999);
+							break;
+						case 5:
+							UpgradeCost = 99999;
+							break;
 						}
 						break;
-					// THURSTERS UPGRADE
+						// THURSTERS UPGRADE
 					case 2:
 						switch (ThrustersLevel)
 						{
-							case 0:
-								UpgradeCost = 500;
-								break;
-							case 1:
-								UpgradeCost = 750;
-								break;
-							case 2:
-								UpgradeCost = 1000;
-								break;
-							case 3:
-								UpgradeCost = 1250;
-								break;
-							case 4:
-								UpgradeCost = 1500;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 500;
+							break;
+						case 1:
+							UpgradeCost = 750;
+							break;
+						case 2:
+							UpgradeCost = 1000;
+							break;
+						case 3:
+							UpgradeCost = 1250;
+							break;
+						case 4:
+							UpgradeCost = 1500;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
 						}
 						break;
-					// MAIN CANNON UPGRADE
+						// MAIN CANNON UPGRADE
 					case 3:
 						switch (CannonLevel)
 						{
-							case 0:
-								UpgradeCost = 500;
-								break;
-							case 1:
-								UpgradeCost = 750;
-								break;
-							case 2:
-								UpgradeCost = 1000;
-								break;
-							case 3:
-								UpgradeCost = 1250;
-								break;
-							case 4:
-								UpgradeCost = 1500;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 500;
+							break;
+						case 1:
+							UpgradeCost = 750;
+							break;
+						case 2:
+							UpgradeCost = 1000;
+							break;
+						case 3:
+							UpgradeCost = 1250;
+							break;
+						case 4:
+							UpgradeCost = 1500;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
 						}
 						break;
-					// LASER UPGRADE
+						// LASER UPGRADE
 					case 4:
 						switch (LaserLevel)
 						{
-							case 0:
-								UpgradeCost = 1000;
-								break;
-							case 1:
-								UpgradeCost = 1500;
-								break;
-							case 2:
-								UpgradeCost = 2000;
-								break;
-							case 3:
-								UpgradeCost = 2500;
-								break;
-							case 4:
-								UpgradeCost = 3000;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 1000;
+							break;
+						case 1:
+							UpgradeCost = 1500;
+							break;
+						case 2:
+							UpgradeCost = 2000;
+							break;
+						case 3:
+							UpgradeCost = 2500;
+							break;
+						case 4:
+							UpgradeCost = 3000;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
 						}
 						break;
-					// MAGNET UPGRADE
+						// MAGNET UPGRADE
 					case 5:
 						switch (MagnetLevel)
 						{
@@ -1123,79 +1128,109 @@ void AEndlessReachHDPawn::MenuAction()
 							break;
 						}
 						break;
-					// MISSILES UPGRADE
+						// MISSILES UPGRADE
 					case 6:
 						switch (MissilesLevel)
 						{
-							case 0:
-								UpgradeCost = 1500;
-								break;
-							case 1:
-								UpgradeCost = 2250;
-								break;
-							case 2:
-								UpgradeCost = 3000;
-								break;
-							case 3:
-								UpgradeCost = 3750;
-								break;
-							case 4:
-								UpgradeCost = 4500;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 1500;
+							break;
+						case 1:
+							UpgradeCost = 2250;
+							break;
+						case 2:
+							UpgradeCost = 3000;
+							break;
+						case 3:
+							UpgradeCost = 3750;
+							break;
+						case 4:
+							UpgradeCost = 4500;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
 						}
 						break;
-					// ENERGY SHIELD UPGRADE
+						// ENERGY SHIELD UPGRADE
 					case 7:
 						switch (ShieldLevel)
 						{
-							case 0:
-								UpgradeCost = 1500;
-								break;
-							case 1:
-								UpgradeCost = 2250;
-								break;
-							case 2:
-								UpgradeCost = 3000;
-								break;
-							case 3:
-								UpgradeCost = 3750;
-								break;
-							case 4:
-								UpgradeCost = 4500;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 1500;
+							break;
+						case 1:
+							UpgradeCost = 2250;
+							break;
+						case 2:
+							UpgradeCost = 3000;
+							break;
+						case 3:
+							UpgradeCost = 3750;
+							break;
+						case 4:
+							UpgradeCost = 4500;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
 						}
 						break;
-					// BOMB LEVEL
+						// BOMB LEVEL
 					case 8:
 						switch (BombLevel)
 						{
-							case 0:
-								UpgradeCost = 2000;
-								break;
-							case 1:
-								UpgradeCost = 3000;
-								break;
-							case 2:
-								UpgradeCost = 4000;
-								break;
-							case 3:
-								UpgradeCost = 5000;
-								break;
-							case 4:
-								UpgradeCost = 6000;
-								break;
-							case 5:
-								UpgradeCost = 10000;
-								break;
+						case 0:
+							UpgradeCost = 2000;
+							break;
+						case 1:
+							UpgradeCost = 3000;
+							break;
+						case 2:
+							UpgradeCost = 4000;
+							break;
+						case 3:
+							UpgradeCost = 5000;
+							break;
+						case 4:
+							UpgradeCost = 6000;
+							break;
+						case 5:
+							UpgradeCost = 10000;
+							break;
 						}
 						break;
+					}
 				}
+				else
+				{
+					switch (HangarMenu->ExitPromptIndex)
+					{
+					case 0:
+						break;
+					case 1:
+						HangarMenu->ReturnToUpgradeMenu();
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+// Back Button Control
+void AEndlessReachHDPawn::BackInput()
+{
+	if (bIsDocked)
+	{
+		if (HangarMenu)
+		{
+			if (HangarMenu->IsInViewport())
+			{
+				if (!HangarMenu->bIsPromptingExit)
+				{
+					HangarMenu->PromptExit();
+				}				
 			}
 		}
 	}
