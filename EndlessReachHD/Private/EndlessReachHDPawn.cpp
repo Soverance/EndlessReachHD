@@ -1207,6 +1207,7 @@ void AEndlessReachHDPawn::ActionInput()
 					switch (HangarMenu->ExitPromptIndex)
 					{
 					case 0:
+						HangarMenu->InitLaunchSequence();
 						break;
 					case 1:
 						HangarMenu->ReturnToUpgradeMenu();

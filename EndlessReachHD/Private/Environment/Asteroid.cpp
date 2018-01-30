@@ -36,16 +36,15 @@ AAsteroid::AAsteroid()
 	RedColor = RedInst.Object;
 
 	// Asteroid
-	static ConstructorHelpers::FObjectFinder<UDestructibleMesh> AsteroidMeshObject(TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"));
-	DM_Asteroid = AsteroidMeshObject.Object;
 	Asteroid = CreateDefaultSubobject<UDestructibleComponent>(TEXT("AsteroidBody"));
 	Asteroid->SetupAttachment(RootComponent);
-	Asteroid->SetDestructibleMesh(DM_Asteroid);
 	Asteroid->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
-	//Asteroid->SetMaterial(0, RockColor);  // outside color
-	//Asteroid->SetMaterial(1, RedColor);  // inside color
 	Asteroid->SetSimulatePhysics(true);
 	Asteroid->BodyInstance.bLockZTranslation = true;
+	//static ConstructorHelpers::FObjectFinder<UDestructibleMesh> AsteroidMeshObject(TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"));
+	//DM_Asteroid = AsteroidMeshObject.Object;
+	////Asteroid->SetMaterial(0, RockColor);  // outside color
+	////Asteroid->SetMaterial(1, RedColor);  // inside color
 
 	// Explosion Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ExplosionParticleObject(TEXT("/Game/Particles/Emitter/P_Explosion.P_Explosion"));
@@ -75,13 +74,23 @@ void AAsteroid::BeginPlay()
 	OnHitAsteroid.AddDynamic(this, &AAsteroid::HitAsteroid);  // bind asteroid hit function
 	OnDestroyAsteroid.AddDynamic(this, &AAsteroid::DestroyAsteroid);  // bind asteroid hit function
 
-	//DM_Asteroid = LoadObject<UDestructibleMesh>(GetOuter(), TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"), NULL, LOAD_None, NULL);	
+	// add the destructible rock after a short delay... thanks 4.18 for moving apex destructibles into a plugin so they load super slow now
+	FTimerHandle DestructibleAddTimer;
+	GetWorldTimerManager().SetTimer(DestructibleAddTimer, this, &AAsteroid::AddDestructible, 5.0f, false);
 }
 
 // Called every frame
 void AAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+// Called when the asteroid is hit with player bullets
+void AAsteroid::AddDestructible()
+{
+	//DM_Asteroid = LoadObject<UDestructibleMesh>(GetOuter(), TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"), NULL, LOAD_None, NULL);
+	DM_Asteroid = Cast<UDestructibleMesh>(StaticLoadObject(UDestructibleMesh::StaticClass(), NULL, TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM")));
+	Asteroid->SetDestructibleMesh(DM_Asteroid);
 }
 
 // Called when the asteroid is hit with player bullets

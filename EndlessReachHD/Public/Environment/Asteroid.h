@@ -75,6 +75,10 @@ public:
 	USoundCue* S_AsteroidExplosion;
 	UAudioComponent* AsteroidExplosionSound;
 
+	// Add the destructible rock when necessary
+	UFUNCTION(BlueprintCallable, Category = Controls)
+	void AddDestructible();
+
 	// When the Asteroid is hit by player bullets
 	UFUNCTION(BlueprintCallable, Category = Controls)
 	void HitAsteroid();
