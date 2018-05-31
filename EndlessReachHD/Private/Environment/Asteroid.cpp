@@ -114,8 +114,7 @@ void AAsteroid::HitAsteroid()
 			if (!bWasDestroyed)
 			{
 				DestroyAsteroid();  // if so, destroy this asteroid
-			}
-			
+			}			
 		}
 	}
 	else
