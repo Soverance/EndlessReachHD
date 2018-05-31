@@ -16,6 +16,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Management/CombatText/CombatTextComponent.h"
 #include "DestructibleComponent.h"
 #include "DestructibleMesh.h"
 #include "Asteroid.generated.h"
@@ -86,6 +87,14 @@ public:
 	// When the Asteroid is destroyed
 	UFUNCTION(BlueprintCallable, Category = Controls)
 	void DestroyAsteroid();
+
+	// The combat text component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CombatText)
+	UCombatTextComponent* CombatTextComponent;
+
+	// Show Combat Damage Text
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void ShowCombatDamageText(bool IsCritical, float Damage);
 
 protected:
 	// Called when the game starts or when spawned

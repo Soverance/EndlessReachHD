@@ -17,6 +17,7 @@
 
 #include "GameFramework/Character.h"
 #include "Management/CommonLibrary.h"
+#include "Management/CombatText/CombatTextComponent.h"
 #include "Widgets/PlayerHUD.h"
 #include "Widgets/HangarMenu.h"
 #include "EndlessReachHDPawn.generated.h"
@@ -324,6 +325,14 @@ public:
 	// by the time the player entered the hangar (because it had been GC'd)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	UHangarMenu* HangarMenu;
+
+	// The combat text component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CombatText)
+	UCombatTextComponent* CombatTextComponent;
+
+	// Show Combat Damage Text
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void ShowCombatDamageText(bool IsCritical, float Damage);
 
 	////////////////////////////////////////////////////
 	//

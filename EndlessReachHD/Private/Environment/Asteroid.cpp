@@ -46,7 +46,7 @@ AAsteroid::AAsteroid()
 	////Asteroid->SetMaterial(0, RockColor);  // outside color
 	////Asteroid->SetMaterial(1, RedColor);  // inside color
 
-	// Explosion Visual Effect
+	// create Explosion Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ExplosionParticleObject(TEXT("/Game/Particles/Emitter/P_Explosion.P_Explosion"));
 	P_ExplosionFX = ExplosionParticleObject.Object;
 	ExplosionFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ExplosionFX"));
@@ -55,12 +55,16 @@ AAsteroid::AAsteroid()
 	ExplosionFX->SetWorldScale3D(FVector(2.0f, 2.0f, 2.0f));
 	ExplosionFX->bAutoActivate = false;
 
+	// create explosion audio effect
 	static ConstructorHelpers::FObjectFinder<USoundCue> AsteroidExplosionAudio(TEXT("/Game/Audio/Environment/Asteroid_Explosion_Cue.Asteroid_Explosion_Cue"));
 	S_AsteroidExplosion = AsteroidExplosionAudio.Object;
 	AsteroidExplosionSound = CreateDefaultSubobject<UAudioComponent>(TEXT("AsteroidExplosionSound"));
 	AsteroidExplosionSound->SetupAttachment(RootComponent);
 	AsteroidExplosionSound->Sound = S_AsteroidExplosion;
 	AsteroidExplosionSound->bAutoActivate = false;
+
+	// Create Combat Text Component
+	CombatTextComponent = CreateDefaultSubobject<UCombatTextComponent>(TEXT("Combat Text Component"));
 
 	// Asteroid Settings
 	HitCount = 0;
@@ -76,7 +80,7 @@ void AAsteroid::BeginPlay()
 
 	// add the destructible rock after a short delay... thanks 4.18 for moving apex destructibles into a plugin so they load super slow now
 	FTimerHandle DestructibleAddTimer;
-	GetWorldTimerManager().SetTimer(DestructibleAddTimer, this, &AAsteroid::AddDestructible, 5.0f, false);
+	GetWorldTimerManager().SetTimer(DestructibleAddTimer, this, &AAsteroid::AddDestructible, 3.0f, false);
 }
 
 // Called every frame
@@ -85,12 +89,13 @@ void AAsteroid::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-// Called when the asteroid is hit with player bullets
+// Called after a short delay in order to add the destructible mesh to the component
 void AAsteroid::AddDestructible()
 {
 	//DM_Asteroid = LoadObject<UDestructibleMesh>(GetOuter(), TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"), NULL, LOAD_None, NULL);
-	DM_Asteroid = Cast<UDestructibleMesh>(StaticLoadObject(UDestructibleMesh::StaticClass(), NULL, TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM")));
+	DM_Asteroid = Cast<UDestructibleMesh>(StaticLoadObject(UDestructibleMesh::StaticClass(), NULL, TEXT("DestructibleMesh'/Game/Environment/Meshes/SM_Asteroid_DM.SM_Asteroid_DM'")));
 	Asteroid->SetDestructibleMesh(DM_Asteroid);
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Asteroid Destructible Mesh added: %f"), 0));
 }
 
 // Called when the asteroid is hit with player bullets
@@ -101,6 +106,7 @@ void AAsteroid::HitAsteroid()
 
 	if (HitCount < 5)  // if less than 5 hits
 	{
+		ShowCombatDamageText(false, 100);  // display asteroid damage taken
 		HitCount++;  // increment hit count
 
 		if (HitCount >= 3)  // check if hit count equals 5
@@ -158,6 +164,20 @@ void AAsteroid::DestroyAsteroid()
 		{
 			ALaser* Laser = GetWorld()->SpawnActor<ALaser>(ALaser::StaticClass(), LaserSettings, Params);  // spawn fuel
 		}
+	}	
+}
+
+// Show combat damage text function
+void AAsteroid::ShowCombatDamageText(bool IsCritical, float Damage)
+{
+	if (IsCritical)
+	{
+		// CRITICAL DAMAGE
+		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_CritDmg, UCommonLibrary::GetFloatAsTextWithPrecision(Damage, 0, true));  // show combat text
 	}
-	
+	else
+	{
+		// STANDARD DAMAGE
+		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Damage, UCommonLibrary::GetFloatAsTextWithPrecision(Damage, 0, true));  // show combat text
+	}
 }

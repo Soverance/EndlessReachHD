@@ -91,51 +91,59 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	ShipMeshComponent->BodyInstance.bLockZTranslation = true;
 	ShipMeshComponent->BodyInstance.bLockXRotation = true;
 	ShipMeshComponent->BodyInstance.bLockYRotation = true;
+
 	// Gun Attachments
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ShipGuns(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Attachments.SM_ShipScout_Set1_Attachments"));
 	ShipMeshGuns = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipGuns"));
 	ShipMeshGuns->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshGuns->SetStaticMesh(ShipGuns.Object);
+
 	// Left Fan
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> LeftFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan.SM_ShipScout_Set1_Fan"));
 	ShipMeshFanL = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftFan"));
 	ShipMeshFanL->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshFanL->SetStaticMesh(LeftFan.Object);
+
 	// Left Fan Rotation
 	RotatingMovement_FanL = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement_FanL"));
 	RotatingMovement_FanL->SetUpdatedComponent(ShipMeshFanL);  // set the updated component
 	RotatingMovement_FanL->RotationRate = FRotator(0,FanSpeed,0);
+
 	// Right Fan
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> RightFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan.SM_ShipScout_Set1_Fan"));
 	ShipMeshFanR = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightFan"));
 	ShipMeshFanR->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshFanR->SetStaticMesh(RightFan.Object);
+
 	// Right Fan Rotation
 	RotatingMovement_FanR = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement_FanR"));
 	RotatingMovement_FanR->SetUpdatedComponent(ShipMeshFanR);  // set the updated component
 	RotatingMovement_FanR->RotationRate = FRotator(0, (FanSpeed * -1), 0);
+
 	// Tail Fan
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> TailFan(TEXT("/Game/ShipScout_Upgrades/Meshes/SM_ShipScout_Set1_Fan_Back.SM_ShipScout_Set1_Fan_Back"));
 	ShipMeshFanT = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TailFan"));
 	ShipMeshFanT->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ShipMeshFanT->SetStaticMesh(TailFan.Object);
+
 	// Tail Fan Rotation
 	RotatingMovement_FanT = CreateDefaultSubobject<URotatingMovementComponent>(TEXT("RotatingMovement_FanT"));
 	RotatingMovement_FanT->SetUpdatedComponent(ShipMeshFanT);  // set the updated component
 	RotatingMovement_FanT->RotationRate = FRotator(0, 0, (FanSpeed * -1));
 	
-	// SOUND EFFECTS
-	// basic weapon pulse
+	// basic weapon pulse audio
 	static ConstructorHelpers::FObjectFinder<USoundBase> FireAudio(TEXT("/Game/Audio/Guns/PlayerTurret_Pulse1_Cue.PlayerTurret_Pulse1_Cue"));
 	FireSound = FireAudio.Object;
-	// low fuel warning
+
+	// low fuel warning audio
 	static ConstructorHelpers::FObjectFinder<USoundCue> LowFuelAudio(TEXT("/Game/Audio/Ship/PlayerShip_LowFuelWarning_Cue.PlayerShip_LowFuelWarning_Cue"));
 	S_LowFuelWarning = LowFuelAudio.Object;
 	LowFuelWarningSound = CreateDefaultSubobject<UAudioComponent>(TEXT("LowFuelWarningSound"));
 	LowFuelWarningSound->SetupAttachment(RootComponent);
 	LowFuelWarningSound->Sound = S_LowFuelWarning;
 	LowFuelWarningSound->bAutoActivate = false;
-	// engine idle noise
+
+	// engine idle noise audio
 	static ConstructorHelpers::FObjectFinder<USoundCue> EngineIdleAudio(TEXT("/Game/Audio/Ship/PlayerShip_EngineIdle_Cue.PlayerShip_EngineIdle_Cue"));
 	S_EngineIdle = EngineIdleAudio.Object;
 	EngineIdleSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineIdleSound"));
@@ -143,14 +151,16 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	EngineIdleSound->Sound = S_EngineIdle;
 	EngineIdleSound->bAutoActivate = true;
 	EngineIdleSound->VolumeMultiplier = 0.4f;
-	// engine thrust noise
+
+	// engine thrust noise audio
 	static ConstructorHelpers::FObjectFinder<USoundCue> EngineThrustAudio(TEXT("/Game/Audio/Ship/PlayerShip_EngineThrust_Cue.PlayerShip_EngineThrust_Cue"));
 	S_EngineThrust = EngineThrustAudio.Object;
 	EngineThrustSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineThrustSound"));
 	EngineThrustSound->SetupAttachment(RootComponent);
 	EngineThrustSound->Sound = S_EngineThrust;
 	EngineThrustSound->bAutoActivate = false;
-	// beam cannon noise
+
+	// beam cannon noise audio
 	static ConstructorHelpers::FObjectFinder<USoundCue> LaserAudio(TEXT("/Game/Audio/Guns/ForwardGun_Laser_Cue.ForwardGun_Laser_Cue"));
 	S_Laser = LaserAudio.Object;
 	LaserSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ELaserSound"));
@@ -250,6 +260,9 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// configure Thruster Cam shake
 	static ConstructorHelpers::FObjectFinder<UClass> ThrusterCamShakeObject(TEXT("/Game/CamShakes/CS_Thrusters.CS_Thrusters_C"));
 	ThrusterCamShake = ThrusterCamShakeObject.Object;
+
+	// Create Combat Text Component
+	CombatTextComponent = CreateDefaultSubobject<UCombatTextComponent>(TEXT("Combat Text Component"));
 }
 
 void AEndlessReachHDPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
@@ -1234,5 +1247,20 @@ void AEndlessReachHDPawn::BackInput()
 				}				
 			}
 		}
+	}
+}
+
+// Show combat damage text function
+void AEndlessReachHDPawn::ShowCombatDamageText(bool IsCritical, float Damage)
+{
+	if (IsCritical)
+	{
+		// CRITICAL DAMAGE
+		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_CritDmg, UCommonLibrary::GetFloatAsTextWithPrecision(Damage, 0, true));  // show combat text
+	}
+	else
+	{
+		// STANDARD DAMAGE
+		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Damage, UCommonLibrary::GetFloatAsTextWithPrecision(Damage, 0, true));  // show combat text
 	}
 }
