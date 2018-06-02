@@ -898,7 +898,8 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	if (HangarMenu)
 	{
 		HangarMenu->AddToViewport();  // add the hangar menu to the viewport
-		UpdateHangarMenu();  // refresh the hangar menu with updated information		
+		UpdateHangarMenu();  // refresh the hangar menu with updated information
+		HangarMenu->ReturnToUpgradeMenu();  // return to the upgrade menu (this is really only necessary for subsequent docking entries after a level load)
 	}
 	else
 	{

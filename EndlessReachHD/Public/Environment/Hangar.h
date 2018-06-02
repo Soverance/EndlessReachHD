@@ -54,6 +54,10 @@ public:
 	UPROPERTY(Category = Docking, EditAnywhere, BlueprintReadWrite)
 	bool bIsDockingInProgress;
 
+	/* Whether launch is currently in progress */
+	UPROPERTY(Category = Docking, EditAnywhere, BlueprintReadWrite)
+	bool bIsLaunchInProgress;
+
 	// Event Dispatcher Launch Sequence
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FInitiateLaunchSequence InitiateLaunchSequence;

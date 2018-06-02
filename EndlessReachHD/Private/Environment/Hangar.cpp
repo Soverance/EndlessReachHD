@@ -25,6 +25,7 @@ AHangar::AHangar()
 	PrimaryActorTick.bCanEverTick = true;
 
 	bIsDockingInProgress = false;
+	bIsLaunchInProgress = false;
 
 	// Creates a scene component and sets it as the root
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
