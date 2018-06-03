@@ -16,10 +16,10 @@
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
 #include "Environment/Asteroid.h"
-#include "EndlessReachHDProjectile.h"
+#include "Cannonball.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
-AEndlessReachHDProjectile::AEndlessReachHDProjectile() 
+ACannonball::ACannonball()
 {
 	// Static reference to the mesh to use for the projectile
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> ProjectileMeshAsset(TEXT("/Game/ShipScout_Upgrades/Ammo/PulseBall.PulseBall"));
@@ -29,7 +29,7 @@ AEndlessReachHDProjectile::AEndlessReachHDProjectile()
 	ProjectileMesh->SetStaticMesh(ProjectileMeshAsset.Object);
 	ProjectileMesh->SetupAttachment(RootComponent);
 	ProjectileMesh->BodyInstance.SetCollisionProfileName("Projectile");
-	ProjectileMesh->OnComponentHit.AddDynamic(this, &AEndlessReachHDProjectile::OnHit);		// set up a notification for when this component hits something
+	ProjectileMesh->OnComponentHit.AddDynamic(this, &ACannonball::OnHit);		// set up a notification for when this component hits something
 	RootComponent = ProjectileMesh;
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
@@ -45,12 +45,12 @@ AEndlessReachHDProjectile::AEndlessReachHDProjectile()
 }
 
 // Called when the game starts or when spawned
-void AEndlessReachHDProjectile::BeginPlay()
+void ACannonball::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void AEndlessReachHDProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{

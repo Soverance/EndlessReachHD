@@ -18,7 +18,7 @@
 #include "Environment/Asteroid.h"
 #include "Pickups/PickupMaster.h"
 #include "TimerManager.h"
-#include "EndlessReachHDProjectile.h"
+#include "Projectiles/Cannonball.h"
 //#include "Widgets/HangarMenu.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
@@ -604,7 +604,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			if (World != NULL)
 			{
 				// FIRE PROJECTILE
-				AEndlessReachHDProjectile* Pulse = World->SpawnActor<AEndlessReachHDProjectile>(SpawnLocation, FireRotation);  // spawn projectile
+				ACannonball* Pulse = World->SpawnActor<ACannonball>(SpawnLocation, FireRotation);  // spawn projectile
 
 				// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
 
@@ -836,7 +836,6 @@ void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActo
 	}	
 }
 
-// Thruster Engage Control
 void AEndlessReachHDPawn::FireThrusters()
 {
 	if (!bIsDocked)
@@ -849,7 +848,6 @@ void AEndlessReachHDPawn::FireThrusters()
 	}	
 }
 
-// Thruster Release Control
 void AEndlessReachHDPawn::StopThrusters()
 {
 	if (!bIsDocked)
@@ -872,7 +870,7 @@ void AEndlessReachHDPawn::LowFuelSafety()
 	}	
 }
 
-// enables the thruster visual, audio, force feedback, and camshake effects - this was separated from the main FireThrusters() function so that the effects could be activated during cutscenes (as opposed to just manually by the player)
+// thruster effects were separated from the main Fire/StopThrusters() functions so that the effects could be activated during cutscenes (as opposed to just manually by the player)
 void AEndlessReachHDPawn::EnableThrusterFX()
 {
 	EngineThrustSound->Play();
@@ -882,7 +880,6 @@ void AEndlessReachHDPawn::EnableThrusterFX()
 	PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
 }
 
-// disables the thruster visual, audio, force feedback, and camshake effects
 void AEndlessReachHDPawn::DisableThrusterFX()
 {
 	ThrusterFX->Deactivate();
@@ -893,7 +890,6 @@ void AEndlessReachHDPawn::DisableThrusterFX()
 	//PlayerController->ClientStopCameraShake(ThrusterCamShake);  // we don't need to manually stop the cam shakes, because that causes them to look unnatural
 }
 
-// Engage Docking Clamps
 void AEndlessReachHDPawn::EngageDockingClamps()
 {
 	Camera_TopDown->SetActive(false, false);  // disable top down cam
@@ -921,7 +917,6 @@ void AEndlessReachHDPawn::EngageDockingClamps()
 	}
 }
 
-// Release Docking Clamps
 void AEndlessReachHDPawn::ReleaseDockingClamps()
 {
 	Camera_TopDown->SetActive(true, false);  // enable top down cam

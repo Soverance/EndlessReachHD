@@ -16,13 +16,13 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "EndlessReachHDProjectile.generated.h"
+#include "Cannonball.generated.h"
 
 class UProjectileMovementComponent;
 class UStaticMeshComponent;
 
 UCLASS(config=Game)
-class AEndlessReachHDProjectile : public AActor
+class ACannonball : public AActor
 {
 	GENERATED_BODY()
 
@@ -39,7 +39,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	AEndlessReachHDProjectile();
+	ACannonball();
 
 	/** Function to handle the projectile hitting something */
 	UFUNCTION()
