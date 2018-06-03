@@ -836,6 +836,7 @@ void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActo
 	}	
 }
 
+// Thruster Engage Control
 void AEndlessReachHDPawn::FireThrusters()
 {
 	if (!bIsDocked)
@@ -843,27 +844,19 @@ void AEndlessReachHDPawn::FireThrusters()
 		bThustersActive = true;
 		if (FuelLevel > 0)
 		{
-			EngineThrustSound->Play();
-			ThrusterFX->Activate();
-			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-			PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
-			PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
+			EnableThrusterFX();
 		}
 	}	
 }
 
+// Thruster Release Control
 void AEndlessReachHDPawn::StopThrusters()
 {
 	if (!bIsDocked)
 	{
 		bThustersActive = false;
 		bLowFuel = false;
-		ThrusterFX->Deactivate();
-		EngineThrustSound->FadeOut(0.25f, 0);
-		LowFuelWarningSound->FadeOut(0.05f, 0);
-		APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-		PlayerController->ClientStopForceFeedback(ThrusterFeedback, FName(TEXT("Thruster")));  // Stop Thruster Feedback
-		//PlayerController->ClientStopCameraShake(ThrusterCamShake);  // we don't need to stop the cam shakes, because that causes them to look unnatural
+		DisableThrusterFX();		
 	}	
 }
 
@@ -877,6 +870,27 @@ void AEndlessReachHDPawn::LowFuelSafety()
 		ShipMeshComponent->SetLinearDamping(2.0f);  // Increase linear damping to slow down translation
 		ShipMeshComponent->SetAngularDamping(2.0f);  // Increase angular damping to slow down rotation	
 	}	
+}
+
+// enables the thruster visual, audio, force feedback, and camshake effects - this was separated from the main FireThrusters() function so that the effects could be activated during cutscenes (as opposed to just manually by the player)
+void AEndlessReachHDPawn::EnableThrusterFX()
+{
+	EngineThrustSound->Play();
+	ThrusterFX->Activate();
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+	PlayerController->ClientPlayForceFeedback(ThrusterFeedback, false, false, FName(TEXT("Thruster")));  // Play Thruster Force Feedback
+	PlayerController->ClientPlayCameraShake(ThrusterCamShake);  // play cam shake
+}
+
+// disables the thruster visual, audio, force feedback, and camshake effects
+void AEndlessReachHDPawn::DisableThrusterFX()
+{
+	ThrusterFX->Deactivate();
+	EngineThrustSound->FadeOut(0.25f, 0);
+	LowFuelWarningSound->FadeOut(0.05f, 0);
+	APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+	PlayerController->ClientStopForceFeedback(ThrusterFeedback, FName(TEXT("Thruster")));  // Stop Thruster Feedback
+	//PlayerController->ClientStopCameraShake(ThrusterCamShake);  // we don't need to manually stop the cam shakes, because that causes them to look unnatural
 }
 
 // Engage Docking Clamps

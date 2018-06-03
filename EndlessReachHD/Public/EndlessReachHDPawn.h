@@ -292,6 +292,10 @@ public:
 	void StopThrusters();
 	UFUNCTION(BlueprintCallable, Category = Thrusters)
 	void LowFuelSafety();
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
+	void EnableThrusterFX();
+	UFUNCTION(BlueprintCallable, Category = Thrusters)
+	void DisableThrusterFX();
 
 	////////////////////////////////////////////////////
 	//
