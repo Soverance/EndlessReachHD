@@ -61,14 +61,14 @@ void AEndlessReachHDGameMode::LoadMap()
 	level->bShouldBeVisible = true;
 }
 
-void AEndlessReachHDGameMode::ReloadMap(FName MapName, int32 Position)
+void AEndlessReachHDGameMode::ReloadMap(FName MapToReload, int32 Position)
 {
 	if (NodeTransforms.IsValidIndex(Position))
 	{
-		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapName);
+		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapToReload);
 
 		//store the new map name and the new transform
-		this->MapName = MapName;
+		this->MapName = MapToReload;
 		MapTransform = NodeTransforms[Position];
 
 		if (level)
@@ -87,7 +87,7 @@ void AEndlessReachHDGameMode::ReloadMap(FName MapName, int32 Position)
 				info.UUID = 0;
 				info.Linkage = 0;
 
-				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
+				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapToReload, info);
 			}
 			//If the level is not visible just load the map
 			else
@@ -97,19 +97,19 @@ void AEndlessReachHDGameMode::ReloadMap(FName MapName, int32 Position)
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("RELOAD ERROR: LEVEL NOT FOUND! - " + MapName.ToString()));
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("RELOAD ERROR: LEVEL NOT FOUND! - " + MapToReload.ToString()));
 		}
 	}
 }
 
-void AEndlessReachHDGameMode::UnloadMap(FName MapName, int32 Position)
+void AEndlessReachHDGameMode::UnloadMap(FName MapToUnload, int32 Position)
 {
 	if (NodeTransforms.IsValidIndex(Position))
 	{
-		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapName);
+		ULevelStreaming* level = UGameplayStatics::GetStreamingLevel(GetWorld(), MapToUnload);
 
 		//store the new map name and the new transform
-		this->MapName = MapName;
+		this->MapName = MapToUnload;
 		MapTransform = NodeTransforms[Position];
 
 		if (level)
@@ -129,12 +129,12 @@ void AEndlessReachHDGameMode::UnloadMap(FName MapName, int32 Position)
 				info.Linkage = 0;
 
 				// for now we're simply unloading the map, but we might eventually do something in-game when this occurs.
-				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapName, info);
+				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapToUnload, info);
 			}
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("UNLOAD ERROR: LEVEL NOT FOUND! - " + MapName.ToString()));
+			GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("UNLOAD ERROR: LEVEL NOT FOUND! - " + MapToUnload.ToString()));
 		}
 	}
 }

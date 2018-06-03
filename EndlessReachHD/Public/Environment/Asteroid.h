@@ -50,14 +50,15 @@ class ENDLESSREACHHD_API AAsteroid : public AActor
 	UPROPERTY(Category = Gameplay, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UParticleSystemComponent* ExplosionFX;
 	UParticleSystem* P_ExplosionFX;
-
-	/* The number of times the rock has been hit */
-	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	int32 HitCount;
+		
 
 public:	
 	// Sets default values for this actor's properties
 	AAsteroid();
+
+	/* The health of this asteroid */
+	UPROPERTY(Category = Combat, VisibleDefaultsOnly, BlueprintReadWrite)
+	int32 Health;
 
 	// Event Dispatcher Hit Asteroid
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")

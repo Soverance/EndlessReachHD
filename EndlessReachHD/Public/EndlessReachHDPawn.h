@@ -208,7 +208,7 @@ public:
 	//
 	////////////////////////////////////////////////////
 	
-	/* Whether the main gun can be fired */
+	/* Whether the player can use the input function which fires the main cannon */
 	UPROPERTY(Category = BaseGuns, EditAnywhere, BlueprintReadWrite)
 	bool bCanFire;
 
@@ -395,7 +395,7 @@ public:
 	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
 	bool bLaserUnlocked;
 
-	/* Whether the beam cannon is enabled */
+	/* Whether the player is pressing the input button which fires the laser */
 	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
 	bool bLaserEnabled;
 
@@ -431,6 +431,26 @@ public:
 	// BOMBS
 	//
 	////////////////////////////////////////////////////
+
+	/* Whether the player can use the input function which fires a bomb */
+	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
+	bool bCanFireBomb;
+
+	/* Whether the bombs have been unlocked */
+	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
+	bool bBombsUnlocked;
+
+	/* The number of bombs available - maximum of 5 */
+	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
+	int32 BombCount;
+
+	// Bomb Control Functions
+	UFUNCTION(BlueprintCallable, Category = Bomb)
+	void FireBomb();
+
+	/** Sound to play when bomb is fired */
+	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
+	class USoundBase* BombSound;
 
 	////////////////////////////////////////////////////
 	//

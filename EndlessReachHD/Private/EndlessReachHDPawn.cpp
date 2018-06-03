@@ -19,6 +19,7 @@
 #include "Pickups/PickupMaster.h"
 #include "TimerManager.h"
 #include "Projectiles/Cannonball.h"
+#include "Projectiles/Bomb.h"
 //#include "Widgets/HangarMenu.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
@@ -57,9 +58,13 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
+	bLaserUnlocked = true;
 	bLaserEnabled = false;
 	LaserChargeCount = 0;
 	bIsDocked = false;
+	bBombsUnlocked = true;
+	bCanFireBomb = true;
+	BombCount = 0;
 	LookSensitivity = 5.0f;
 	CamRotSpeed = 5.0f;
 	ClampDegreeMin = -40.0f;
@@ -163,10 +168,14 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// beam cannon noise audio
 	static ConstructorHelpers::FObjectFinder<USoundCue> LaserAudio(TEXT("/Game/Audio/Guns/ForwardGun_Laser_Cue.ForwardGun_Laser_Cue"));
 	S_Laser = LaserAudio.Object;
-	LaserSound = CreateDefaultSubobject<UAudioComponent>(TEXT("ELaserSound"));
+	LaserSound = CreateDefaultSubobject<UAudioComponent>(TEXT("LaserSound"));
 	LaserSound->SetupAttachment(RootComponent);
 	LaserSound->Sound = S_Laser;
 	LaserSound->bAutoActivate = false;
+
+	// bomb shot audio
+	static ConstructorHelpers::FObjectFinder<USoundBase> BombAudio(TEXT("/Game/Audio/Guns/Bomb_FireShot_Cue.Bomb_FireShot_Cue"));
+	BombSound = BombAudio.Object;
 
 	// Thruster Visual Effect
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ThrusterParticleObject(TEXT("/Game/Particles/Emitter/P_BlossomJet.P_BlossomJet"));
@@ -591,7 +600,7 @@ void AEndlessReachHDPawn::UpdateHangarMenu()
 void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 {
 	// If we it's ok to fire again
-	if (bCanFire == true)
+	if (bCanFire)
 	{
 		// If we are pressing fire stick in a direction
 		if (FireDirection.SizeSquared() > 0.0f)
@@ -704,6 +713,7 @@ void AEndlessReachHDPawn::CameraControl_RotateVertical(float vertical)
 void AEndlessReachHDPawn::ShotTimerExpired()
 {
 	bCanFire = true;
+	bCanFireBomb = true;
 }
 
 void AEndlessReachHDPawn::UpdateFanSpeed()
@@ -718,32 +728,10 @@ void AEndlessReachHDPawn::FireLaser()
 {
 	if (!bIsDocked)
 	{
-		if (bLaserEnabled)  // if the laser is already enabled when this function is called, it means the player was still holding the button and had charges remaining, so we essentially loop the firing mechanism
+		if (bLaserUnlocked)
 		{
-			APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
-			PlayerController->ClientPlayForceFeedback(LaserFeedback, false, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
-			PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
-
-			UseLaserCharge();  // use a laser charge
-
-			 // laser firing duration
-			FTimerHandle LaserDelay;
-			GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
-		}
-
-		// if the laser has yet to be enabled...
-		if (!bLaserEnabled)
-		{
-			if (LaserChargeCount > 0 && LaserChargeCount < 5)  // if laser charges is greater than zero but less than five...
+			if (bLaserEnabled)  // if the laser is already enabled when this function is called, it means the player was still holding the button and had charges remaining, so we essentially loop the firing mechanism
 			{
-				bLaserEnabled = true;  // enable laser
-
-				if (!LaserSound->IsPlaying())  // if the laser sound is not already playing...
-				{
-					LaserSound->Play();  // play laser sfx
-				}
-
-				LaserFX->Activate();  // play laser vfx
 				APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
 				PlayerController->ClientPlayForceFeedback(LaserFeedback, false, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
 				PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
@@ -754,7 +742,32 @@ void AEndlessReachHDPawn::FireLaser()
 				FTimerHandle LaserDelay;
 				GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
 			}
-		}
+
+			// if the laser has yet to be enabled...
+			if (!bLaserEnabled)
+			{
+				if (LaserChargeCount > 0 && LaserChargeCount < 5)  // if laser charges is greater than zero but less than five...
+				{
+					bLaserEnabled = true;  // enable laser
+
+					if (!LaserSound->IsPlaying())  // if the laser sound is not already playing...
+					{
+						LaserSound->Play();  // play laser sfx
+					}
+
+					LaserFX->Activate();  // play laser vfx
+					APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);  // Get Player Controller
+					PlayerController->ClientPlayForceFeedback(LaserFeedback, false, false, FName(TEXT("Laser")));  // Play Laser Force Feedback
+					PlayerController->ClientPlayCameraShake(LaserCamShake);  // play laser cam shake
+
+					UseLaserCharge();  // use a laser charge
+
+					// laser firing duration
+					FTimerHandle LaserDelay;
+					GetWorldTimerManager().SetTimer(LaserDelay, this, &AEndlessReachHDPawn::StopLaser, 3.0f, false);
+				}
+			}
+		}		
 	}	
 }
 
@@ -936,6 +949,51 @@ void AEndlessReachHDPawn::ReleaseDockingClamps()
 	{
 		PlayerHUD->AddToViewport();  // add the player hud to the viewport
 	}	
+}
+
+void AEndlessReachHDPawn::FireBomb()
+{
+	if (bBombsUnlocked)
+	{
+		if (bCanFireBomb)
+		{
+			// Find movement direction
+			const float ForwardValue = GetInputAxisValue(MoveForwardBinding);
+			const float RightValue = GetInputAxisValue(MoveRightBinding);
+
+			// Clamp max size so that (X=1, Y=1) doesn't cause faster movement in diagonal directions
+			const FVector MoveDirection = FVector(ForwardValue, RightValue, 0.0f).GetClampedToMaxSize(1.0f);
+			// Spawn projectile at an offset from this pawn
+			const FRotator FireRotation = MoveDirection.Rotation();
+			const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset);
+
+			UWorld* const World = GetWorld();
+			if (World != NULL)
+			{
+				// FIRE PROJECTILE
+				ABomb* Bomb = World->SpawnActor<ABomb>(SpawnLocation, FireRotation);  // spawn projectile
+
+				// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
+
+				//float InheritanceMod = 1.0f;  // set inheritance level to 100%
+				//FVector Inheritance = GetControlRotation().UnrotateVector(GetVelocity());  // unrotate the player's velocity vector
+				//FVector NewVelocity = ((Inheritance * InheritanceMod) + ProjectileDefaultVelocity);  // add inherited velocity to the projectile's default velocity - THIS LINE IS INCORRECT
+				//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
+				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Projectile Velocity: %f"), Pulse->GetVelocity().Size()));
+			}
+
+			bCanFireBomb = false;
+			World->GetTimerManager().SetTimer(TimerHandle_ShotTimerExpired, this, &AEndlessReachHDPawn::ShotTimerExpired, FireRate);
+
+			// try and play the sound if specified
+			if (BombSound != nullptr)
+			{
+				UGameplayStatics::PlaySoundAtLocation(this, BombSound, GetActorLocation());  // play sound
+			}
+
+			bCanFireBomb = false;
+		}
+	}
 }
 
 // Menu Left Control
@@ -1256,6 +1314,18 @@ void AEndlessReachHDPawn::BackInput()
 					HangarMenu->PromptExit();
 				}				
 			}
+		}
+	}
+	if (!bIsDocked)
+	{
+		if (bCanFireBomb)
+		{
+			if (BombCount > 0)
+			{
+				FireBomb();
+			}
+
+			FireBomb();
 		}
 	}
 }

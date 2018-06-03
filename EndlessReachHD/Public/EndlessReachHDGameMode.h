@@ -47,13 +47,13 @@ public:
 	// param MapName - the name of the map we want to move
 	// param Position - the index of the Transforms array we want to use
 	UFUNCTION(Exec, Category = LevelStreaming)
-	void ReloadMap(FName MapName, int32 Position);
+	void ReloadMap(FName MapToReload, int32 Position);
 
 	// Unloads a streaming level.
 	// param MapName - the name of the map we want to move
 	// param Position - the index of the Transforms array we want to use
 	UFUNCTION(Exec, Category = LevelStreaming)
-	void UnloadMap(FName MapName, int32 Position);
+	void UnloadMap(FName MapToUnload, int32 Position);
 
 	// Get the streaming name of the specified map
 	// param Position - the index of the Transforms array we want to use

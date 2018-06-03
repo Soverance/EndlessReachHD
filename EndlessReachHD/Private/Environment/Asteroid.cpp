@@ -67,7 +67,7 @@ AAsteroid::AAsteroid()
 	CombatTextComponent = CreateDefaultSubobject<UCombatTextComponent>(TEXT("Combat Text Component"));
 
 	// Asteroid Settings
-	HitCount = 0;
+	Health = 300;
 	bWasDestroyed = false;
 }
 
@@ -104,12 +104,12 @@ void AAsteroid::HitAsteroid()
 	Asteroid->SetMaterial(0, RedColor);  // outside color
 	Asteroid->SetMaterial(1, RedColor);  // inside color
 
-	if (HitCount < 5)  // if less than 5 hits
+	if (Health > 0)  // if if the asteroid has more than zero health
 	{
 		ShowCombatDamageText(false, 100);  // display asteroid damage taken
-		HitCount++;  // increment hit count
+		Health = Health - 100;  // remove health
 
-		if (HitCount >= 3)  // check if hit count equals 5
+		if (Health <= 0)  // if the asteroid is dead
 		{
 			if (!bWasDestroyed)
 			{
@@ -137,8 +137,8 @@ void AAsteroid::DestroyAsteroid()
 		FActorSpawnParameters Params;
 		Params.OverrideLevel = GetLevel();  // make pickups spawn within the streaming level so they can be properly unloaded
 
-		//int32 DroppedOrbCount = FMath::RandRange(0, 9);  // drop a random amount of orbs
-		int32 DroppedOrbCount = 10;  // drop a static amount of orbs
+		int32 DroppedOrbCount = FMath::RandRange(0, 15);  // drop a random amount of orbs
+		//int32 DroppedOrbCount = 100;  // drop a static amount of orbs
 		const FTransform Settings = FTransform(GetActorRotation(), GetActorLocation(), FVector(1,1,1));  // cache transform settings
 
 		for (int32 i = 0; i < DroppedOrbCount; i++)
