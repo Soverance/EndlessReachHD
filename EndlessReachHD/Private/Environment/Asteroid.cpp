@@ -17,6 +17,7 @@
 #include "Pickups/Orb.h"
 #include "Pickups/FuelCell.h"
 #include "Pickups/Laser.h"
+#include "Pickups/BombCore.h"
 #include "Environment/Asteroid.h"
 
 // Sets default values
@@ -146,22 +147,34 @@ void AAsteroid::DestroyAsteroid()
 			AOrb* Orb = GetWorld()->SpawnActor<AOrb>(AOrb::StaticClass(), Settings, Params);
 		}
 
+		// FUEL CELL
 		int32 FuelDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a fuel cell
 		const FTransform FuelSettings = FTransform(GetActorRotation(), GetActorLocation(), FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
 		
 		// drop fuel @ 50%
 		if (FuelDropChance > 4)
 		{
-			AFuelCell* Fuel = GetWorld()->SpawnActor<AFuelCell>(AFuelCell::StaticClass(), FuelSettings, Params);  // spawn fuel
+			AFuelCell* Fuel = GetWorld()->SpawnActor<AFuelCell>(AFuelCell::StaticClass(), FuelSettings, Params);  // spawn fuel cell
 		}
 
-		int32 LaserDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a fuel cell
+		// LASER CHARGE
+		int32 LaserDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a laser charge
 		const FTransform LaserSettings = FTransform(GetActorRotation(), GetActorLocation(), FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
 
 		// drop fuel @ 20%
-		if (FuelDropChance > 7)
+		if (LaserDropChance > 7)
 		{
-			ALaser* Laser = GetWorld()->SpawnActor<ALaser>(ALaser::StaticClass(), LaserSettings, Params);  // spawn fuel
+			ALaser* Laser = GetWorld()->SpawnActor<ALaser>(ALaser::StaticClass(), LaserSettings, Params);  // spawn laser charge
+		}
+
+		// BOMB CORE
+		int32 BombCoreDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a bomb core
+		const FTransform BombCoreSettings = FTransform(GetActorRotation(), GetActorLocation(), FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
+
+		// drop fuel @ 20%
+		if (BombCoreDropChance > 7)
+		{
+			ABombCore* BombCore = GetWorld()->SpawnActor<ABombCore>(ABombCore::StaticClass(), BombCoreSettings, Params);  // spawn fuel
 		}
 	}	
 }
