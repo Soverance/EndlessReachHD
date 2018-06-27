@@ -104,6 +104,7 @@ void AFuelCell::CollideWithPlayer()
 			Player->FuelLevel = Player->MaxFuel;  // reset the fuel level to maximum
 		}
 		
+		Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Fuel"));
 		FuelPickupFX->Activate();  // activate visual fx
 		FuelPickupSound->Play();  // play orb pickup sound
 		FuelMeshComponent->SetVisibility(false);  // hide orb from player view

@@ -16,6 +16,8 @@
 #include "EndlessReachHD.h"
 #include "BombCore.h"
 
+#define LOCTEXT_NAMESPACE "PickupText"
+
 // Sets default values
 ABombCore::ABombCore()
 {
@@ -119,6 +121,7 @@ void ABombCore::CollideWithPlayer()
 			Player->BombCount++;  // increment charge count
 		}
 
+		Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Bomb"));
 		BombCorePickupFX->Activate();  // activate visual fx
 		BombCorePickupSound->Play();  // play BombCore pickup sound
 		BombCoreMeshComponent->SetVisibility(false);  // hide BombCore from player view
@@ -128,3 +131,5 @@ void ABombCore::CollideWithPlayer()
 		GetWorldTimerManager().SetTimer(DestroyDelay, this, &ABombCore::StartDestruction, 2.0f, false);
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

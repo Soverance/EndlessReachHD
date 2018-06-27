@@ -119,6 +119,7 @@ void ALaser::CollideWithPlayer()
 			Player->LaserChargeCount++;  // increment charge count
 		}
 
+		Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Laser"));
 		LaserPickupFX->Activate();  // activate visual fx
 		LaserPickupSound->Play();  // play laser pickup sound
 		LaserMeshComponent->SetVisibility(false);  // hide laser from player view
