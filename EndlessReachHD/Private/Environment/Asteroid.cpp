@@ -96,7 +96,7 @@ void AAsteroid::AddDestructible()
 	//DM_Asteroid = LoadObject<UDestructibleMesh>(GetOuter(), TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"), NULL, LOAD_None, NULL);
 	DM_Asteroid = Cast<UDestructibleMesh>(StaticLoadObject(UDestructibleMesh::StaticClass(), NULL, TEXT("DestructibleMesh'/Game/Environment/Meshes/SM_Asteroid_DM.SM_Asteroid_DM'")));
 	Asteroid->SetDestructibleMesh(DM_Asteroid);
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Asteroid Destructible Mesh added: %f"), 0));
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Asteroid Destructible Mesh added: %f"), 0));
 }
 
 // Called when the asteroid is hit with player bullets

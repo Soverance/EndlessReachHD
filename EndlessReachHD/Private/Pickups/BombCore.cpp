@@ -98,37 +98,50 @@ void ABombCore::CollideWithPlayer()
 {
 	if (Player)  // if player is valid (it should be, because they just collided with the BombCore pickup)
 	{
-		if (Player->BombCount < 5)  // if the player's BombCore count is less than five
+		if (Player->bBombsUnlocked)
 		{
-			switch (Player->BombCount)
+			if (Player->BombCount < Player->BombMax)  // if the player's BombCore count is less than max
 			{
+				switch (Player->BombCount)
+				{
 				case 0:  // if none
-					//Player->PlayerHUD->ChargeLaser_Stage1();  // charge laser stage 1 hud anim
+						 //Player->PlayerHUD->ChargeLaser_Stage1();  // charge laser stage 1 hud anim
 					break;
 				case 1:  // if one
-					//Player->PlayerHUD->ChargeLaser_Stage2();  // charge laser stage 2 hud anim
+						 //Player->PlayerHUD->ChargeLaser_Stage2();  // charge laser stage 2 hud anim
 					break;
 				case 2:  // if two
-					//Player->PlayerHUD->ChargeLaser_Stage3();  // charge laser stage 3 hud anim
+						 //Player->PlayerHUD->ChargeLaser_Stage3();  // charge laser stage 3 hud anim
 					break;
 				case 3:  // if three
-					//Player->PlayerHUD->ChargeLaser_Stage4();  // charge laser stage 4 hud anim
+						 //Player->PlayerHUD->ChargeLaser_Stage4();  // charge laser stage 4 hud anim
 					break;
 				case 4:  // if four
-					//Player->PlayerHUD->ChargeLaser_Stage5();  // charge laser stage 5 hud anim
+						 //Player->PlayerHUD->ChargeLaser_Stage5();  // charge laser stage 5 hud anim
 					break;
+				}
+
+				Player->BombCount++;  // increment charge count
+				Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Bomb"));
+				BombCorePickupFX->Activate();  // activate visual fx
+				BombCorePickupSound->Play();  // play BombCore pickup sound
+				
 			}
-			Player->BombCount++;  // increment charge count
+			else
+			{
+				Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Text, FText::FromString("MAX"));
+				PickupErrorSound->Play();  // play pickup error sound
+			}			
+		}
+		else
+		{
+			Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Text, FText::FromString("LOCKED"));
+			PickupErrorSound->Play();  // play pickup error sound
 		}
 
-		Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Bomb"));
-		BombCorePickupFX->Activate();  // activate visual fx
-		BombCorePickupSound->Play();  // play BombCore pickup sound
-		BombCoreMeshComponent->SetVisibility(false);  // hide BombCore from player view
-
-		// delay destruction so that audio can finish playing
+		BombCoreMeshComponent->SetVisibility(false);  // hide BombCore from player view		
 		FTimerHandle DestroyDelay;
-		GetWorldTimerManager().SetTimer(DestroyDelay, this, &ABombCore::StartDestruction, 2.0f, false);
+		GetWorldTimerManager().SetTimer(DestroyDelay, this, &ABombCore::StartDestruction, 2.0f, false); // delay destruction so that audio can finish playing
 	}
 }
 

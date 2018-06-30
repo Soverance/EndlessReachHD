@@ -46,9 +46,13 @@ struct FPlayerStatAttribute
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
 	FText UnlockDescription;
 
-	// Attribute Description
+	// Attribute Upgrade Description
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
-	FText Description;
+	FText UpgradeDescription;
+
+	// Attribute Max Description
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)
+	FText MaxDescription;
 
 	// Attribute Icon
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Attribute)

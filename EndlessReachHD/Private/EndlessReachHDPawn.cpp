@@ -54,17 +54,20 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	MaxFuel = 1000.0f;
 	bThustersActive = false;
 	bLowFuel = false;
-	bMagnetEnabled = true;
+	bMissilesEnabled = false;
+	bMagnetEnabled = false;
 	GunOffset = FVector(140.f, 0.f, 0.f);
 	FireRate = 0.1f;
 	bCanFire = true;
-	bLaserUnlocked = true;
+	bLaserUnlocked = false;
 	bLaserEnabled = false;
 	LaserChargeCount = 0;
+	LaserChargeMax = 0;
 	bIsDocked = false;
-	bBombsUnlocked = true;
+	bBombsUnlocked = false;
 	bCanFireBomb = true;
 	BombCount = 0;
+	BombMax = 0;
 	LookSensitivity = 5.0f;
 	CamRotSpeed = 5.0f;
 	ClampDegreeMin = -40.0f;
@@ -237,6 +240,13 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	Camera_Rotational->SetupAttachment(CameraBoom_Rotational, USpringArmComponent::SocketName);
 	Camera_Rotational->bUsePawnControlRotation = false;	// Camera does not rotate relative to arm
 
+	// configure Aggro Radius
+	AggroRadius = CreateDefaultSubobject<USphereComponent>(TEXT("AggroRadius"));
+	AggroRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
+	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AggroRadius->SetSphereRadius(5000);  //  5000 max range for aggro by default... we'll try it out for now
+	AggroRadius->bHiddenInGame = true;
+
 	// configure Magnet Radius
 	MagnetRadius = CreateDefaultSubobject<USphereComponent>(TEXT("MagnetRadius"));
 	MagnetRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
@@ -388,6 +398,15 @@ void AEndlessReachHDPawn::ConfigureShip()
 	LaserConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, LaserRadius, NAME_None);  // constrain beam cannon to the ship body
 	LaserRadius->AttachToComponent(LaserConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach beam cannon to constraint
 	LaserRadius->SetRelativeLocation(FVector(0, 2500, 0));  // reset beam cannon location
+
+	// Aggro Constraint
+	AggroConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create Aggro constraint
+	AggroConstraint->ConstraintInstance = ConstraintInstance_Static;  // set constraint instance
+	AggroConstraint->AttachToComponent(ShipMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, NAME_None);  // attach constraint to ship - can add a socket if necessary
+	AggroConstraint->SetRelativeLocation(FVector(0, 0, 0));  // set default location of constraint
+	AggroConstraint->SetConstrainedComponents(ShipMeshComponent, NAME_None, AggroRadius, NAME_None);  // constrain the Aggro radius to the ship body
+	AggroRadius->AttachToComponent(AggroConstraint, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach radius to constraint
+	AggroRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset radius location
 
 	// Magnet Constraint
 	MagnetConstraint = NewObject<UPhysicsConstraintComponent>(ShipMeshComponent);  // create magnet constraint
@@ -555,7 +574,7 @@ void AEndlessReachHDPawn::InitializeAllWidgets()
 		if (bIsDocked)
 		{
 			HangarMenu->AddToViewport();  // add hangar menu to viewport
-			UpdateHangarMenu();  // refresh the hangar menu with updated information
+			UpdateHangarMenu();  // refresh the hangar menu with default information
 		}
 	}
 }
@@ -576,7 +595,7 @@ void AEndlessReachHDPawn::UpdatePlayerHUD()
 	}
 }
 
-// Update the Hangar Menu with new information each frame
+// Update the Hangar Menu with new information
 void AEndlessReachHDPawn::UpdateHangarMenu()
 {
 	if (HangarMenu)
@@ -584,6 +603,7 @@ void AEndlessReachHDPawn::UpdateHangarMenu()
 		if (HangarMenu->IsInViewport())
 		{
 			HangarMenu->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
+
 			HangarMenu->Attributes[0].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[0].UpgradeCost, 0, false);  // set Ship Type upgrade cost text
 			HangarMenu->Attributes[1].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[1].UpgradeCost, 0, false);  // set Health upgrade cost text
 			HangarMenu->Attributes[2].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[2].UpgradeCost, 0, false);  // set Thrusters upgrade cost text
@@ -593,6 +613,16 @@ void AEndlessReachHDPawn::UpdateHangarMenu()
 			HangarMenu->Attributes[6].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[6].UpgradeCost, 0, false);  // set Missile upgrade cost text
 			HangarMenu->Attributes[7].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[7].UpgradeCost, 0, false);  // set Shield upgrade cost text
 			HangarMenu->Attributes[8].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[8].UpgradeCost, 0, false);  // set Bomb upgrade cost text
+
+			HangarMenu->Attributes[0].CurrentPower = ShipTypeLevel;
+			HangarMenu->Attributes[1].CurrentPower = HealthLevel;
+			HangarMenu->Attributes[2].CurrentPower = ThrustersLevel;
+			HangarMenu->Attributes[3].CurrentPower = CannonLevel;
+			HangarMenu->Attributes[4].CurrentPower = LaserLevel;
+			HangarMenu->Attributes[5].CurrentPower = MagnetLevel;
+			HangarMenu->Attributes[6].CurrentPower = MissilesLevel;
+			HangarMenu->Attributes[7].CurrentPower = ShieldLevel;
+			HangarMenu->Attributes[8].CurrentPower = BombLevel;
 		}
 	}
 }
@@ -746,7 +776,7 @@ void AEndlessReachHDPawn::FireLaser()
 			// if the laser has yet to be enabled...
 			if (!bLaserEnabled)
 			{
-				if (LaserChargeCount > 0 && LaserChargeCount < 5)  // if laser charges is greater than zero but less than five...
+				if (LaserChargeCount > 0 && LaserChargeCount <= LaserChargeMax)  // if laser charges is greater than zero but less or equal to than max...
 				{
 					bLaserEnabled = true;  // enable laser
 
@@ -957,41 +987,55 @@ void AEndlessReachHDPawn::FireBomb()
 	{
 		if (bCanFireBomb)
 		{
-			// Find movement direction
-			const float ForwardValue = GetInputAxisValue(MoveForwardBinding);
-			const float RightValue = GetInputAxisValue(MoveRightBinding);
-
-			// Clamp max size so that (X=1, Y=1) doesn't cause faster movement in diagonal directions
-			const FVector MoveDirection = FVector(ForwardValue, RightValue, 0.0f).GetClampedToMaxSize(1.0f);
-			// Spawn projectile at an offset from this pawn
-			const FRotator FireRotation = MoveDirection.Rotation();
-			const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset);
-
-			UWorld* const World = GetWorld();
-			if (World != NULL)
+			if (BombCount > 0 && BombCount <= BombMax)
 			{
-				// FIRE PROJECTILE
-				ABomb* Bomb = World->SpawnActor<ABomb>(SpawnLocation, FireRotation);  // spawn projectile
+				// Find movement direction
+				const float ForwardValue = GetInputAxisValue(MoveForwardBinding);
+				const float RightValue = GetInputAxisValue(MoveRightBinding);
 
-				// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
+				// Clamp max size so that (X=1, Y=1) doesn't cause faster movement in diagonal directions
+				const FVector MoveDirection = FVector(ForwardValue, RightValue, 0.0f).GetClampedToMaxSize(1.0f);
+				// Spawn projectile at an offset from this pawn
+				const FRotator FireRotation = MoveDirection.Rotation();
+				const FVector SpawnLocation = GetActorLocation() + FireRotation.RotateVector(GunOffset);
 
-				//float InheritanceMod = 1.0f;  // set inheritance level to 100%
-				//FVector Inheritance = GetControlRotation().UnrotateVector(GetVelocity());  // unrotate the player's velocity vector
-				//FVector NewVelocity = ((Inheritance * InheritanceMod) + ProjectileDefaultVelocity);  // add inherited velocity to the projectile's default velocity - THIS LINE IS INCORRECT
-				//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
-				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Projectile Velocity: %f"), Pulse->GetVelocity().Size()));
+				UWorld* const World = GetWorld();
+				if (World != NULL)
+				{
+					// FIRE PROJECTILE
+					ABomb* Bomb = World->SpawnActor<ABomb>(SpawnLocation, FireRotation);  // spawn projectile
+
+					// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
+
+					//float InheritanceMod = 1.0f;  // set inheritance level to 100%
+					//FVector Inheritance = GetControlRotation().UnrotateVector(GetVelocity());  // unrotate the player's velocity vector
+					//FVector NewVelocity = ((Inheritance * InheritanceMod) + ProjectileDefaultVelocity);  // add inherited velocity to the projectile's default velocity - THIS LINE IS INCORRECT
+					//Pulse->GetProjectileMovement()->SetVelocityInLocalSpace(NewVelocity);  // update projectile velocity
+					//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Updated Projectile Velocity: %f"), Pulse->GetVelocity().Size()));
+				}
+
+				// Reduce bomb count by one for each bomb fired
+				if (BombCount > 0)
+				{
+					BombCount--;
+				}
+				else
+				{
+					BombCount = 0;  // bomb count cannot be less than zero
+				}
+
+				bCanFireBomb = false;
+				World->GetTimerManager().SetTimer(TimerHandle_ShotTimerExpired, this, &AEndlessReachHDPawn::ShotTimerExpired, FireRate);
+
+				// try and play the sound if specified
+				if (BombSound != nullptr)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, BombSound, GetActorLocation());  // play sound
+				}
+
+				bCanFireBomb = false;
 			}
-
-			bCanFireBomb = false;
-			World->GetTimerManager().SetTimer(TimerHandle_ShotTimerExpired, this, &AEndlessReachHDPawn::ShotTimerExpired, FireRate);
-
-			// try and play the sound if specified
-			if (BombSound != nullptr)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, BombSound, GetActorLocation());  // play sound
-			}
-
-			bCanFireBomb = false;
+			
 		}
 	}
 }
@@ -1035,6 +1079,75 @@ void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level, int32 Ne
 		HealthLevel = Level;  // set health upgrade level
 		MaxHP = (MaxHP + (MaxHP * 0.5f));  // Add 50% of current max HP for each upgrade
 		HangarMenu->SetUpgradeLevel(HealthLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
+		UpdateHangarMenu();  // update the hangar menu display
+	}
+	else
+	{
+		HangarMenu->NotifyError();
+	}
+}
+
+// Upgrade Laser
+void AEndlessReachHDPawn::UpgradeLaser(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost)
+{
+	if (OrbCount > UpgradeCost)
+	{
+		// if laser charge max is less than five, increase max by one for each upgrade
+		if (LaserChargeMax < 5)
+		{
+			LaserChargeMax++;
+		}
+		else
+		{
+			LaserChargeMax = 5; // force the laser charge max to five if it exceeds for some reason
+		}
+
+		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
+		LaserLevel = Level;  // set laser upgrade level		
+		HangarMenu->SetUpgradeLevel(LaserLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
+		UpdateHangarMenu();  // update the hangar menu display
+	}
+	else
+	{
+		HangarMenu->NotifyError();
+	}
+}
+
+// Upgrade Magnet
+void AEndlessReachHDPawn::UpgradeMagnet(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost, int32 NewMagnetRadius)
+{
+	if (OrbCount > UpgradeCost)
+	{
+		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
+		MagnetLevel = Level;  // set magnet upgrade level
+		MagnetRadius->SetSphereRadius(NewMagnetRadius);
+		HangarMenu->SetUpgradeLevel(MagnetLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
+		UpdateHangarMenu();  // update the hangar menu display
+	}
+	else
+	{
+		HangarMenu->NotifyError();
+	}
+}
+
+// Upgrade Bomb
+void AEndlessReachHDPawn::UpgradeBomb(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost)
+{
+	if (OrbCount > UpgradeCost)
+	{
+		// if bomb max is less than five, increase max by one for each upgrade
+		if (BombMax < 5)
+		{
+			BombMax++;
+		}
+		else
+		{
+			BombMax = 5; // force the bomb max to five if it exceeds for some reason
+		}
+
+		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
+		BombLevel = Level;  // set bomb upgrade level
+		HangarMenu->SetUpgradeLevel(BombLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
 		UpdateHangarMenu();  // update the hangar menu display
 	}
 	else
@@ -1165,23 +1278,29 @@ void AEndlessReachHDPawn::ActionInput()
 					case 4:
 						switch (LaserLevel)
 						{
-						case 0:
+						case 0:							
 							UpgradeCost = 1000;
+							UpgradeLaser(UpgradeCost, 1, 1500);
+							bLaserUnlocked = true;
 							break;
 						case 1:
 							UpgradeCost = 1500;
+							UpgradeLaser(UpgradeCost, 2, 2000);
 							break;
 						case 2:
 							UpgradeCost = 2000;
+							UpgradeLaser(UpgradeCost, 3, 2500);
 							break;
 						case 3:
 							UpgradeCost = 2500;
+							UpgradeLaser(UpgradeCost, 4, 3000);
 							break;
 						case 4:
 							UpgradeCost = 3000;
+							UpgradeLaser(UpgradeCost, 5, 99999);
 							break;
 						case 5:
-							UpgradeCost = 10000;
+							UpgradeCost = 99999;
 							break;
 						}
 						break;
@@ -1191,21 +1310,27 @@ void AEndlessReachHDPawn::ActionInput()
 						{
 						case 0:
 							UpgradeCost = 1000;
+							UpgradeMagnet(UpgradeCost, 1, 1500, 1000);
+							bMagnetEnabled = true;							
 							break;
 						case 1:
 							UpgradeCost = 1500;
+							UpgradeMagnet(UpgradeCost, 2, 2000, 1500);
 							break;
 						case 2:
 							UpgradeCost = 2000;
+							UpgradeMagnet(UpgradeCost, 3, 2500, 2000);
 							break;
 						case 3:
 							UpgradeCost = 2500;
+							UpgradeMagnet(UpgradeCost, 4, 3000, 2500);
 							break;
 						case 4:
 							UpgradeCost = 3000;
+							UpgradeMagnet(UpgradeCost, 5, 99999, 3000);
 							break;
 						case 5:
-							UpgradeCost = 10000;
+							UpgradeCost = 99999;
 							break;
 						}
 						break;
@@ -1263,21 +1388,27 @@ void AEndlessReachHDPawn::ActionInput()
 						{
 						case 0:
 							UpgradeCost = 2000;
+							UpgradeBomb(UpgradeCost, 1, 3000);
+							bBombsUnlocked = true;
 							break;
 						case 1:
 							UpgradeCost = 3000;
+							UpgradeBomb(UpgradeCost, 2, 4000);
 							break;
 						case 2:
 							UpgradeCost = 4000;
+							UpgradeBomb(UpgradeCost, 3, 5000);
 							break;
 						case 3:
 							UpgradeCost = 5000;
+							UpgradeBomb(UpgradeCost, 4, 6000);
 							break;
 						case 4:
 							UpgradeCost = 6000;
+							UpgradeBomb(UpgradeCost, 5, 99999);
 							break;
 						case 5:
-							UpgradeCost = 10000;
+							UpgradeCost = 99999;
 							break;
 						}
 						break;
@@ -1324,16 +1455,14 @@ void AEndlessReachHDPawn::BackInput()
 			{
 				FireBomb();
 			}
-
-			FireBomb();
 		}
 	}
 }
 
 // Show combat damage text function
-void AEndlessReachHDPawn::ShowCombatDamageText(bool IsCritical, float Damage)
+void AEndlessReachHDPawn::ShowCombatDamageText(bool bIsCritical, float Damage)
 {
-	if (IsCritical)
+	if (bIsCritical)
 	{
 		// CRITICAL DAMAGE
 		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_CritDmg, UCommonLibrary::GetFloatAsTextWithPrecision(Damage, 0, true));  // show combat text
@@ -1342,5 +1471,14 @@ void AEndlessReachHDPawn::ShowCombatDamageText(bool IsCritical, float Damage)
 	{
 		// STANDARD DAMAGE
 		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Damage, UCommonLibrary::GetFloatAsTextWithPrecision(Damage, 0, true));  // show combat text
+	}
+}
+
+// Add Status Effect Icon to HUD
+void AEndlessReachHDPawn::AddStatusEffectIcon(FName ID, UTexture2D* Icon, bool bShouldBlink)
+{
+	if (PlayerHUD)
+	{
+		//PlayerHUD->
 	}
 }

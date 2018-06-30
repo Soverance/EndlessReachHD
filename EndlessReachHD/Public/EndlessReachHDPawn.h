@@ -335,8 +335,30 @@ public:
 	UCombatTextComponent* CombatTextComponent;
 
 	// Show Combat Damage Text
-	UFUNCTION(BlueprintCallable, Category = Combat)
-	void ShowCombatDamageText(bool IsCritical, float Damage);
+	UFUNCTION(BlueprintCallable, Category = CombatText)
+	void ShowCombatDamageText(bool bIsCritical, float Damage);
+
+	// Add Status Effect Icon to HUD
+	UFUNCTION(BlueprintCallable, Category = CombatText)
+	void AddStatusEffectIcon(FName ID, UTexture2D* Icon, bool bShouldBlink);
+
+	////////////////////////////////////////////////////
+	//
+	// AGGRO RADIUS and MISSILES
+	//
+	////////////////////////////////////////////////////
+
+	// AGGRO Physics Constraint
+	UPROPERTY(Category = Aggro, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPhysicsConstraintComponent* AggroConstraint;
+
+	// Aggro Radius Collider
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Aggro)
+	USphereComponent* AggroRadius;
+
+	/* Whether the missiles are enabled */
+	UPROPERTY(Category = Missiles, EditAnywhere, BlueprintReadWrite)
+	bool bMissilesEnabled;
 
 	////////////////////////////////////////////////////
 	//
@@ -351,10 +373,6 @@ public:
 	// Magnet Radius Collider
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Magnet)
 	USphereComponent* MagnetRadius;
-
-	/* Whether the magnet is unlocked */
-	UPROPERTY(Category = Magnet, EditAnywhere, BlueprintReadWrite)
-	bool bMagnetUnlocked;
 
 	/* Whether the magnet is enabled */
 	UPROPERTY(Category = Magnet, EditAnywhere, BlueprintReadWrite)
@@ -387,9 +405,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser)
 	UBoxComponent* LaserRadius;
 
-	/* The number of charges for the laser beam cannon - maximum of 5 */
-	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+	/* The number of charges for the laser beam cannon*/
+	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
 	int32 LaserChargeCount;
+
+	/* The maximum number of charges for the laser beam cannon*/
+	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
+	int32 LaserChargeMax;
 
 	/* Whether the beam cannon is unlocked */
 	UPROPERTY(Category = Laser, EditAnywhere, BlueprintReadWrite)
@@ -444,6 +466,10 @@ public:
 	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
 	int32 BombCount;
 
+	/* The number of bombs available - maximum of 5 */
+	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
+	int32 BombMax;
+
 	// Bomb Control Functions
 	UFUNCTION(BlueprintCallable, Category = Bomb)
 	void FireBomb();
@@ -462,9 +488,7 @@ public:
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
 	int32 ShipTypeLevel;
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
-	int32 HealthLevel;
-	UFUNCTION(BlueprintCallable, Category = Upgrade)
-	void UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
+	int32 HealthLevel;	
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
 	int32 ThrustersLevel;
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
@@ -479,6 +503,21 @@ public:
 	int32 ShieldLevel;
 	UPROPERTY(Category = Upgrade, EditAnywhere, BlueprintReadWrite)
 	int32 BombLevel;
+
+	////////////////////////////////////////////////////
+	//
+	// UPGRADE FUNCTIONS
+	//
+	////////////////////////////////////////////////////
+
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeLaser(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeMagnet(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost, int32 NewMagnetRadius);
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeBomb(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
 
 	////////////////////////////////////////////////////
 	//

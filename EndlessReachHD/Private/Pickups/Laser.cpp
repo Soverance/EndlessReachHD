@@ -96,10 +96,12 @@ void ALaser::CollideWithPlayer()
 {
 	if (Player)  // if player is valid (it should be, because they just collided with the laser pickup)
 	{
-		if (Player->LaserChargeCount < 5)  // if the player's laser charge count is less than five
+		if (Player->bLaserUnlocked)
 		{
-			switch (Player->LaserChargeCount)
+			if (Player->LaserChargeCount < Player->LaserChargeMax)  // if the player's laser charge count is less than the maximum
 			{
+				switch (Player->LaserChargeCount)
+				{
 				case 0:  // if none
 					Player->PlayerHUD->ChargeLaser_Stage1();  // charge laser stage 1 hud anim
 					break;
@@ -115,17 +117,28 @@ void ALaser::CollideWithPlayer()
 				case 4:  // if four
 					Player->PlayerHUD->ChargeLaser_Stage5();  // charge laser stage 5 hud anim
 					break;
+				}
+
+				Player->LaserChargeCount++;  // increment charge count
+				Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Laser"));
+				LaserPickupFX->Activate();  // activate visual fx
+				LaserPickupSound->Play();  // play laser pickup sound
+				//LaserMeshComponent->SetVisibility(false);  // hide laser from player view				
 			}
-			Player->LaserChargeCount++;  // increment charge count
+			else  // break into this section if the player already has max laser charges
+			{
+				Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Text, FText::FromString("MAX"));
+				PickupErrorSound->Play();  // play pickup error sound
+			}
+		}
+		else
+		{
+			Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Text, FText::FromString("LOCKED"));
+			PickupErrorSound->Play();  // play pickup error sound
 		}
 
-		Player->CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Drop, FText::FromString("+ Laser"));
-		LaserPickupFX->Activate();  // activate visual fx
-		LaserPickupSound->Play();  // play laser pickup sound
-		LaserMeshComponent->SetVisibility(false);  // hide laser from player view
-
-		// delay destruction so that audio can finish playing
+		LaserMeshComponent->SetVisibility(false);  // hide laser from player view after collision		
 		FTimerHandle DestroyDelay;
-		GetWorldTimerManager().SetTimer(DestroyDelay, this, &ALaser::StartDestruction, 2.0f, false);
+		GetWorldTimerManager().SetTimer(DestroyDelay, this, &ALaser::StartDestruction, 2.0f, false); // delay destruction so that audio can finish playing
 	}
 }
