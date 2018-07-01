@@ -18,6 +18,7 @@
 #include "Blueprint/UserWidget.h"
 #include "PlayerStatAttribute.h"
 #include "Environment/Hangar.h"
+#include "Management/CommonLibrary.h"
 #include "HangarMenu.generated.h"
 
 UCLASS()

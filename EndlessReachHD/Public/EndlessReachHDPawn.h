@@ -511,6 +511,9 @@ public:
 	////////////////////////////////////////////////////
 
 	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	int32 GetUpgradeCost(int32 UpgradeIndex, int32 PowerLevel);
+
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
 	void UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
 	UFUNCTION(BlueprintCallable, Category = Upgrade)
 	void UpgradeThrusters(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);

@@ -567,7 +567,10 @@ void AEndlessReachHDPawn::InitializeAllWidgets()
 		}		
 	}
 
-	HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
+	if (!HangarMenu)
+	{
+		HangarMenu = CreateWidget<UHangarMenu>(GetWorld(), W_HangarMenu);  // creates the hangar menu widget
+	}	
 
 	if (HangarMenu)
 	{
@@ -603,26 +606,6 @@ void AEndlessReachHDPawn::UpdateHangarMenu()
 		if (HangarMenu->IsInViewport())
 		{
 			HangarMenu->Player_OrbCount = UCommonLibrary::GetFloatAsTextWithPrecision(OrbCount, 0, false);  // set current orb count
-
-			HangarMenu->Attributes[0].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[0].UpgradeCost, 0, false);  // set Ship Type upgrade cost text
-			HangarMenu->Attributes[1].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[1].UpgradeCost, 0, false);  // set Health upgrade cost text
-			HangarMenu->Attributes[2].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[2].UpgradeCost, 0, false);  // set Thrusters upgrade cost text
-			HangarMenu->Attributes[3].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[3].UpgradeCost, 0, false);  // set Cannon upgrade cost text
-			HangarMenu->Attributes[4].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[4].UpgradeCost, 0, false);  // set Laser upgrade cost text
-			HangarMenu->Attributes[5].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[5].UpgradeCost, 0, false);  // set Magnet upgrade cost text
-			HangarMenu->Attributes[6].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[6].UpgradeCost, 0, false);  // set Missile upgrade cost text
-			HangarMenu->Attributes[7].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[7].UpgradeCost, 0, false);  // set Shield upgrade cost text
-			HangarMenu->Attributes[8].UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(HangarMenu->Attributes[8].UpgradeCost, 0, false);  // set Bomb upgrade cost text
-
-			HangarMenu->Attributes[0].CurrentPower = ShipTypeLevel;
-			HangarMenu->Attributes[1].CurrentPower = HealthLevel;
-			HangarMenu->Attributes[2].CurrentPower = ThrustersLevel;
-			HangarMenu->Attributes[3].CurrentPower = CannonLevel;
-			HangarMenu->Attributes[4].CurrentPower = LaserLevel;
-			HangarMenu->Attributes[5].CurrentPower = MagnetLevel;
-			HangarMenu->Attributes[6].CurrentPower = MissilesLevel;
-			HangarMenu->Attributes[7].CurrentPower = ShieldLevel;
-			HangarMenu->Attributes[8].CurrentPower = BombLevel;
 		}
 	}
 }
@@ -1070,6 +1053,235 @@ void AEndlessReachHDPawn::MenuRight()
 	}
 }
 
+// Get Upgrade Cost
+int32 AEndlessReachHDPawn::GetUpgradeCost(int32 UpgradeIndex, int32 PowerLevel)
+{
+	// cost of the upgrade for the specified level
+	int32 UpgradeCost = 0;
+
+	switch (UpgradeIndex)
+	{
+		// SHIP TYPE UPGRADE
+		case 0:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 1750;
+				break;
+			case 1:
+				UpgradeCost = 2500;
+				break;
+			case 2:
+				UpgradeCost = 3250;
+				break;
+			case 3:
+				UpgradeCost = 4500;
+				break;
+			case 4:
+				UpgradeCost = 6000;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// HEALTH UPGRADE
+		case 1:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 250;
+				break;
+			case 1:
+				UpgradeCost = 500;
+				break;
+			case 2:
+				UpgradeCost = 750;
+				break;
+			case 3:
+				UpgradeCost = 1000;
+				break;
+			case 4:
+				UpgradeCost = 1500;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// THURSTERS UPGRADE
+		case 2:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 500;
+				break;
+			case 1:
+				UpgradeCost = 750;
+				break;
+			case 2:
+				UpgradeCost = 1000;
+				break;
+			case 3:
+				UpgradeCost = 1250;
+				break;
+			case 4:
+				UpgradeCost = 1500;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// MAIN CANNON UPGRADE
+		case 3:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 500;
+				break;
+			case 1:
+				UpgradeCost = 750;
+				break;
+			case 2:
+				UpgradeCost = 1000;
+				break;
+			case 3:
+				UpgradeCost = 1250;
+				break;
+			case 4:
+				UpgradeCost = 1500;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// LASER UPGRADE
+		case 4:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 1000;
+				break;
+			case 1:
+				UpgradeCost = 1500;
+				break;
+			case 2:
+				UpgradeCost = 2000;
+				break;
+			case 3:
+				UpgradeCost = 2500;
+				break;
+			case 4:
+				UpgradeCost = 3000;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// MAGNET UPGRADE
+		case 5:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 1000;
+				break;
+			case 1:
+				UpgradeCost = 1500;
+				break;
+			case 2:
+				UpgradeCost = 2000;
+				break;
+			case 3:
+				UpgradeCost = 2500;
+				break;
+			case 4:
+				UpgradeCost = 3000;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// MISSILES UPGRADE
+		case 6:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 1500;
+				break;
+			case 1:
+				UpgradeCost = 2250;
+				break;
+			case 2:
+				UpgradeCost = 3000;
+				break;
+			case 3:
+				UpgradeCost = 3750;
+				break;
+			case 4:
+				UpgradeCost = 4500;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// ENERGY SHIELD UPGRADE
+		case 7:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 1500;
+				break;
+			case 1:
+				UpgradeCost = 2250;
+				break;
+			case 2:
+				UpgradeCost = 3000;
+				break;
+			case 3:
+				UpgradeCost = 3750;
+				break;
+			case 4:
+				UpgradeCost = 4500;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+		// BOMB LEVEL
+		case 8:
+			switch (PowerLevel)
+			{
+			case 0:
+				UpgradeCost = 2000;
+				break;
+			case 1:
+				UpgradeCost = 3000;
+				break;
+			case 2:
+				UpgradeCost = 4000;
+				break;
+			case 3:
+				UpgradeCost = 5000;
+				break;
+			case 4:
+				UpgradeCost = 6000;
+				break;
+			case 5:
+				UpgradeCost = 99999;
+				break;
+			}
+			break;
+	}
+
+	return UpgradeCost;
+}
+
 // Upgrade Health
 void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost)
 {
@@ -1203,259 +1415,207 @@ void AEndlessReachHDPawn::ActionInput()
 				{
 					switch (HangarMenu->MenuIndex)
 					{
-						// cost of the upgrade for the specified level
-						int32 UpgradeCost;
-
-						// SHIP TYPE UPGRADE
-					case 0:
-						switch (ShipTypeLevel)
-						{
+						// SHIP TYPE UPGRADE - INDEX 0
 						case 0:
-							UpgradeCost = 1750;
+							switch (ShipTypeLevel)
+							{
+							case 0:
+								//UpgradeCost = GetUpgradeCost(0, 0);
+								break;
+							case 1:
+								//UpgradeCost = GetUpgradeCost(0, 1);
+								break;
+							case 2:
+								//UpgradeCost = GetUpgradeCost(0, 2);
+								break;
+							case 3:
+								//UpgradeCost = GetUpgradeCost(0, 3);
+								break;
+							case 4:
+								//UpgradeCost = GetUpgradeCost(0, 4);
+								break;
+							case 5:
+								//UpgradeCost = GetUpgradeCost(0, 5);
+								break;
+							}
 							break;
+						// HEALTH UPGRADE - INDEX 1
 						case 1:
-							UpgradeCost = 2500;
+							switch (HealthLevel)
+							{
+							case 0:
+								UpgradeHealth(GetUpgradeCost(1, 0), 1, GetUpgradeCost(1, 1));
+								break;
+							case 1:
+								UpgradeHealth(GetUpgradeCost(1, 1), 2, GetUpgradeCost(1, 2));
+								break;
+							case 2:
+								UpgradeHealth(GetUpgradeCost(1, 2), 3, GetUpgradeCost(1, 3));
+								break;
+							case 3:
+								UpgradeHealth(GetUpgradeCost(1, 3), 4, GetUpgradeCost(1, 4));
+								break;
+							case 4:
+								UpgradeHealth(GetUpgradeCost(1, 4), 5, GetUpgradeCost(1, 5));
+								break;
+							case 5:
+								break;
+							}
 							break;
+						// THURSTERS UPGRADE - INDEX 2
 						case 2:
-							UpgradeCost = 3250;
+							switch (ThrustersLevel)
+							{
+							case 0:
+								UpgradeThrusters(GetUpgradeCost(2, 0), 1, GetUpgradeCost(2, 1));
+								break;
+							case 1:
+								UpgradeThrusters(GetUpgradeCost(2, 1), 2, GetUpgradeCost(2, 2));
+								break;
+							case 2:
+								UpgradeThrusters(GetUpgradeCost(2, 2), 3, GetUpgradeCost(2, 3));
+								break;
+							case 3:
+								UpgradeThrusters(GetUpgradeCost(2, 3), 4, GetUpgradeCost(2, 4));
+								break;
+							case 4:
+								UpgradeThrusters(GetUpgradeCost(2, 4), 5, GetUpgradeCost(2, 5));
+								break;
+							case 5:
+								break;
+							}
 							break;
+						// MAIN CANNON UPGRADE - INDEX 3
 						case 3:
-							UpgradeCost = 4500;
+							switch (CannonLevel)
+							{
+							case 0:
+								UpgradeCannon(GetUpgradeCost(3, 0), 1, GetUpgradeCost(3, 1), 0.175f);
+								break;
+							case 1:
+								UpgradeCannon(GetUpgradeCost(3, 1), 2, GetUpgradeCost(3, 2), 0.15f);
+								break;
+							case 2:
+								UpgradeCannon(GetUpgradeCost(3, 2), 3, GetUpgradeCost(3, 3), 0.125f);
+								break;
+							case 3:
+								UpgradeCannon(GetUpgradeCost(3, 3), 4, GetUpgradeCost(3, 4), 0.1f);
+								break;
+							case 4:
+								UpgradeCannon(GetUpgradeCost(3, 4), 5, GetUpgradeCost(3, 5), 0.075f);
+								break;
+							case 5:
+								break;
+							}
 							break;
+						// LASER UPGRADE - INDEX 4
 						case 4:
-							UpgradeCost = 6000;
+							switch (LaserLevel)
+							{
+							case 0:
+								UpgradeLaser(GetUpgradeCost(4, 0), 1, GetUpgradeCost(4, 1));
+								bLaserUnlocked = true;
+								break;
+							case 1:
+								UpgradeLaser(GetUpgradeCost(4, 1), 2, GetUpgradeCost(4, 2));
+								break;
+							case 2:
+								UpgradeLaser(GetUpgradeCost(4, 2), 3, GetUpgradeCost(4, 3));
+								break;
+							case 3:
+								UpgradeLaser(GetUpgradeCost(4, 3), 4, GetUpgradeCost(4, 4));
+								break;
+							case 4:
+								UpgradeLaser(GetUpgradeCost(4, 4), 5, GetUpgradeCost(4, 5));
+								break;
+							case 5:
+								break;
+							}
 							break;
+						// MAGNET UPGRADE - INDEX 5
 						case 5:
-							UpgradeCost = 99999;
+							switch (MagnetLevel)
+							{
+							case 0:
+								UpgradeMagnet(GetUpgradeCost(5, 0), 1, GetUpgradeCost(5, 1), 1000);
+								bMagnetEnabled = true;							
+								break;
+							case 1:
+								UpgradeMagnet(GetUpgradeCost(5, 1), 2, GetUpgradeCost(5, 2), 1500);
+								break;
+							case 2:
+								UpgradeMagnet(GetUpgradeCost(5, 2), 3, GetUpgradeCost(5, 3), 2000);
+								break;
+							case 3:
+								UpgradeMagnet(GetUpgradeCost(5, 3), 4, GetUpgradeCost(5, 4), 2500);
+								break;
+							case 4:
+								UpgradeMagnet(GetUpgradeCost(5, 4), 5, GetUpgradeCost(5, 5), 3000);
+								break;
+							case 5:
+								break;
+							}
 							break;
-						}
-						HangarMenu->SetUpgradeLevel(ShipTypeLevel, UpgradeCost);  // update the hangar menu display
-						break;
-						// HEALTH UPGRADE
-					case 1:
-						switch (HealthLevel)
-						{
-						case 0:
-							UpgradeCost = 250;
-							UpgradeHealth(UpgradeCost, 1, 500);
+						// MISSILES UPGRADE - INDEX 6
+						case 6:
+							switch (MissilesLevel)
+							{
+							case 0:
+								break;
+							case 1:
+								break;
+							case 2:
+								break;
+							case 3:
+								break;
+							case 4:
+								break;
+							case 5:
+								break;
+							}
 							break;
-						case 1:
-							UpgradeCost = 500;
-							UpgradeHealth(UpgradeCost, 2, 750);
+						// ENERGY SHIELD UPGRADE - INDEX 7
+						case 7:
+							switch (ShieldLevel)
+							{
+							case 0:
+								break;
+							case 1:
+								break;
+							case 2:
+								break;
+							case 3:
+								break;
+							case 4:
+								break;
+							case 5:
+								break;
+							}
 							break;
-						case 2:
-							UpgradeCost = 750;
-							UpgradeHealth(UpgradeCost, 3, 1000);
+						// BOMB LEVEL - INDEX 8
+						case 8:
+							switch (BombLevel)
+							{
+							case 0:
+								UpgradeBomb(GetUpgradeCost(8, 0), 1, GetUpgradeCost(8, 1));
+								bBombsUnlocked = true;
+								break;
+							case 1:
+								UpgradeBomb(GetUpgradeCost(8, 1), 2, GetUpgradeCost(8, 2));
+								break;
+							case 2:
+								UpgradeBomb(GetUpgradeCost(8, 2), 3, GetUpgradeCost(8, 3));
+								break;
+							case 3:
+								UpgradeBomb(GetUpgradeCost(8, 3), 4, GetUpgradeCost(8, 4));
+								break;
+							case 4:
+								UpgradeBomb(GetUpgradeCost(8, 4), 5, GetUpgradeCost(8, 5));
+								break;
+							case 5:
+								break;
+							}
 							break;
-						case 3:
-							UpgradeCost = 1000;
-							UpgradeHealth(UpgradeCost, 4, 1500);
-							break;
-						case 4:
-							UpgradeCost = 1500;
-							UpgradeHealth(UpgradeCost, 5, 99999);
-							break;
-						case 5:
-							UpgradeCost = 99999;
-							break;
-						}
-						break;
-						// THURSTERS UPGRADE
-					case 2:
-						switch (ThrustersLevel)
-						{
-						case 0:
-							UpgradeCost = 500;
-							UpgradeThrusters(UpgradeCost, 1, 750);
-							break;
-						case 1:
-							UpgradeCost = 750;
-							UpgradeThrusters(UpgradeCost, 2, 1000);
-							break;
-						case 2:
-							UpgradeCost = 1000;
-							UpgradeThrusters(UpgradeCost, 3, 1250);
-							break;
-						case 3:
-							UpgradeCost = 1250;
-							UpgradeThrusters(UpgradeCost, 4, 1500);
-							break;
-						case 4:
-							UpgradeCost = 1500;
-							UpgradeThrusters(UpgradeCost, 5, 99999);
-							break;
-						case 5:
-							UpgradeCost = 99999;
-							break;
-						}
-						break;
-						// MAIN CANNON UPGRADE
-					case 3:
-						switch (CannonLevel)
-						{
-						case 0:
-							UpgradeCost = 500;
-							UpgradeCannon(UpgradeCost, 1, 750, 0.175f);
-							break;
-						case 1:
-							UpgradeCost = 750;
-							UpgradeCannon(UpgradeCost, 2, 1000, 0.15f);
-							break;
-						case 2:
-							UpgradeCost = 1000;
-							UpgradeCannon(UpgradeCost, 3, 1250, 0.125f);
-							break;
-						case 3:
-							UpgradeCost = 1250;
-							UpgradeCannon(UpgradeCost, 4, 1500, 0.1f);
-							break;
-						case 4:
-							UpgradeCost = 1500;
-							UpgradeCannon(UpgradeCost, 5, 99999, 0.075f);
-							break;
-						case 5:
-							UpgradeCost = 99999;
-							break;
-						}
-						break;
-						// LASER UPGRADE
-					case 4:
-						switch (LaserLevel)
-						{
-						case 0:							
-							UpgradeCost = 1000;
-							UpgradeLaser(UpgradeCost, 1, 1500);
-							bLaserUnlocked = true;
-							break;
-						case 1:
-							UpgradeCost = 1500;
-							UpgradeLaser(UpgradeCost, 2, 2000);
-							break;
-						case 2:
-							UpgradeCost = 2000;
-							UpgradeLaser(UpgradeCost, 3, 2500);
-							break;
-						case 3:
-							UpgradeCost = 2500;
-							UpgradeLaser(UpgradeCost, 4, 3000);
-							break;
-						case 4:
-							UpgradeCost = 3000;
-							UpgradeLaser(UpgradeCost, 5, 99999);
-							break;
-						case 5:
-							UpgradeCost = 99999;
-							break;
-						}
-						break;
-						// MAGNET UPGRADE
-					case 5:
-						switch (MagnetLevel)
-						{
-						case 0:
-							UpgradeCost = 1000;
-							UpgradeMagnet(UpgradeCost, 1, 1500, 1000);
-							bMagnetEnabled = true;							
-							break;
-						case 1:
-							UpgradeCost = 1500;
-							UpgradeMagnet(UpgradeCost, 2, 2000, 1500);
-							break;
-						case 2:
-							UpgradeCost = 2000;
-							UpgradeMagnet(UpgradeCost, 3, 2500, 2000);
-							break;
-						case 3:
-							UpgradeCost = 2500;
-							UpgradeMagnet(UpgradeCost, 4, 3000, 2500);
-							break;
-						case 4:
-							UpgradeCost = 3000;
-							UpgradeMagnet(UpgradeCost, 5, 99999, 3000);
-							break;
-						case 5:
-							UpgradeCost = 99999;
-							break;
-						}
-						break;
-						// MISSILES UPGRADE
-					case 6:
-						switch (MissilesLevel)
-						{
-						case 0:
-							UpgradeCost = 1500;
-							break;
-						case 1:
-							UpgradeCost = 2250;
-							break;
-						case 2:
-							UpgradeCost = 3000;
-							break;
-						case 3:
-							UpgradeCost = 3750;
-							break;
-						case 4:
-							UpgradeCost = 4500;
-							break;
-						case 5:
-							UpgradeCost = 10000;
-							break;
-						}
-						break;
-						// ENERGY SHIELD UPGRADE
-					case 7:
-						switch (ShieldLevel)
-						{
-						case 0:
-							UpgradeCost = 1500;
-							break;
-						case 1:
-							UpgradeCost = 2250;
-							break;
-						case 2:
-							UpgradeCost = 3000;
-							break;
-						case 3:
-							UpgradeCost = 3750;
-							break;
-						case 4:
-							UpgradeCost = 4500;
-							break;
-						case 5:
-							UpgradeCost = 10000;
-							break;
-						}
-						break;
-						// BOMB LEVEL
-					case 8:
-						switch (BombLevel)
-						{
-						case 0:
-							UpgradeCost = 2000;
-							UpgradeBomb(UpgradeCost, 1, 3000);
-							bBombsUnlocked = true;
-							break;
-						case 1:
-							UpgradeCost = 3000;
-							UpgradeBomb(UpgradeCost, 2, 4000);
-							break;
-						case 2:
-							UpgradeCost = 4000;
-							UpgradeBomb(UpgradeCost, 3, 5000);
-							break;
-						case 3:
-							UpgradeCost = 5000;
-							UpgradeBomb(UpgradeCost, 4, 6000);
-							break;
-						case 4:
-							UpgradeCost = 6000;
-							UpgradeBomb(UpgradeCost, 5, 99999);
-							break;
-						case 5:
-							UpgradeCost = 99999;
-							break;
-						}
-						break;
 					}
 				}
 				else

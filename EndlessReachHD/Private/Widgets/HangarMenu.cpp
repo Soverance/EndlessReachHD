@@ -200,46 +200,73 @@ void UHangarMenu::SetUpgradeLevel(int32 Level, int32 UpgradeCost)
 	{
 		// SHIP TYPE
 		case 0:
+			ShipType.UpgradeCost = UpgradeCost;
+			ShipType.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			ShipType.CurrentPower = Level;
 			Attributes[0].UpgradeCost = UpgradeCost;
 			Attributes[0].CurrentPower = Level;
 			break;
 		// HEALTH
 		case 1:
+			Health.UpgradeCost = UpgradeCost;
+			Health.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Health.CurrentPower = Level;
 			Attributes[1].UpgradeCost = UpgradeCost;
 			Attributes[1].CurrentPower = Level;
 			break;
 		// THRUSTERS
 		case 2:
+			Thruster.UpgradeCost = UpgradeCost;
+			Thruster.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Thruster.CurrentPower = Level;
 			Attributes[2].UpgradeCost = UpgradeCost;
 			Attributes[2].CurrentPower = Level;
 			break;
 		// MAIN CANNON
 		case 3:
+			Cannon.UpgradeCost = UpgradeCost;
+			Cannon.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Cannon.CurrentPower = Level;
 			Attributes[3].UpgradeCost = UpgradeCost;
 			Attributes[3].CurrentPower = Level;
 			break;
 		// LASER
 		case 4:
+			Laser.UpgradeCost = UpgradeCost;
+			Laser.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Laser.CurrentPower = Level;
 			Attributes[4].UpgradeCost = UpgradeCost;
 			Attributes[4].CurrentPower = Level;
 			break;
 		// MAGNET
 		case 5:
+			Magnet.UpgradeCost = UpgradeCost;
+			Magnet.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Magnet.CurrentPower = Level;
 			Attributes[5].UpgradeCost = UpgradeCost;
 			Attributes[5].CurrentPower = Level;
 			break;
 		// MISSILES
 		case 6:
+			Missiles.UpgradeCost = UpgradeCost;
+			Missiles.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Missiles.CurrentPower = Level;
 			Attributes[6].UpgradeCost = UpgradeCost;
 			Attributes[6].CurrentPower = Level;
 			break;
 		// ENERGY SHIELD
 		case 7:
+			Shield.UpgradeCost = UpgradeCost;
+			Shield.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Shield.CurrentPower = Level;
 			Attributes[7].UpgradeCost = UpgradeCost;
 			Attributes[7].CurrentPower = Level;
 			break;
 		// BOMB
 		case 8:
+			Bomb.UpgradeCost = UpgradeCost;
+			Bomb.UpgradeCostText = UCommonLibrary::GetFloatAsTextWithPrecision(UpgradeCost, 0, false);
+			Bomb.CurrentPower = Level;
 			Attributes[8].UpgradeCost = UpgradeCost;
 			Attributes[8].CurrentPower = Level;
 			break;
