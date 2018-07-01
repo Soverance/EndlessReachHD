@@ -57,7 +57,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	bMissilesEnabled = false;
 	bMagnetEnabled = false;
 	GunOffset = FVector(140.f, 0.f, 0.f);
-	FireRate = 0.1f;
+	FireRate = 0.2f;
 	bCanFire = true;
 	bLaserUnlocked = false;
 	bLaserEnabled = false;
@@ -663,7 +663,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 				UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());  // play sound
 			}
 
-			bCanFire = false;
+			//bCanFire = false;
 		}
 	}
 }
@@ -1087,6 +1087,40 @@ void AEndlessReachHDPawn::UpgradeHealth(int32 UpgradeCost, int32 Level, int32 Ne
 	}
 }
 
+// Upgrade Thrusters
+void AEndlessReachHDPawn::UpgradeThrusters(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost)
+{
+	if (OrbCount > UpgradeCost)
+	{
+		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
+		ThrustersLevel = Level;  // set thrusters upgrade level
+		MaxFuel = (MaxFuel + (MaxFuel * 0.5f));  // Add 50% of current max fuel for each upgrade
+		HangarMenu->SetUpgradeLevel(ThrustersLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
+		UpdateHangarMenu();  // update the hangar menu display
+	}
+	else
+	{
+		HangarMenu->NotifyError();
+	}
+}
+
+// Upgrade Main Cannon
+void AEndlessReachHDPawn::UpgradeCannon(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost, float NewFireRate)
+{
+	if (OrbCount > UpgradeCost)
+	{
+		OrbCount = OrbCount - UpgradeCost;  // subtract Cost from OrbCount
+		CannonLevel = Level;  // set Cannon upgrade level
+		FireRate = NewFireRate;  // set new fire rate
+		HangarMenu->SetUpgradeLevel(CannonLevel, NextUpgradeCost);  // set the new upgrade information within the hangar menu
+		UpdateHangarMenu();  // update the hangar menu display
+	}
+	else
+	{
+		HangarMenu->NotifyError();
+	}
+}
+
 // Upgrade Laser
 void AEndlessReachHDPawn::UpgradeLaser(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost)
 {
@@ -1232,21 +1266,26 @@ void AEndlessReachHDPawn::ActionInput()
 						{
 						case 0:
 							UpgradeCost = 500;
+							UpgradeThrusters(UpgradeCost, 1, 750);
 							break;
 						case 1:
 							UpgradeCost = 750;
+							UpgradeThrusters(UpgradeCost, 2, 1000);
 							break;
 						case 2:
 							UpgradeCost = 1000;
+							UpgradeThrusters(UpgradeCost, 3, 1250);
 							break;
 						case 3:
 							UpgradeCost = 1250;
+							UpgradeThrusters(UpgradeCost, 4, 1500);
 							break;
 						case 4:
 							UpgradeCost = 1500;
+							UpgradeThrusters(UpgradeCost, 5, 99999);
 							break;
 						case 5:
-							UpgradeCost = 10000;
+							UpgradeCost = 99999;
 							break;
 						}
 						break;
@@ -1256,21 +1295,26 @@ void AEndlessReachHDPawn::ActionInput()
 						{
 						case 0:
 							UpgradeCost = 500;
+							UpgradeCannon(UpgradeCost, 1, 750, 0.175f);
 							break;
 						case 1:
 							UpgradeCost = 750;
+							UpgradeCannon(UpgradeCost, 2, 1000, 0.15f);
 							break;
 						case 2:
 							UpgradeCost = 1000;
+							UpgradeCannon(UpgradeCost, 3, 1250, 0.125f);
 							break;
 						case 3:
 							UpgradeCost = 1250;
+							UpgradeCannon(UpgradeCost, 4, 1500, 0.1f);
 							break;
 						case 4:
 							UpgradeCost = 1500;
+							UpgradeCannon(UpgradeCost, 5, 99999, 0.075f);
 							break;
 						case 5:
-							UpgradeCost = 10000;
+							UpgradeCost = 99999;
 							break;
 						}
 						break;

@@ -64,8 +64,8 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	Thruster.UpgradeCostText = LOCTEXT("AttributeCost_ThrusterUpgradeCost", "250");
 	Thruster.UpgradeCost = 250;
 	Thruster.CurrentPower = 0;
-	Thruster.UnlockDescription = LOCTEXT("AttributeDescription_UnlockThruster", "Increase the ship's fuel economy.");
-	Thruster.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeThruster", "Increase the ship's fuel economy.");
+	Thruster.UnlockDescription = LOCTEXT("AttributeDescription_UnlockThruster", "Increase the ship's maximum fuel capacity.");
+	Thruster.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeThruster", "Increase the ship's maximum fuel capacity.");
 	Thruster.MaxDescription = LOCTEXT("AttributeDescription_MaxThruster", "No further upgrades available.");
 	Thruster.Icon = ThrusterIcon.Object;
 	Attributes.Add(Health);

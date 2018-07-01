@@ -282,7 +282,7 @@ public:
 	UAudioComponent* EngineThrustSound;
 
 	// Thrusters Cam Shake
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Laser)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Thrusters)
 	TSubclassOf<UCameraShake> ThrusterCamShake;
 
 	// Thrusters Control
@@ -512,6 +512,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Upgrade)
 	void UpgradeHealth(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeThrusters(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
+	UFUNCTION(BlueprintCallable, Category = Upgrade)
+	void UpgradeCannon(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost, float NewFireRate);
 	UFUNCTION(BlueprintCallable, Category = Upgrade)
 	void UpgradeLaser(int32 UpgradeCost, int32 Level, int32 NextUpgradeCost);
 	UFUNCTION(BlueprintCallable, Category = Upgrade)
