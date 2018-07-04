@@ -21,6 +21,7 @@
 #include "Widgets/PlayerHUD.h"
 #include "Widgets/HangarMenu.h"
 #include "EndlessReachHDPawn.generated.h"
+class AEnemyMaster;  // forward declaration to avoid circular dependency on the enemy master class
 
 UCLASS(Blueprintable)
 class AEndlessReachHDPawn : public APawn
@@ -344,7 +345,7 @@ public:
 
 	////////////////////////////////////////////////////
 	//
-	// AGGRO RADIUS and MISSILES
+	// AGGRO
 	//
 	////////////////////////////////////////////////////
 
@@ -356,6 +357,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Aggro)
 	USphereComponent* AggroRadius;
 
+	// Enemy Aggro List. Enemies are added to this list as they are aggroed, and removed accordingly.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Aggro)
+	TArray<AEnemyMaster*> AggroList;
+
+	////////////////////////////////////////////////////
+	//
+	// MISSILES
+	//
+	////////////////////////////////////////////////////
+	
 	/* Whether the missiles are enabled */
 	UPROPERTY(Category = Missiles, EditAnywhere, BlueprintReadWrite)
 	bool bMissilesEnabled;
@@ -477,7 +488,7 @@ public:
 	/** Sound to play when bomb is fired */
 	UPROPERTY(Category = Bomb, EditAnywhere, BlueprintReadWrite)
 	class USoundBase* BombSound;
-
+	
 	////////////////////////////////////////////////////
 	//
 	// UPGRADE LEVELS
@@ -528,7 +539,7 @@ public:
 
 	////////////////////////////////////////////////////
 	//
-	// DEFAULTS
+	// GAMEPLAY DEFAULTS
 	//
 	////////////////////////////////////////////////////
 
@@ -539,6 +550,10 @@ public:
 	/* The number of orbs the player has collected since the last time they returned to the outpost */
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 	int32 OrbCount;
+
+	// Whether or not the player is dead
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	bool bIsDead;
 
 	////////////////////////////////////////////////////
 	//

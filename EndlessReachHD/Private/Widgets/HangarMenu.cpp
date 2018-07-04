@@ -86,7 +86,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	Laser.UpgradeCostText = LOCTEXT("AttributeCost_LaserUpgradeCost", "500");
 	Laser.UpgradeCost = 500;
 	Laser.CurrentPower = 0;
-	Laser.UnlockDescription = LOCTEXT("AttributeDescription_UnlockLaser", "Unlock the laser, a heavy damage weapon. Can only be fired in the forward direction, and only if one of more charges is available.");
+	Laser.UnlockDescription = LOCTEXT("AttributeDescription_UnlockLaser", "Install the laser, a heavy directional weapon. Requires one or more charges to fire.");
 	Laser.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeLaser", "Increase the maximum number of laser charges the ship can carry.");
 	Laser.MaxDescription = LOCTEXT("AttributeDescription_MaxLaser", "No further upgrades available.");
 	Laser.Icon = LaserIcon.Object;
@@ -97,7 +97,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	Magnet.UpgradeCostText = LOCTEXT("AttributeCost_MagnetUpgradeCost", "500");
 	Magnet.UpgradeCost = 500;
 	Magnet.CurrentPower = 0;
-	Magnet.UnlockDescription = LOCTEXT("AttributeDescription_UnlockMagnet", "Unlock the magnet, which automatically draws in pickups, making them easier to collect.");
+	Magnet.UnlockDescription = LOCTEXT("AttributeDescription_UnlockMagnet", "Install the magnet, which automatically draws in collectible objects.");
 	Magnet.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeMagnet", "Increase the magent's radius.");
 	Magnet.MaxDescription = LOCTEXT("AttributeDescription_MaxMagnet", "No further upgrades available.");
 	Magnet.Icon = MagnetIcon.Object;
@@ -108,8 +108,8 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	Missiles.UpgradeCostText = LOCTEXT("AttributeCost_MissilesUpgradeCost", "750");
 	Missiles.UpgradeCost = 750;
 	Missiles.CurrentPower = 0;
-	Missiles.UnlockDescription = LOCTEXT("AttributeDescription_UnlockMissiles", "Unlock homing missiles, which are fired automatically.");
-	Missiles.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeMissiles", "Increase the effectiveness of homing missles.");
+	Missiles.UnlockDescription = LOCTEXT("AttributeDescription_UnlockMissiles", "Install homing missiles, which are fired automatically at any target in range.");
+	Missiles.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeMissiles", "Increase the firing rate of homing missiles.");
 	Missiles.MaxDescription = LOCTEXT("AttributeDescription_MaxMissiles", "No further upgrades available.");
 	Missiles.Icon = MissileIcon.Object;
 	Attributes.Add(Missiles);
@@ -119,7 +119,7 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	Shield.UpgradeCostText = LOCTEXT("AttributeCost_ShieldUpgradeCost", "750");
 	Shield.UpgradeCost = 750;
 	Shield.CurrentPower = 0;
-	Shield.UnlockDescription = LOCTEXT("AttributeDescription_UnlockShield", "Unlock the energy shield, which will help protect your ship from damage.");
+	Shield.UnlockDescription = LOCTEXT("AttributeDescription_UnlockShield", "Install the energy shield, which will help protect your ship from damage.");
 	Shield.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeShield", "Increase the energy shield's durability.");
 	Shield.MaxDescription = LOCTEXT("AttributeDescription_MaxShield", "No further upgrades available.");
 	Shield.Icon = ShieldIcon.Object;
@@ -130,8 +130,8 @@ UHangarMenu::UHangarMenu(const FObjectInitializer& ObjectInitializer)
 	Bomb.UpgradeCostText = LOCTEXT("AttributeCost_BombUpgradeCost", "1000");
 	Bomb.UpgradeCost = 1000;
 	Bomb.CurrentPower = 0;
-	Bomb.UnlockDescription = LOCTEXT("AttributeDescription_UnlockBomb", "Unlock atomic bombs, which immediately destroy all targets in range (excluding bosses).");
-	Bomb.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeBomb", "Increase the maximum number of bombs the ship is capable of carrying.");
+	Bomb.UnlockDescription = LOCTEXT("AttributeDescription_UnlockBomb", "Install atomic bombs, which upon detonation immediately destroy all targets in range (excluding bosses).");
+	Bomb.UpgradeDescription = LOCTEXT("AttributeDescription_UpgradeBomb", "Increase the maximum number of bombs the ship can carry.");
 	Bomb.MaxDescription = LOCTEXT("AttributeDescription_MaxBomb", "No further upgrades available.");
 	Bomb.Icon = BombIcon.Object;
 	Attributes.Add(Bomb);

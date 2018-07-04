@@ -20,7 +20,6 @@
 #include "TimerManager.h"
 #include "Projectiles/Cannonball.h"
 #include "Projectiles/Bomb.h"
-//#include "Widgets/HangarMenu.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
 // AXIS
@@ -75,6 +74,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	RollX = 0;
 	PitchY = 0;
 	YawZ = 0;
+	bIsDead = false;
 
 	// Upgrade Level Initialization
 	ShipTypeLevel = 0;
@@ -245,7 +245,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	AggroRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	AggroRadius->SetSphereRadius(5000);  //  5000 max range for aggro by default... we'll try it out for now
-	AggroRadius->bHiddenInGame = true;
+	AggroRadius->bHiddenInGame = false;
 
 	// configure Magnet Radius
 	MagnetRadius = CreateDefaultSubobject<USphereComponent>(TEXT("MagnetRadius"));
