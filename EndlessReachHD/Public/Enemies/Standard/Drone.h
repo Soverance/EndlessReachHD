@@ -37,4 +37,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Fire Audio
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effects)
+	UAudioComponent* FireAudio;
+	USoundCue* S_FireAudio;
+
+	// Death Audio
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effects)
+	UAudioComponent* DeathAudio;
+	USoundCue* S_DeathAudio;
+
+	// Explosion FX
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effects)
+	UParticleSystemComponent* ExplosionFX;
+	UParticleSystem* P_ExplosionFX;
 };

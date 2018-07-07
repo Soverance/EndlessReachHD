@@ -14,9 +14,11 @@
 // limitations under the License.
 
 #include "EndlessReachHD.h"
-#include "Environment/Asteroid.h"
-#include "Management/EnemyManager.h"
+#include "EndlessReachHDGameMode.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Management/EnemyManager.h"
+#include "Enemies/EnemyMaster.h"
+#include "Enemies/Standard/Drone.h"
 
 // Sets default values
 AEnemyManager::AEnemyManager()
@@ -48,28 +50,37 @@ void AEnemyManager::Tick(float DeltaTime)
 void AEnemyManager::ClearEnemyField()
 {
 	TArray<AActor*> EnemyField;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AAsteroid::StaticClass(), EnemyField);  // get all asteroids
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyMaster::StaticClass(), EnemyField);  // get all enemies
 
-	for (auto Rock : EnemyField)
+	for (auto Enemy : EnemyField)
 	{
-		Rock->Destroy();  // destroy all rocks in asteroid field
+		Enemy->Destroy();  // destroy all enemies in the enemy field
 	}
 }
 
 // Spawn all asteroids
 void AEnemyManager::PopulateEnemyField()
 {
-	// Asteroid Procedural Generation
+	AEndlessReachHDGameMode* GameMode = Cast<AEndlessReachHDGameMode>(GetWorld()->GetAuthGameMode());  // collect game mode reference
+
+	// Enemy Procedural Generation
 	for (int32 i = 0; i < TotalEnemies; i++)
 	{
-		// Generate random settings for each asteroid in the field
+		// Generate random settings for each enemy in the field
 		FVector Location = FMath::VRand() * FMath::FRandRange(MinDistance, MaxDistance);  // random location
-		FVector CorrectedLocation = FVector(Location.X, Location.Y, 0);  // force Z value to 0 for all asteroid locations (so they're on the same plane as the player)
-		FRotator Rotation = FRotator(FMath::FRandRange(-180.0f, 180.0f), FMath::FRandRange(-180.0f, 180.0f), FMath::FRandRange(-180.0f, 180.0f));  // random rotation
-		//FVector Scale = UKismetMathLibrary::Conv_FloatToVector((ScaleMultiplier * FMath::FRandRange(MinScale, MaxScale)));  // random scale
-		const FTransform Settings = FTransform(Rotation, CorrectedLocation, FVector(1, 1, 1));
+		FVector CorrectedLocation = FVector(Location.X, Location.Y, 0);  // force Z value to 0 for all enemy locations (so they're on the same plane as the player)
+		const FTransform Settings = FTransform(FRotator(0, 0, 0), CorrectedLocation, FVector(1, 1, 1));
 		FActorSpawnParameters Params;
-		Params.OverrideLevel = GetLevel();  // make asteroids spawn within the streaming level so they can be properly unloaded		
-		AAsteroid* Asteroid = GetWorld()->SpawnActor<AAsteroid>(AAsteroid::StaticClass(), Settings, Params);  // Spawn procedurally generated asteroids
+		Params.OverrideLevel = GetLevel();  // make enemies spawn within the streaming level so they can be properly unloaded along with the level
+
+		// spawn enemies based on current map
+		switch (GameMode->CurrentMap)
+		{
+			case 0:
+				break;
+			case 1:
+				AEnemyMaster * Enemy = GetWorld()->SpawnActor<ADrone>(ADrone::StaticClass(), Settings, Params);  // Spawn procedurally generated Drones
+				break;
+		}		
 	}
 }

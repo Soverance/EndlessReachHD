@@ -93,16 +93,6 @@ public:
 	UParticleSystemComponent* DeathFX;
 	UParticleSystem* P_DeathFX;
 
-	/** Effect played when enemy vanishes after dying. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effects)
-	UParticleSystemComponent* DisappearFX;
-	UParticleSystem* P_DisappearFX;
-
-	// Disappear Audio
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effects)
-	UAudioComponent* DisappearAudio;
-	USoundCue* S_DisappearAudio;
-
 	// Whether or not this character is dead
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Controls)
 	bool bIsDead;

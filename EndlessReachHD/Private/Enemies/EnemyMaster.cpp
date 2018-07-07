@@ -30,34 +30,6 @@ AEnemyMaster::AEnemyMaster()
 	// Create Combat Text Component
 	CombatTextComponent = CreateDefaultSubobject<UCombatTextComponent>(TEXT("Combat Text Component"));
 
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> HitParticleObject(TEXT("ParticleSystem'/Game/Particles/Emitter/P_blood_splash.P_blood_splash'"));
-	P_HitFX = HitParticleObject.Object;
-	HitFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("HitFX"));
-	HitFX->SetupAttachment(RootComponent);
-	HitFX->Template = P_HitFX;
-	HitFX->bAutoActivate = false;
-
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> DeathParticleObject(TEXT("ParticleSystem'/Game/Particles/Emitter/EnemyDeath.EnemyDeath'"));
-	P_DeathFX = DeathParticleObject.Object;
-	DeathFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DeathFX"));
-	DeathFX->SetupAttachment(RootComponent);
-	DeathFX->Template = P_DeathFX;
-	DeathFX->bAutoActivate = false;
-
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> DisappearParticleObject(TEXT("ParticleSystem'/Game/Particles/Emitter/EnemyDisappear.EnemyDisappear'"));
-	P_DisappearFX = DisappearParticleObject.Object;
-	DisappearFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DisappearFX"));
-	DisappearFX->SetupAttachment(RootComponent);
-	DisappearFX->Template = P_DisappearFX;
-	DisappearFX->bAutoActivate = false;
-
-	static ConstructorHelpers::FObjectFinder<USoundCue> DisappearAudioObject(TEXT("SoundCue'/Game/Audio/Party/EnemyDisappear_Cue.EnemyDisappear_Cue'"));
-	S_DisappearAudio = DisappearAudioObject.Object;
-	DisappearAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("DisappearAudio"));
-	DisappearAudio->SetupAttachment(RootComponent);
-	DisappearAudio->Sound = S_DisappearAudio;
-	DisappearAudio->bAutoActivate = false;
-
 	bIsDead = false;
 	bIsHit = false;
 	bIsTargetable = true;
@@ -319,8 +291,6 @@ void AEnemyMaster::FinalDeath(bool ShouldDestroy)
 
 void AEnemyMaster::Disappear()
 {
-	DisappearFX->Activate(); // Activate Disappear effect
-	DisappearAudio->Play(); // Play Disappear audio
 	GetMesh()->SetVisibility(false);  // Hide the enemy mesh
 	GetMesh()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);

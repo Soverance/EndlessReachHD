@@ -16,16 +16,75 @@
 #include "EndlessReachHD.h"
 #include "Drone.h"
 
+#define LOCTEXT_NAMESPACE "EndlessReachHD-TextLibrary"
+
 // Sets default values
 ADrone::ADrone()
 {
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> EnemyMesh(TEXT("/Game/Enemies/Drone/SK_Drone.SK_Drone"));
+	static ConstructorHelpers::FObjectFinder<UClass> AnimBP(TEXT("/Game/Enemies/Drone/AnimBP_Drone.AnimBP_Drone_C"));
+	GetMesh()->SkeletalMesh = EnemyMesh.Object;
+	GetMesh()->SetAnimInstanceClass(AnimBP.Object);
+	GetMesh()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
+	GetMesh()->SetRelativeLocation(FVector(0, 0, 0));
+	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 
+	/*static ConstructorHelpers::FObjectFinder<USoundCue> FireAudioObject(TEXT("SoundCue'/Game/Sounds/Stingers/Mono/StingerPickup_Health01_Cue.StingerPickup_Health01_Cue'"));
+	S_FireAudio = FireAudioObject.Object;
+	FireAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("FireAudio"));
+	FireAudio->SetupAttachment(RootComponent);
+	FireAudio->Sound = S_FireAudio;
+	FireAudio->bAutoActivate = false;*/
+
+	static ConstructorHelpers::FObjectFinder<USoundCue> DeathAudioObject(TEXT("/Game/Audio/Enemies/Robot/Robot_Gunfire_Cue.Robot_Gunfire_Cue"));
+	S_DeathAudio = DeathAudioObject.Object;
+	DeathAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("DeathAudio"));
+	DeathAudio->SetupAttachment(RootComponent);
+	DeathAudio->Sound = S_DeathAudio;
+	DeathAudio->bAutoActivate = false;
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ExplosionParticleObject(TEXT("/Game/Particles/Emitter/P_Explosion.P_Explosion"));
+	P_ExplosionFX = ExplosionParticleObject.Object;
+	ExplosionFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ExplosionFX"));
+	ExplosionFX->SetupAttachment(RootComponent);
+	ExplosionFX->Template = P_ExplosionFX;
+	ExplosionFX->bAutoActivate = false;
+	ExplosionFX->SetRelativeLocation(FVector(0, 0, 0));
+	ExplosionFX->SetRelativeRotation(FRotator(0, 0, 0));
+	ExplosionFX->SetRelativeScale3D(FVector(2, 2, 2));
+	
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> DroneHitParticleObject(TEXT("/Game/Particles/Emitter/P_WeldSparks.P_WeldSparks"));
+	P_HitFX = DroneHitParticleObject.Object;
+	HitFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("HitFX"));
+	HitFX->SetupAttachment(RootComponent);
+	HitFX->Template = P_HitFX;
+	HitFX->bAutoActivate = false;
+	HitFX->SetRelativeLocation(FVector(0, 0, 0));
+	HitFX->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> DeathParticleObject(TEXT("/Game/Particles/Emitter/EnemyDeath.EnemyDeath"));
+	P_DeathFX = DeathParticleObject.Object;
+	DeathFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DeathFX"));
+	DeathFX->SetupAttachment(RootComponent);
+	DeathFX->Template = P_DeathFX;
+	DeathFX->bAutoActivate = false;
+	DeathFX->SetRelativeLocation(FVector(0, 0, -90));
+	DeathFX->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));	
+
+	// DEFAULTS
+	BattleType = EBattleTypes::BT_Standard;
+	NameText = LOCTEXT("Drone_NameText", "Drone");
+	AttackDelay = 0.75f;
+	GetCapsuleComponent()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
+	//GetCharacterMovement()->MaxAcceleration = 30;
 }
 
 // Called when the game starts or when spawned
 void ADrone::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+
+	SetBaseStats();  // set base stats
 }
 
 // Called every frame
@@ -33,3 +92,5 @@ void ADrone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+#undef LOCTEXT_NAMESPACE

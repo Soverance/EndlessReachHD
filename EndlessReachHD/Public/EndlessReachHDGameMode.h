@@ -1,4 +1,4 @@
-// © 2014 - 2018 Soverance Studios
+// Â© 2014 - 2018 Soverance Studios
 // http://www.soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ class AEndlessReachHDGameMode : public AGameModeBase
 
 private:
 
-	/** Contains all the available transforms of LevelMovePointActors. */
+	/** Contains all the available transforms of Level Nodes. */
 	TArray<FTransform> NodeTransforms;
 
 	/** Map name to spawn */
