@@ -78,9 +78,28 @@ void AEnemyManager::PopulateEnemyField()
 		{
 			case 0:
 				break;
-			case 1:
+			case 1:				
 				AEnemyMaster * Enemy = GetWorld()->SpawnActor<ADrone>(ADrone::StaticClass(), Settings, Params);  // Spawn procedurally generated Drones
+				Enemy->Level = GetEnemyLevel(GameMode);
+				Enemy->SetBaseStats();
 				break;
 		}		
 	}
+}
+
+int32 AEnemyManager::GetEnemyLevel(AEndlessReachHDGameMode* GameMode)
+{
+	int32 EnemyLevel = 0;
+
+	switch (GameMode->CurrentMap)
+	{
+		case 0:
+			EnemyLevel = 1;
+			break;
+		case 1:
+			EnemyLevel = FMath::RandRange(1, 2);			
+			break;
+	}
+
+	return EnemyLevel;
 }

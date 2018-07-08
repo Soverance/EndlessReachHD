@@ -51,4 +51,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Effects)
 	UParticleSystemComponent* ExplosionFX;
 	UParticleSystem* P_ExplosionFX;
+
+	// Enemy-Specific Death Function. 
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void Death();
 };

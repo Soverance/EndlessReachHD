@@ -15,11 +15,12 @@
 
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
+#include "Enemies/EnemyMaster.h"
 #include "Environment/Asteroid.h"
 #include "Pickups/PickupMaster.h"
-#include "TimerManager.h"
 #include "Projectiles/Cannonball.h"
 #include "Projectiles/Bomb.h"
+#include "TimerManager.h"
 
 // Create bindings for input - these are originally declared in DefaultInput.ini
 // AXIS
@@ -244,6 +245,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	AggroRadius = CreateDefaultSubobject<USphereComponent>(TEXT("AggroRadius"));
 	AggroRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AggroRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::AggroRadiusBeginOverlap);  // set up a notification for when this component hits something
 	AggroRadius->SetSphereRadius(5000);  //  5000 max range for aggro by default... we'll try it out for now
 	AggroRadius->bHiddenInGame = false;
 
@@ -860,6 +862,18 @@ void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActo
 			}
 		}
 	}	
+}
+
+void AEndlessReachHDPawn::AggroRadiusBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
+	{
+		AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy
+		if (Enemy)
+		{
+			Enemy->Aggro(this);
+		}
+	}
 }
 
 void AEndlessReachHDPawn::FireThrusters()

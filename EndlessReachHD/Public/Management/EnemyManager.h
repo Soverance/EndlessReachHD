@@ -51,6 +51,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Default)
 	void ClearEnemyField();
 
+	// Determine Enemy Level
+	UFUNCTION(BlueprintCallable, Category = Default)
+	int32 GetEnemyLevel(AEndlessReachHDGameMode* GameMode);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

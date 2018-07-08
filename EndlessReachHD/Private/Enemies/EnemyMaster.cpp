@@ -156,30 +156,6 @@ void AEnemyMaster::EnemyTakeDamage(float DamageTaken)
 		CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Damage, UCommonLibrary::GetFloatAsTextWithPrecision(mod3, 0, false));
 	}
 
-	bool found = false; // Define a local variable to determine if the enemy is already in the player's aggro list
-
-	// Filter through the player's aggro list, and check if this enemy already exists
-	for (AEnemyMaster* Enemy : Target->AggroList)
-	{
-		if (Enemy == this)
-		{
-			found = true; // enemy was found
-			break; // stop looping
-		}
-		else
-		{
-			found = false; // enemy was not found
-		}
-	}
-
-	if (!found)
-	{
-		if (!bIsDead)
-		{
-			Aggro(Target); // since enemy was not found in the aggro list and is not dead, call aggro because the player must have hit this enemy before he was noticed
-		}
-	}
-
 	ForceHPCaps(); // force HP caps
 }
 
@@ -196,8 +172,7 @@ void AEnemyMaster::Aggro(APawn* Pawn)
 			{
 				if (!Player->bIsDead)  // Make sure the player isn't dead before going further
 				{
-					Target = Player; // Set the seen player as the new Target	
-					Target->AggroList.AddUnique(this); // Add this enemy to the player's aggro list array
+					Target = Player; // Set the seen player as the new Target
 					bInRange = true; // the enemy is now in range
 					bIsAggroed = true; // the enemy is now aggroed
 					bIsTargetable = true;  // turn on targeting, in case it was previously disabled
@@ -230,7 +205,6 @@ void AEnemyMaster::Deaggro()
 	if (BattleType == EBattleTypes::BT_Standard)
 	{
 		bIsAggroed = false;
-		Target->AggroList.Remove(this);  // Remove this enemy from the player's aggro list
 	}
 	// Boss and Signet enemies cannot be deaggroed in the traditional manner.
 	if (BattleType == EBattleTypes::BT_Boss || BattleType == EBattleTypes::BT_Bounty)
@@ -238,7 +212,6 @@ void AEnemyMaster::Deaggro()
 		if (bIsDead)
 		{
 			bIsAggroed = false;
-			Target->AggroList.Remove(this);  // Remove this enemy from the player's aggro list
 		}
 		if (!bIsDead)
 		{
@@ -248,7 +221,6 @@ void AEnemyMaster::Deaggro()
 				if (Target->bIsDead)
 				{
 					bIsAggroed = false;
-					Target->AggroList.Remove(this);  // Remove this enemy from the player's aggro list	
 				}
 			}
 		}

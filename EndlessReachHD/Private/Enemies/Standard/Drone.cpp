@@ -25,8 +25,8 @@ ADrone::ADrone()
 	static ConstructorHelpers::FObjectFinder<UClass> AnimBP(TEXT("/Game/Enemies/Drone/AnimBP_Drone.AnimBP_Drone_C"));
 	GetMesh()->SkeletalMesh = EnemyMesh.Object;
 	GetMesh()->SetAnimInstanceClass(AnimBP.Object);
-	GetMesh()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
-	GetMesh()->SetRelativeLocation(FVector(0, 0, 0));
+	GetMesh()->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+	GetMesh()->SetRelativeLocation(FVector(-50, 0, 0));
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
 
 	/*static ConstructorHelpers::FObjectFinder<USoundCue> FireAudioObject(TEXT("SoundCue'/Game/Sounds/Stingers/Mono/StingerPickup_Health01_Cue.StingerPickup_Health01_Cue'"));
@@ -83,14 +83,27 @@ ADrone::ADrone()
 void ADrone::BeginPlay()
 {
 	Super::BeginPlay();
-
-	SetBaseStats();  // set base stats
+	OnDeath.AddDynamic(this, &ADrone::Death); // bind the death fuction to the OnDeath event 
 }
 
 // Called every frame
 void ADrone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ADrone::Death()
+{
+	HitFX->Deactivate();
+	ExplosionFX->Activate();
+	DeathAudio->Play();
+	GetMesh()->SetVisibility(false);
+
+	// wait a bit (delays the UI display for readability).
+	FTimerDelegate DelegateDeath;
+	DelegateDeath.BindUFunction(this, FName("FinalDeath"), true, false);
+	FTimerHandle DeathTimer;
+	GetWorldTimerManager().SetTimer(DeathTimer, DelegateDeath, 1.0f, false);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -15,6 +15,7 @@
 
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
+#include "Enemies/EnemyMaster.h"
 #include "Environment/Asteroid.h"
 #include "Cannonball.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -68,6 +69,12 @@ void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 			if (Asteroid)
 			{
 				Asteroid->OnHitAsteroid.Broadcast();  // Broadcast Asteroid Hit
+			}
+
+			AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy...
+			if (Enemy)
+			{
+				Enemy->EnemyTakeDamage(500);  // call take damage function
 			}
 		}		
 	}

@@ -357,9 +357,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Aggro)
 	USphereComponent* AggroRadius;
 
-	// Enemy Aggro List. Enemies are added to this list as they are aggroed, and removed accordingly.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Aggro)
-	TArray<AEnemyMaster*> AggroList;
+	/** Function to handle the aggro radius hitting something */
+	UFUNCTION(BlueprintCallable, Category = Laser)
+	void AggroRadiusBeginOverlap(UPrimitiveComponent * HitComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	////////////////////////////////////////////////////
 	//

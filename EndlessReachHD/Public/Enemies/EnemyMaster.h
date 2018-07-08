@@ -149,7 +149,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Combat)
 	float EnemyDealDamage(float BaseATK);
 
-	// Aggro the player. This function is called in Blueprint by the AI OnSeePawn event
+	// Aggro the player.
 	UFUNCTION(BlueprintCallable, Category = Combat)
 	void Aggro(APawn* Pawn);
 
