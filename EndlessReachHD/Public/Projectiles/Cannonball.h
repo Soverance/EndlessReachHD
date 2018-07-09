@@ -18,6 +18,7 @@
 #include "GameFramework/Actor.h"
 #include "Cannonball.generated.h"
 
+class AEndlessReachHDPawn;
 class UProjectileMovementComponent;
 class UStaticMeshComponent;
 
@@ -39,7 +40,12 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+
 	ACannonball();
+
+	/** Player reference */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	AEndlessReachHDPawn* Player;
 
 	/** Function to handle the projectile hitting something */
 	UFUNCTION()

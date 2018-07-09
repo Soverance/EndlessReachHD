@@ -55,10 +55,10 @@ void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		AEndlessReachHDPawn* Player = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
+		AEndlessReachHDPawn* HitPlayer = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
 		
 		// Proceed with damage functions if you did not hit the player
-		if (!Player)
+		if (!HitPlayer)
 		{
 			if (OtherComp->IsSimulatingPhysics())
 			{
@@ -74,7 +74,7 @@ void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 			AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy...
 			if (Enemy)
 			{
-				Enemy->EnemyTakeDamage(500);  // call take damage function
+				Enemy->EnemyTakeDamage(Player->PlayerDealDamage(Player->ATK));  // call take damage function
 			}
 		}		
 	}

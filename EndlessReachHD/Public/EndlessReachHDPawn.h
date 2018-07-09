@@ -21,7 +21,10 @@
 #include "Widgets/PlayerHUD.h"
 #include "Widgets/HangarMenu.h"
 #include "EndlessReachHDPawn.generated.h"
-class AEnemyMaster;  // forward declaration to avoid circular dependency on the enemy master class
+
+// forward declarations
+class AEnemyMaster;
+class ACannonball;
 
 UCLASS(Blueprintable)
 class AEndlessReachHDPawn : public APawn
@@ -72,10 +75,30 @@ public:
 	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
 	float MaxHP;
 
+	/* The ship's ATK (attack) modifier */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	float ATK;
+
+	/* The ship's DEF (defense) modifier */
+	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
+	float DEF;
+
 	/** Engine Idle Sound */
 	UPROPERTY(Category = Ship, EditAnywhere, BlueprintReadWrite)
 	USoundCue* S_EngineIdle;
 	UAudioComponent* EngineIdleSound;
+
+	// This function sets the DamageOutput variable, based on the ATK value of an attack. Returns the ultimate value of damage dealt to an enemy.
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	float PlayerDealDamage(float BaseAtk);
+
+	// This function deals damage to the player, based on a DamageTaken value supplied by an enemy. This function is usually called by the enemy itself.
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void PlayerTakeDamage(float DamageTaken);
+
+	// manages player HP value - will call death function when HP equals zero
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	bool ForceHPCaps();
 
 	////////////////////////////////////////////////////
 	//

@@ -44,6 +44,8 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// Ship Default Specs
 	CurrentHP = 1000;
 	MaxHP = 1000;
+	ATK = 25.0f;
+	DEF = 25.0f;
 	OrbCount = 0;
 	bCanMove = true;
 	MoveSpeed = 50.0f;
@@ -629,6 +631,7 @@ void AEndlessReachHDPawn::FireShot(FVector FireDirection)
 			{
 				// FIRE PROJECTILE
 				ACannonball* Pulse = World->SpawnActor<ACannonball>(SpawnLocation, FireRotation);  // spawn projectile
+				Pulse->Player = this;
 
 				// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
 
@@ -874,6 +877,72 @@ void AEndlessReachHDPawn::AggroRadiusBeginOverlap(UPrimitiveComponent * HitComp,
 			Enemy->Aggro(this);
 		}
 	}
+}
+
+// This function sets the DamageOutput variable, based on the BaseAtk value of an attack. Returns the ultimate value of damage dealt to an enemy.
+float AEndlessReachHDPawn::PlayerDealDamage(float BaseAtk)
+{
+	// The next three lines are pure Black Magic
+	float mod1 = ((BaseAtk + ATK) / 32);
+	float mod2 = ((BaseAtk * ATK) / 64);
+	float mod3 = (((mod1 * mod2) + ATK) * 40);
+	float adjusted = mod3;  // set adjusted to base value of mod3
+
+	return adjusted;  // Set Damage Output
+}
+
+// This function deals damage to the player, based on a DamageTaken value supplied by an enemy. This function is usually called by the enemy itself.
+void AEndlessReachHDPawn::PlayerTakeDamage(float DamageTaken)
+{
+	if (!bIsDead)  // take no damage if you're already dead!
+	{
+		//IsHit = true;
+
+		// Calculate damage taken
+		float critical = FMath::FRandRange(1, 1.5f); // sets a random critical rate
+		float mod1 = (critical * (DEF - 512) * DamageTaken);
+		float mod2 = (mod1 / (16 * 512));
+		float mod3 = FMath::Abs(mod2);
+		float FinalDamage = mod3;
+
+		CurrentHP = (CurrentHP - FinalDamage);  // apply new HP value
+
+		if (critical > 1.4f)
+		{
+			// Display Critical Damage
+			CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_CritDmg, UCommonLibrary::GetFloatAsTextWithPrecision(FinalDamage, 0, true));
+		}
+		else
+		{
+			// Display Normal Damage
+			CombatTextComponent->ShowCombatText(ECombatTextTypes::TT_Damage, UCommonLibrary::GetFloatAsTextWithPrecision(FinalDamage, 0, true));
+		}
+
+		ForceHPCaps();
+	}
+}
+
+// Force HP Caps keeps the enemy's HP between 0 and Max
+bool AEndlessReachHDPawn::ForceHPCaps()
+{
+	bool Kill = false;
+
+	if (CurrentHP > MaxHP)  // if HP is greater than 0
+	{
+		CurrentHP = MaxHP;
+	}
+	else if (CurrentHP < 0)  // if HP is less than 0
+	{
+		CurrentHP = 0;
+		Kill = true;
+	}
+
+	if (Kill)
+	{
+		//Death(); // Start the Death sequence
+	}
+
+	return Kill;
 }
 
 void AEndlessReachHDPawn::FireThrusters()
