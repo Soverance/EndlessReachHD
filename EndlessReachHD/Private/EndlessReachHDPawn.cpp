@@ -863,6 +863,12 @@ void AEndlessReachHDPawn::LaserBeginOverlap(UPrimitiveComponent * HitComp, AActo
 			{
 				Asteroid->OnDestroyAsteroid.Broadcast();  // Broadcast Asteroid Destruction
 			}
+
+			AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if object is an enemy...
+			if (Enemy)
+			{
+				Enemy->EnemyTakeDamage(PlayerDealDamage(ATK + 250));
+			}
 		}
 	}	
 }
@@ -1070,6 +1076,7 @@ void AEndlessReachHDPawn::FireBomb()
 				{
 					// FIRE PROJECTILE
 					ABomb* Bomb = World->SpawnActor<ABomb>(SpawnLocation, FireRotation);  // spawn projectile
+					Bomb->Player = this;
 
 					// The following is velocity inheritance code for the projectile... it's almost working, but not quite, so commented out for now
 

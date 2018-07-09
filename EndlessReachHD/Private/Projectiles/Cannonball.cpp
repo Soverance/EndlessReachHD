@@ -74,7 +74,10 @@ void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 			AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy...
 			if (Enemy)
 			{
-				Enemy->EnemyTakeDamage(Player->PlayerDealDamage(Player->ATK));  // call take damage function
+				if (Player)
+				{
+					Enemy->EnemyTakeDamage(Player->PlayerDealDamage(Player->ATK));  // call take damage function
+				}				
 			}
 		}		
 	}

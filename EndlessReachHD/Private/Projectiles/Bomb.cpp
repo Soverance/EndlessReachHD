@@ -15,6 +15,7 @@
 
 #include "EndlessReachHD.h"
 #include "EndlessReachHDPawn.h"
+#include "Enemies/EnemyMaster.h"
 #include "Environment/Asteroid.h"
 #include "Bomb.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -88,17 +89,17 @@ void ABomb::BeginPlay()
 	Super::BeginPlay();
 
 	ShockwaveRadius->AttachToComponent(ProjectileMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);  // Attach shockwave radius to projectile
-	ShockwaveRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset magnet location
+	ShockwaveRadius->SetRelativeLocation(FVector(0, 0, 0));  // reset shockwave radius location
 }
 
 void ABomb::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		AEndlessReachHDPawn* Player = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
+		AEndlessReachHDPawn* HitPlayer = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
 		
 		// Proceed with damage functions if you did not hit the player
-		if (!Player)
+		if (!HitPlayer)
 		{
 			if (OtherComp->IsSimulatingPhysics())
 			{
@@ -107,6 +108,12 @@ void ABomb::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveCo
 
 			AAsteroid* Asteroid = Cast<AAsteroid>(OtherActor);  // if object is an asteroid...
 			if (Asteroid)
+			{
+				FireShockwave(OtherActor);  // shockwave effects
+			}
+
+			AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if object is an enemy...
+			if (Enemy)
 			{
 				FireShockwave(OtherActor);  // shockwave effects
 			}
@@ -134,8 +141,8 @@ void ABomb::FireShockwave(AActor* OtherActor)
 
 void ABomb::DelayedDestruction()
 {
-	TArray<AActor*> OverlappingAsteroids;  // define a local array to store hits
-	ShockwaveRadius->GetOverlappingActors(OverlappingAsteroids, AAsteroid::StaticClass()); // check for and store overlapping asteroids
+	TArray<AActor*> OverlappingAsteroids;
+	ShockwaveRadius->GetOverlappingActors(OverlappingAsteroids, AAsteroid::StaticClass()); // check for and store overlapping asteroids	
 
 	if (OverlappingAsteroids.Num() > 0)
 	{
@@ -147,6 +154,32 @@ void ABomb::DelayedDestruction()
 			{
 				Asteroid->OnDestroyAsteroid.Broadcast();  // Destroy Asteroid
 			}			
+		}
+	}
+
+	TArray<AActor*> OverlappingEnemies;
+	ShockwaveRadius->GetOverlappingActors(OverlappingEnemies, AEnemyMaster::StaticClass()); // check for and store overlapping enemies
+
+	if (OverlappingEnemies.Num() > 0)
+	{
+		for (AActor* Actor : OverlappingEnemies) // for each actor found overlapping
+		{
+			AEnemyMaster* Enemy = Cast<AEnemyMaster>(Actor);  // cast to enemy master
+
+			if (Enemy)
+			{
+				if (Enemy->BattleType == EBattleTypes::BT_Standard)
+				{
+					Enemy->Death();
+				}
+				if (Enemy->BattleType == EBattleTypes::BT_Boss)
+				{
+					if (Player)
+					{
+						Enemy->EnemyTakeDamage(Player->PlayerDealDamage((Player->ATK + 500)));  // bomb just deals damage to bosses...
+					}					
+				}
+			}
 		}
 	}
 }

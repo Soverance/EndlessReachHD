@@ -18,6 +18,7 @@
 #include "GameFramework/Actor.h"
 #include "Bomb.generated.h"
 
+class AEndlessReachHDPawn;
 class UProjectileMovementComponent;
 class UStaticMeshComponent;
 
@@ -70,6 +71,10 @@ public:
 	/** Function to handle the projectile hitting something */
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	/** Player reference */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	AEndlessReachHDPawn* Player;
 
 	// the shockwave explosion function
 	UFUNCTION(BlueprintCallable, Category = Bomb)
