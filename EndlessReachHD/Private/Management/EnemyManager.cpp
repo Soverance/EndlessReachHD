@@ -79,7 +79,7 @@ void AEnemyManager::PopulateEnemyField()
 			case 0:
 				break;
 			case 1:				
-				AEnemyMaster * Enemy = GetWorld()->SpawnActor<ADrone>(ADrone::StaticClass(), Settings, Params);  // Spawn procedurally generated Drones
+				AEnemyMaster* Enemy = GetWorld()->SpawnActor<ADrone>(ADrone::StaticClass(), Settings, Params);  // Spawn procedurally generated Drones
 				Enemy->Level = GetEnemyLevel(GameMode);
 				Enemy->SetBaseStats();
 				break;

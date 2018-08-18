@@ -76,7 +76,10 @@ void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 			{
 				if (Player)
 				{
-					Enemy->EnemyTakeDamage(Player->PlayerDealDamage(Player->ATK));  // call take damage function
+					if (!Enemy->bIsDead)  // don't deal damage if the enemy is already flagged as dead...
+					{
+						Enemy->EnemyTakeDamage(Player->PlayerDealDamage(Player->ATK));  // call take damage function
+					}					
 				}				
 			}
 		}		

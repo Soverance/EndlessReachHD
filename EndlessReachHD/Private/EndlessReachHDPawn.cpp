@@ -18,6 +18,10 @@
 #include "Enemies/EnemyMaster.h"
 #include "Environment/Asteroid.h"
 #include "Pickups/PickupMaster.h"
+#include "Pickups/Orb.h"
+#include "Pickups/FuelCell.h"
+#include "Pickups/Laser.h"
+#include "Pickups/BombCore.h"
 #include "Projectiles/Cannonball.h"
 #include "Projectiles/Bomb.h"
 #include "TimerManager.h"
@@ -1774,5 +1778,54 @@ void AEndlessReachHDPawn::AddStatusEffectIcon(FName ID, UTexture2D* Icon, bool b
 	if (PlayerHUD)
 	{
 		//PlayerHUD->
+	}
+}
+
+// Generate reward dropss for defeating an enemy or destroying an environment object
+void AEndlessReachHDPawn::GenerateDrops(bool bDropsOrbs, FVector TargetLocation)
+{
+	FActorSpawnParameters Params;
+	Params.OverrideLevel = GetLevel();  // make pickup drops spawn within the streaming level so they can be properly unloaded
+
+	if (bDropsOrbs)
+	{
+		int32 DroppedOrbCount = FMath::RandRange(0, 15);  // drop a random amount of orbs
+		//int32 DroppedOrbCount = 100;  // drop a static amount of orbs
+		const FTransform Settings = FTransform(FRotator(0, 0, 0), TargetLocation, FVector(1, 1, 1));  // cache transform settings
+
+		for (int32 i = 0; i < DroppedOrbCount; i++)
+		{
+			AOrb* Orb = GetWorld()->SpawnActor<AOrb>(AOrb::StaticClass(), Settings, Params);
+		}
+	}
+	
+	// FUEL CELL
+	int32 FuelDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this drop will include a fuel cell
+	const FTransform FuelSettings = FTransform(FRotator(0, 0, 0), TargetLocation, FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
+
+	// drop fuel @ 50%
+	if (FuelDropChance > 4)
+	{
+		AFuelCell* Fuel = GetWorld()->SpawnActor<AFuelCell>(AFuelCell::StaticClass(), FuelSettings, Params);  // spawn fuel cell
+	}
+
+	// LASER CHARGE
+	int32 LaserDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this drop will include a laser charge
+	const FTransform LaserSettings = FTransform(FRotator(0, 0, 0), TargetLocation, FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
+
+	// drop fuel @ 20%
+	if (LaserDropChance > 7)
+	{
+		ALaser* Laser = GetWorld()->SpawnActor<ALaser>(ALaser::StaticClass(), LaserSettings, Params);  // spawn laser charge
+	}
+
+	// BOMB CORE
+	int32 BombCoreDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this drop will include a bomb core
+	const FTransform BombCoreSettings = FTransform(FRotator(0, 0, 0), TargetLocation, FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
+
+	// drop fuel @ 20%
+	if (BombCoreDropChance > 7)
+	{
+		ABombCore* BombCore = GetWorld()->SpawnActor<ABombCore>(ABombCore::StaticClass(), BombCoreSettings, Params);  // spawn fuel
 	}
 }

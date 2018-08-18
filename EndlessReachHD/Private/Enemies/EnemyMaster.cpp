@@ -241,6 +241,7 @@ void AEnemyMaster::Death()
 	GetMovementComponent()->StopMovementImmediately();  // Stop Movement
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); // sets capsule to ignore pawn collision
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Ignore); // sets capsule to ignore destructible collision
+	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Ignore); // sets capsule to ignore physics bodies, such as projectiles
 	Deaggro();  // Deaggro
 	// TO DO:  reward the player for killing this enemy
 	OnDeath.Broadcast();  // broadcast the OnDeath event dispatcher, which will run enemy specific death code like animations and effects

@@ -562,7 +562,7 @@ public:
 
 	////////////////////////////////////////////////////
 	//
-	// GAMEPLAY DEFAULTS
+	// GAMEPLAY
 	//
 	////////////////////////////////////////////////////
 
@@ -577,6 +577,10 @@ public:
 	// Whether or not the player is dead
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	bool bIsDead;
+
+	// Generate reward dropss for defeating an enemy or destroying an environment object
+	UFUNCTION(BlueprintCallable, Category = Gameplay)
+	void GenerateDrops(bool bDropsOrbs, FVector TargetLocation);
 
 	////////////////////////////////////////////////////
 	//

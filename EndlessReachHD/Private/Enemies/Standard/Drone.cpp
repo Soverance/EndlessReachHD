@@ -99,6 +99,15 @@ void ADrone::Death()
 	DeathAudio->Play();
 	GetMesh()->SetVisibility(false);
 
+	if (Target)
+	{
+		Target->GenerateDrops(true, GetActorLocation());  // reward drops for the kill
+	}
+	if (!Target)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("NO TARGET = NO DROPS!")));
+	}
+
 	// wait a bit (delays the UI display for readability).
 	FTimerDelegate DelegateDeath;
 	DelegateDeath.BindUFunction(this, FName("FinalDeath"), true, false);

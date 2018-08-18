@@ -93,7 +93,6 @@ void AAsteroid::Tick(float DeltaTime)
 // Called after a short delay in order to add the destructible mesh to the component
 void AAsteroid::AddDestructible()
 {
-	//DM_Asteroid = LoadObject<UDestructibleMesh>(GetOuter(), TEXT("/Game/Environment/Meshes/Asteroids/SM_Asteroid_DM.SM_Asteroid_DM"), NULL, LOAD_None, NULL);
 	DM_Asteroid = Cast<UDestructibleMesh>(StaticLoadObject(UDestructibleMesh::StaticClass(), NULL, TEXT("DestructibleMesh'/Game/Environment/Meshes/SM_Asteroid_DM.SM_Asteroid_DM'")));
 	Asteroid->SetDestructibleMesh(DM_Asteroid);
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::Printf(TEXT("Asteroid Destructible Mesh added: %f"), 0));
@@ -135,46 +134,11 @@ void AAsteroid::DestroyAsteroid()
 		ExplosionFX->Activate();  // explosion fx
 		AsteroidExplosionSound->Play();  // explosion sound fx
 		Asteroid->ApplyRadiusDamage(1000, this->GetActorLocation(), 1000, 1000, true);  // break apart destructible mesh
-		FActorSpawnParameters Params;
-		Params.OverrideLevel = GetLevel();  // make pickups spawn within the streaming level so they can be properly unloaded
-
-		int32 DroppedOrbCount = FMath::RandRange(0, 15);  // drop a random amount of orbs
-		//int32 DroppedOrbCount = 100;  // drop a static amount of orbs
-		const FTransform Settings = FTransform(GetActorRotation(), GetActorLocation(), FVector(1,1,1));  // cache transform settings
-
-		for (int32 i = 0; i < DroppedOrbCount; i++)
-		{
-			AOrb* Orb = GetWorld()->SpawnActor<AOrb>(AOrb::StaticClass(), Settings, Params);
-		}
-
-		// FUEL CELL
-		int32 FuelDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a fuel cell
-		const FTransform FuelSettings = FTransform(GetActorRotation(), GetActorLocation(), FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
 		
-		// drop fuel @ 50%
-		if (FuelDropChance > 4)
+		for (TActorIterator<AEndlessReachHDPawn> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 		{
-			AFuelCell* Fuel = GetWorld()->SpawnActor<AFuelCell>(AFuelCell::StaticClass(), FuelSettings, Params);  // spawn fuel cell
-		}
-
-		// LASER CHARGE
-		int32 LaserDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a laser charge
-		const FTransform LaserSettings = FTransform(GetActorRotation(), GetActorLocation(), FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
-
-		// drop fuel @ 20%
-		if (LaserDropChance > 7)
-		{
-			ALaser* Laser = GetWorld()->SpawnActor<ALaser>(ALaser::StaticClass(), LaserSettings, Params);  // spawn laser charge
-		}
-
-		// BOMB CORE
-		int32 BombCoreDropChance = FMath::RandRange(0, 9);  // get a random number to determine whether or not this rock will drop a bomb core
-		const FTransform BombCoreSettings = FTransform(GetActorRotation(), GetActorLocation(), FVector(0.25f, 0.25f, 0.25f));  // cache transform settings
-
-		// drop fuel @ 20%
-		if (BombCoreDropChance > 7)
-		{
-			ABombCore* BombCore = GetWorld()->SpawnActor<ABombCore>(ABombCore::StaticClass(), BombCoreSettings, Params);  // spawn fuel
+			AEndlessReachHDPawn* Player = *ActorItr; // get the player instance
+			Player->GenerateDrops(true, GetActorLocation());  // spawn reward drops
 		}
 	}	
 }
