@@ -69,7 +69,12 @@ ADrone::ADrone()
 	DeathFX->Template = P_DeathFX;
 	DeathFX->bAutoActivate = false;
 	DeathFX->SetRelativeLocation(FVector(0, 0, -90));
-	DeathFX->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));	
+	DeathFX->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
+
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> Curve(TEXT("/Game/Curves/DroneCurve.DroneCurve"));
+	AnimCurve = Curve.Object;
+	AnimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AnimTimeline"));
+	InterpFunction.BindUFunction(this, FName{ TEXT("TimelineFloatReturn") });
 
 	// DEFAULTS
 	BattleType = EBattleTypes::BT_Standard;
@@ -83,7 +88,8 @@ ADrone::ADrone()
 void ADrone::BeginPlay()
 {
 	Super::BeginPlay();
-	OnDeath.AddDynamic(this, &ADrone::Death); // bind the death fuction to the OnDeath event 
+	OnDeath.AddDynamic(this, &ADrone::DroneDeath);  // bind the death fuction to the OnDeath event
+	OnAggro.AddDynamic(this, &ADrone::DroneAggro);  // bind the aggro function to the OnAggro event
 }
 
 // Called every frame
@@ -92,7 +98,13 @@ void ADrone::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ADrone::Death()
+void ADrone::DroneAggro()
+{
+	AnimTimeline->AddInterpFloat(AnimCurve, InterpFunction, FName{ TEXT("Float") });
+	AnimTimeline->PlayFromStart();  // start animation timeline
+}
+
+void ADrone::DroneDeath()
 {
 	HitFX->Deactivate();
 	ExplosionFX->Activate();
@@ -103,16 +115,25 @@ void ADrone::Death()
 	{
 		Target->GenerateDrops(true, GetActorLocation());  // reward drops for the kill
 	}
-	if (!Target)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("NO TARGET = NO DROPS!")));
-	}
 
 	// wait a bit (delays the UI display for readability).
 	FTimerDelegate DelegateDeath;
 	DelegateDeath.BindUFunction(this, FName("FinalDeath"), true, false);
 	FTimerHandle DeathTimer;
 	GetWorldTimerManager().SetTimer(DeathTimer, DelegateDeath, 1.0f, false);
+}
+
+// Animation Timeline
+void ADrone::TimelineFloatReturn(float val)
+{
+	if (Target)  // this variable should have been set when the enemy was initially aggroed
+	{
+		float NewX = FMath::Lerp(FMath::FloorToInt(GetActorLocation().X), FMath::FloorToInt(Target->GetActorLocation().X), val);  // create new X value
+		float NewY = FMath::Lerp(FMath::FloorToInt(GetActorLocation().Y), FMath::FloorToInt(Target->GetActorLocation().Y), val);  // create new Y value
+		float NewZ = GetActorLocation().Z;  // create new Z value
+		// lerp from the pickup's current X/Y location to player's current X/Y location
+		RootComponent->SetWorldLocation(FVector(NewX, NewY, NewZ));
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

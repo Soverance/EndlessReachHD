@@ -1781,7 +1781,7 @@ void AEndlessReachHDPawn::AddStatusEffectIcon(FName ID, UTexture2D* Icon, bool b
 	}
 }
 
-// Generate reward dropss for defeating an enemy or destroying an environment object
+// Generate reward drops for defeating an enemy or destroying an environment object
 void AEndlessReachHDPawn::GenerateDrops(bool bDropsOrbs, FVector TargetLocation)
 {
 	FActorSpawnParameters Params;

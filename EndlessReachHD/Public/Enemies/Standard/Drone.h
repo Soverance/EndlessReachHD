@@ -52,7 +52,26 @@ public:
 	UParticleSystemComponent* ExplosionFX;
 	UParticleSystem* P_ExplosionFX;
 
+	// Enemy-Specific Aggro Function. 
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void DroneAggro();
+
 	// Enemy-Specific Death Function. 
 	UFUNCTION(BlueprintCallable, Category = Combat)
-	void Death();
+	void DroneDeath();
+
+	// Animation Timeline.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Timeline)
+	UTimelineComponent* AnimTimeline;
+
+	// Animation External Curve.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Timeline)
+	UCurveFloat* AnimCurve;
+
+	// Timeline Interp Function
+	FOnTimelineFloat InterpFunction{};
+
+	// Timeline Float Return
+	UFUNCTION(BlueprintCallable, Category = Timeline)
+	void TimelineFloatReturn(float val);
 };

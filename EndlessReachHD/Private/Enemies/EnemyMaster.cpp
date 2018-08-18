@@ -176,11 +176,12 @@ void AEnemyMaster::Aggro(APawn* Pawn)
 					bInRange = true; // the enemy is now in range
 					bIsAggroed = true; // the enemy is now aggroed
 					bIsTargetable = true;  // turn on targeting, in case it was previously disabled
+					OnAggro.Broadcast();
 
 					// IF STANDARD ENEMY
 					if (BattleType == EBattleTypes::BT_Standard)
 					{
-						GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Enemy Aggro!")));
+						//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Enemy Aggro!")));
 					}
 					// IF BOSS ENEMY
 					if (BattleType == EBattleTypes::BT_Boss)

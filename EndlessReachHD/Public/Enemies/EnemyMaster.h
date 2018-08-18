@@ -23,7 +23,7 @@
 #include "EnemyMaster.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDeath);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReachedTarget);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAggro);
 
 UCLASS()
 class ENDLESSREACHHD_API AEnemyMaster : public ACharacter
@@ -164,6 +164,10 @@ public:
 	// Event Dispatcher OnDeath
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FDeath OnDeath;
+
+	// Event Dispatcher OnAggro
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FAggro OnAggro;
 
 	// Activate the Death sequence of this enemy
 	UFUNCTION(BlueprintCallable, Category = Combat)
