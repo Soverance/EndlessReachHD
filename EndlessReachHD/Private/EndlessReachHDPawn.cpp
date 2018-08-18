@@ -246,7 +246,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// configure Aggro Radius
 	AggroRadius = CreateDefaultSubobject<USphereComponent>(TEXT("AggroRadius"));
 	AggroRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
-	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 	AggroRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::AggroRadiusBeginOverlap);  // set up a notification for when this component hits something
 	AggroRadius->SetSphereRadius(5000);  //  5000 max range for aggro by default... we'll try it out for now
 	AggroRadius->bHiddenInGame = false;

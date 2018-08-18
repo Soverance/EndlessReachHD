@@ -348,7 +348,7 @@ public:
 	// Hangar Menu Widget.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)
 	TSubclassOf<UUserWidget> W_HangarMenu;
-	// This bug existed for months, until I figued out that UWidgets declared in this manner MUST be marked as a UPROPERTY,
+	// This bug existed for months, until I figured out that UWidgets declared in this manner MUST be marked as a UPROPERTY,
 	// otherwise they get Garbage Collected when they're removed from the viewport... so the widget reference would occasionally be null
 	// by the time the player entered the hangar (because it had been GC'd)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Widgets)

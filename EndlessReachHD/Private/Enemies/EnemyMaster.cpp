@@ -180,7 +180,7 @@ void AEnemyMaster::Aggro(APawn* Pawn)
 					// IF STANDARD ENEMY
 					if (BattleType == EBattleTypes::BT_Standard)
 					{
-
+						GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Enemy Aggro!")));
 					}
 					// IF BOSS ENEMY
 					if (BattleType == EBattleTypes::BT_Boss)
