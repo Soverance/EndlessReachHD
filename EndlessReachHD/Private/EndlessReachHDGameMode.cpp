@@ -58,7 +58,7 @@ void AEndlessReachHDGameMode::LoadMap()
 	level->LevelTransform = MapTransform;
 
 	//Make the level visible
-	level->bShouldBeVisible = true;
+	level->SetShouldBeVisible(true);
 }
 
 void AEndlessReachHDGameMode::ReloadMap(FName MapToReload, int32 Position)
@@ -87,7 +87,7 @@ void AEndlessReachHDGameMode::ReloadMap(FName MapToReload, int32 Position)
 				info.UUID = 0;
 				info.Linkage = 0;
 
-				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapToReload, info);
+				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapToReload, info, false);
 			}
 			//If the level is not visible just load the map
 			else
@@ -129,7 +129,7 @@ void AEndlessReachHDGameMode::UnloadMap(FName MapToUnload, int32 Position)
 				info.Linkage = 0;
 
 				// for now we're simply unloading the map, but we might eventually do something in-game when this occurs.
-				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapToUnload, info);
+				UGameplayStatics::UnloadStreamLevel(GetWorld(), MapToUnload, info, false);
 			}
 		}
 		else

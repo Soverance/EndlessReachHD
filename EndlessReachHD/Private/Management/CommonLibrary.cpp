@@ -39,7 +39,7 @@ AActor* UCommonLibrary::SpawnActorIntoLevel(UObject* WorldContextObject, TSubcla
 	// Get Level from Name
 	ULevel* FoundLevel = NULL;
 
-	for (const ULevelStreaming* EachLevel : World->StreamingLevels)
+	for (const ULevelStreaming* EachLevel : World->GetStreamingLevels())
 	{
 		if (!EachLevel) continue;
 
