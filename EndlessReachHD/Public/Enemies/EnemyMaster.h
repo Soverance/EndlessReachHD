@@ -1,5 +1,5 @@
-// © 2014 - 2018 Soverance Studios
-// http://www.soverance.com
+// © 2012 - 2019 Soverance Studios
+// https://soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,17 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Perception/PawnSensingComponent.h"
 #include "EndlessReachHDPawn.h"
 #include "Management/BattleTypes.h"
 #include "Management/CommonLibrary.h"
 #include "Management/CombatText/CombatTextComponent.h"
 #include "EnemyMaster.generated.h"
 
+// Event Dispatchers
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDeath);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAggro);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReachedTarget);
 
 UCLASS()
 class ENDLESSREACHHD_API AEnemyMaster : public ACharacter
@@ -185,4 +188,44 @@ public:
 	// Destroys this enemy
 	UFUNCTION(BlueprintCallable, Category = Combat)
 	void DestroyEnemy();
+
+	///////////////////////////////////
+	//
+	// A.I. Functionality
+	//
+	///////////////////////////////////
+
+	// Pawn Sensing Component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	UPawnSensingComponent* PawnSensing = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
+
+	// Behavior Tree
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	class UBehaviorTree* EnemyBehavior;
+
+	// Allows the AI MoveToPlayer task to run.
+	// Setting this to true will cause the AI to move this Enemy towards the player, following the shortest route possible.
+	// Setting this to false will stop the enemy in his tracks and prevent all further A.I. processing
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	bool bRunAI;
+
+	// Radius to determine when the enemy will consider himself as having reached his target.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)
+	float AcceptanceRadius;
+
+	// Event Dispatcher ReachedTarget
+	UPROPERTY(BlueprintAssignable, Category = AI)
+	FReachedTarget OnReachedTarget;
+
+	// Run to Target
+	UFUNCTION(BlueprintCallable, Category = AI)
+	void RunToTarget();
+
+	// Called when seeing a player pawn
+	UFUNCTION()
+	virtual void OnSeePawn(APawn* Pawn);
+
+	// Called when hearing a noise made by a player pawn
+	UFUNCTION()
+	virtual void OnHearNoise(APawn* PawnInstigator, const FVector& Location, float Volume);
 };

@@ -15,12 +15,26 @@
 
 #pragma once
 
-#include "BattleTypes.generated.h"
+#include "AIController.h"
+#include "EnemyAI.generated.h"
 
-UENUM(BlueprintType)
-enum class EBattleTypes : uint8
+UCLASS()
+class ENDLESSREACHHD_API AEnemyAI : public AAIController
 {
-	BT_Standard UMETA(DisplayName = "Standard"),
-	BT_Boss UMETA(DisplayName = "Boss"),
-	BT_Bounty UMETA(DisplayName = "Bounty"),
+	GENERATED_BODY()
+	
+	UPROPERTY(transient)
+	class UBlackboardComponent* BlackboardComp;
+
+	UPROPERTY(transient)
+	class UBehaviorTreeComponent* BehaviorComp;
+
+public:
+
+	AEnemyAI();
+
+	// Called to initialize AI
+	virtual void Possess(APawn *InPawn) override;
+
+	uint8 PlayerKeyID;
 };

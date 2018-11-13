@@ -15,12 +15,18 @@
 
 #pragma once
 
-#include "BattleTypes.generated.h"
+#include "BehaviorTree/BTService.h"
+#include "BTService_CheckForPlayer.generated.h"
 
-UENUM(BlueprintType)
-enum class EBattleTypes : uint8
+UCLASS()
+class ENDLESSREACHHD_API UBTService_CheckForPlayer : public UBTService
 {
-	BT_Standard UMETA(DisplayName = "Standard"),
-	BT_Boss UMETA(DisplayName = "Boss"),
-	BT_Bounty UMETA(DisplayName = "Bounty"),
+	GENERATED_BODY()
+	
+public:
+	
+	UBTService_CheckForPlayer();
+
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	
 };

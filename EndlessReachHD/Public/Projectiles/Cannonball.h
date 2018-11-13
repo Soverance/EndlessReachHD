@@ -1,5 +1,5 @@
-// © 2014 - 2018 Soverance Studios
-// http://www.soverance.com
+// Â© 2012 - 2019 Soverance Studios
+// https://soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

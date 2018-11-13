@@ -1,5 +1,5 @@
-// © 2014 - 2018 Soverance Studios
-// http://www.soverance.com
+// © 2012 - 2019 Soverance Studios
+// https://soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,7 +155,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	S_LowFuelWarning = LowFuelAudio.Object;
 	LowFuelWarningSound = CreateDefaultSubobject<UAudioComponent>(TEXT("LowFuelWarningSound"));
 	LowFuelWarningSound->SetupAttachment(RootComponent);
-	LowFuelWarningSound->Sound = S_LowFuelWarning;
+	LowFuelWarningSound->SetSound(S_LowFuelWarning);
 	LowFuelWarningSound->bAutoActivate = false;
 
 	// engine idle noise audio
@@ -163,7 +163,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	S_EngineIdle = EngineIdleAudio.Object;
 	EngineIdleSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineIdleSound"));
 	EngineIdleSound->SetupAttachment(RootComponent);
-	EngineIdleSound->Sound = S_EngineIdle;
+	EngineIdleSound->SetSound(S_EngineIdle);
 	EngineIdleSound->bAutoActivate = true;
 	EngineIdleSound->VolumeMultiplier = 0.4f;
 
@@ -172,7 +172,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	S_EngineThrust = EngineThrustAudio.Object;
 	EngineThrustSound = CreateDefaultSubobject<UAudioComponent>(TEXT("EngineThrustSound"));
 	EngineThrustSound->SetupAttachment(RootComponent);
-	EngineThrustSound->Sound = S_EngineThrust;
+	EngineThrustSound->SetSound(S_EngineThrust);
 	EngineThrustSound->bAutoActivate = false;
 
 	// beam cannon noise audio
@@ -180,7 +180,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	S_Laser = LaserAudio.Object;
 	LaserSound = CreateDefaultSubobject<UAudioComponent>(TEXT("LaserSound"));
 	LaserSound->SetupAttachment(RootComponent);
-	LaserSound->Sound = S_Laser;
+	LaserSound->SetSound(S_Laser);
 	LaserSound->bAutoActivate = false;
 
 	// bomb shot audio
@@ -192,7 +192,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	P_ThrusterFX = ThrusterParticleObject.Object;
 	ThrusterFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ThrusterFX"));
 	ThrusterFX->SetupAttachment(ShipMeshComponent, FName("ThrusterEffectSocket"));
-	ThrusterFX->Template = P_ThrusterFX;
+	ThrusterFX->SetTemplate(P_ThrusterFX);
 	ThrusterFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
 	ThrusterFX->bAutoActivate = false;
 
@@ -209,7 +209,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	P_DistortionFX = DistortionParticleObject.Object;
 	DistortionFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DistortionFX"));
 	DistortionFX->SetupAttachment(ShipMeshComponent, FName("DistortionEffectSocket"));
-	DistortionFX->Template = P_DistortionFX;
+	DistortionFX->SetTemplate(P_DistortionFX);
 	DistortionFX->SetWorldScale3D(FVector(0.3f, 0.3f, 0.3f));
 	DistortionFX->bAutoActivate = true;
 
@@ -250,10 +250,10 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	// configure Aggro Radius
 	AggroRadius = CreateDefaultSubobject<USphereComponent>(TEXT("AggroRadius"));
 	AggroRadius->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
-	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
+	AggroRadius->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	AggroRadius->OnComponentBeginOverlap.AddDynamic(this, &AEndlessReachHDPawn::AggroRadiusBeginOverlap);  // set up a notification for when this component hits something
 	AggroRadius->SetSphereRadius(5000);  //  5000 max range for aggro by default... we'll try it out for now
-	AggroRadius->bHiddenInGame = false;
+	AggroRadius->bHiddenInGame = true;
 
 	// configure Magnet Radius
 	MagnetRadius = CreateDefaultSubobject<USphereComponent>(TEXT("MagnetRadius"));
@@ -267,7 +267,7 @@ AEndlessReachHDPawn::AEndlessReachHDPawn()
 	P_LaserFX = LaserParticleObject.Object;
 	LaserFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LaserFX"));
 	LaserFX->SetupAttachment(ShipMeshComponent, FName("LaserEffectSocket"));
-	LaserFX->Template = P_LaserFX;
+	LaserFX->SetTemplate(P_LaserFX);
 	LaserFX->SetRelativeRotation(FRotator(0, 90, 0));
 	LaserFX->SetWorldScale3D(FVector(1.0f, 1.0f, 1.0f));
 	LaserFX->bAutoActivate = false;
@@ -884,7 +884,10 @@ void AEndlessReachHDPawn::AggroRadiusBeginOverlap(UPrimitiveComponent * HitComp,
 		AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy
 		if (Enemy)
 		{
-			Enemy->Aggro(this);
+			// calling this here will manually force trigger the enemy's aggro function, and immediately attack the player when he gets in range
+			// in general, we leave it up to the Unreal A.I. system to perform this action
+			// but this is here for debug purposes, if necessary
+			//Enemy->Aggro(this);
 		}
 	}
 }

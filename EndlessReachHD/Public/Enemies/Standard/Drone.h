@@ -1,5 +1,5 @@
-// © 2014 - 2018 Soverance Studios
-// http://www.soverance.com
+// © 2012 - 2019 Soverance Studios
+// https://soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,9 +52,13 @@ public:
 	UParticleSystemComponent* ExplosionFX;
 	UParticleSystem* P_ExplosionFX;
 
-	// Enemy-Specific Aggro Function. 
+	// DEPRECATED - Enemy-Specific Aggro Function. 
 	UFUNCTION(BlueprintCallable, Category = Combat)
 	void DroneAggro();
+
+	// Enemy-Specific Attack Function. 
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void DroneAttack();
 
 	// Enemy-Specific Death Function. 
 	UFUNCTION(BlueprintCallable, Category = Combat)

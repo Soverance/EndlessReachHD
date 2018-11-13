@@ -15,12 +15,16 @@
 
 #pragma once
 
-#include "BattleTypes.generated.h"
+#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
+#include "BTTask_MoveToPlayer.generated.h"
 
-UENUM(BlueprintType)
-enum class EBattleTypes : uint8
+UCLASS()
+class ENDLESSREACHHD_API UBTTask_MoveToPlayer : public UBTTask_BlackboardBase
 {
-	BT_Standard UMETA(DisplayName = "Standard"),
-	BT_Boss UMETA(DisplayName = "Boss"),
-	BT_Bounty UMETA(DisplayName = "Bounty"),
+	GENERATED_BODY()
+
+public:
+
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	
 };

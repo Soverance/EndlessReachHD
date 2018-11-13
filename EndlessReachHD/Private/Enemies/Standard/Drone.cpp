@@ -1,5 +1,5 @@
-// © 2014 - 2018 Soverance Studios
-// http://www.soverance.com
+// © 2012 - 2019 Soverance Studios
+// https://soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,6 +82,14 @@ ADrone::ADrone()
 	AttackDelay = 0.75f;
 	GetCapsuleComponent()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
 	//GetCharacterMovement()->MaxAcceleration = 30;
+
+	// Enemy A.I. Config
+	PawnSensing->HearingThreshold = 150;
+	PawnSensing->LOSHearingThreshold = 200;
+	PawnSensing->SightRadius = 250;
+	PawnSensing->SetPeripheralVisionAngle(40.0f);
+	AcceptanceRadius = 25.0f;
+	bRunAI = false;
 }
 
 // Called when the game starts or when spawned
@@ -90,12 +98,18 @@ void ADrone::BeginPlay()
 	Super::BeginPlay();
 	OnDeath.AddDynamic(this, &ADrone::DroneDeath);  // bind the death fuction to the OnDeath event
 	OnAggro.AddDynamic(this, &ADrone::DroneAggro);  // bind the aggro function to the OnAggro event
+	OnReachedTarget.AddDynamic(this, &ADrone::DroneAttack);  // bind the attack function to the OnReachedTarget event
 }
 
 // Called every frame
 void ADrone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void ADrone::DroneAttack()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Drone attacking player!")));
 }
 
 void ADrone::DroneAggro()

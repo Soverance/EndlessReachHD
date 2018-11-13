@@ -1,5 +1,5 @@
-// © 2014 - 2018 Soverance Studios
-// http://www.soverance.com
+// © 2012 - 2019 Soverance Studios
+// https://soverance.com
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include "EndlessReachHD.h"
+#include "Management/AI/EnemyAI.h"
 #include "EnemyMaster.h"
 
 // Sets default values
@@ -42,13 +43,32 @@ AEnemyMaster::AEnemyMaster()
 // Called when the game starts or when spawned
 void AEnemyMaster::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+
+	PawnSensing->OnHearNoise.AddDynamic(this, &AEnemyMaster::OnHearNoise);  // bind the OnHearNoise event
+	PawnSensing->OnSeePawn.AddDynamic(this, &AEnemyMaster::OnSeePawn);  // bind the OnSeePawn event
 }
 
 // Called every frame
 void AEnemyMaster::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!bIsDead) // if enemy is not dead
+	{
+		if (bInRange)  // if is in range of player
+		{
+			if (bIsAggroed)  // if is aggroed to the player
+			{
+				if (GetDistanceTo(Target) > PawnSensing->SightRadius)  // if the player gets out of the enemy's sight radius
+				{
+					// Lost sight of player, disable aggro
+					bInRange = false;
+					Deaggro();
+				}
+			}
+		}
+	}
 }
 
 // Show combat damage text function
@@ -159,6 +179,20 @@ void AEnemyMaster::EnemyTakeDamage(float DamageTaken)
 	ForceHPCaps(); // force HP caps
 }
 
+// Sets RunAI to true, allowing the enemy's behavior tree to begin running
+void AEnemyMaster::RunToTarget()
+{
+	if (!bIsDead)
+	{
+		if (!Target->bIsDead)
+		{
+			bIsAggroed = true;
+			bIsAttacking = false;
+			bRunAI = true;  // Allow AI to be running
+		}
+	}
+}
+
 // AGGRO
 void AEnemyMaster::Aggro(APawn* Pawn)
 {
@@ -176,7 +210,7 @@ void AEnemyMaster::Aggro(APawn* Pawn)
 					bInRange = true; // the enemy is now in range
 					bIsAggroed = true; // the enemy is now aggroed
 					bIsTargetable = true;  // turn on targeting, in case it was previously disabled
-					OnAggro.Broadcast();
+					OnAggro.Broadcast();  // call custom enemy aggro function (usually the enemy specific attack cycle)
 
 					// IF STANDARD ENEMY
 					if (BattleType == EBattleTypes::BT_Standard)
@@ -276,4 +310,33 @@ void AEnemyMaster::Disappear()
 void AEnemyMaster::DestroyEnemy()
 {
 	Destroy(); // Destroy this actor
+}
+
+void AEnemyMaster::OnHearNoise(APawn* PawnInstigator, const FVector& Location, float Volume)
+{
+	if (!bIsDead)
+	{
+		if (!bIsAggroed)
+		{
+			Aggro(PawnInstigator);
+			RunToTarget();
+		}
+	}
+}
+
+void AEnemyMaster::OnSeePawn(APawn* Pawn)
+{
+	if (!bIsDead)
+	{
+		if (!bIsAggroed)
+		{
+			//bIsAggroed = true;
+
+			// Delay Aggro in case we want to play an aggro animation
+			FTimerDelegate DelegateAggro;
+			DelegateAggro.BindUFunction(this, FName("Aggro"), Pawn);
+			FTimerHandle AggroTimer;
+			GetWorldTimerManager().SetTimer(AggroTimer, DelegateAggro, 2.5f, false);
+		}
+	}
 }
