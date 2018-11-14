@@ -881,14 +881,14 @@ void AEndlessReachHDPawn::AggroRadiusBeginOverlap(UPrimitiveComponent * HitComp,
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
-		AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy
-		if (Enemy)
-		{
-			// calling this here will manually force trigger the enemy's aggro function, and immediately attack the player when he gets in range
-			// in general, we leave it up to the Unreal A.I. system to perform this action
-			// but this is here for debug purposes, if necessary
-			//Enemy->Aggro(this);
-		}
+		//AEnemyMaster* Enemy = Cast<AEnemyMaster>(OtherActor);  // if the object is an enemy
+		//if (Enemy)
+		//{
+		//	// calling this here will manually force trigger the enemy's aggro function, and immediately attack the player when he gets in range
+		//	// in general, we leave it up to the Unreal A.I. system to perform this action
+		//	// but this is here for debug purposes, if necessary
+		//	Enemy->Aggro(this);
+		//}
 	}
 }
 
@@ -965,7 +965,8 @@ void AEndlessReachHDPawn::FireThrusters()
 		bThustersActive = true;
 		if (FuelLevel > 0)
 		{
-			EnableThrusterFX();
+			EnableThrusterFX();			
+			MakeNoise(1, this, GetActorLocation(), 2500);  // Report to Enemy A.I. that we've made an audible sound.  This noise will alert enemies to your location!
 		}
 	}	
 }

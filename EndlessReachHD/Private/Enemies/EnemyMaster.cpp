@@ -295,14 +295,12 @@ void AEnemyMaster::EndAttackRound()
 void AEnemyMaster::Death()
 {
 	bIsDead = true;
+	bRunAI = false;
 	bIsTargetable = false;  // turn off targeting if dead.
 	GetMovementComponent()->StopMovementImmediately();  // Stop Movement
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); // sets capsule to ignore pawn collision
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Ignore); // sets capsule to ignore destructible collision
-	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Ignore); // sets capsule to ignore physics bodies, such as projectiles
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	Deaggro();  // Deaggro
-	// TO DO:  reward the player for killing this enemy
-	OnDeath.Broadcast();  // broadcast the OnDeath event dispatcher, which will run enemy specific death code like animations and effects
+	OnDeath.Broadcast();  // broadcast the OnDeath event dispatcher, which will run enemy specific death code like animations, effects, and rewards
 }
 
 // FINAL DEATH
@@ -353,8 +351,6 @@ void AEnemyMaster::OnSeePawn(APawn* PawnInstigator)
 	{
 		if (!bIsAggroed)
 		{
-			//bIsAggroed = true;
-
 			Aggro(PawnInstigator);
 			RunToTarget();
 		}

@@ -28,6 +28,7 @@ ADrone::ADrone()
 	GetMesh()->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
 	GetMesh()->SetRelativeLocation(FVector(-50, 0, 0));
 	GetMesh()->SetRelativeRotation(FRotator(0, -90, 0));
+	//GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	/*static ConstructorHelpers::FObjectFinder<USoundCue> FireAudioObject(TEXT("SoundCue'/Game/Sounds/Stingers/Mono/StingerPickup_Health01_Cue.StingerPickup_Health01_Cue'"));
 	S_FireAudio = FireAudioObject.Object;
@@ -109,7 +110,7 @@ void ADrone::Tick(float DeltaTime)
 
 void ADrone::DroneAttack()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Drone attacking player!")));
+	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Drone attacking player!")));
 }
 
 void ADrone::DroneAggro()

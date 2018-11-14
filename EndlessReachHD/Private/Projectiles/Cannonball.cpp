@@ -55,6 +55,8 @@ void ACannonball::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 {
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL))
 	{
+		//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, OtherComp->GetName());
+
 		AEndlessReachHDPawn* HitPlayer = Cast<AEndlessReachHDPawn>(OtherActor);  // Check if hit actor is the player
 		
 		// Proceed with damage functions if you did not hit the player
