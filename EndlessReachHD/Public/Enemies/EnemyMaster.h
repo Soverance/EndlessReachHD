@@ -221,6 +221,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = AI)
 	void RunToTarget();
 
+	// Look at Target
+	UFUNCTION(BlueprintCallable, Category = AI)
+	void LookAtTarget();
+
 	// Called when seeing a player pawn
 	UFUNCTION()
 	virtual void OnSeePawn(APawn* Pawn);

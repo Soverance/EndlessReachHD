@@ -84,10 +84,10 @@ ADrone::ADrone()
 	//GetCharacterMovement()->MaxAcceleration = 30;
 
 	// Enemy A.I. Config
-	PawnSensing->HearingThreshold = 150;
-	PawnSensing->LOSHearingThreshold = 200;
-	PawnSensing->SightRadius = 250;
-	PawnSensing->SetPeripheralVisionAngle(40.0f);
+	PawnSensing->HearingThreshold = 500;
+	PawnSensing->LOSHearingThreshold = 750;
+	PawnSensing->SightRadius = 1500;
+	PawnSensing->SetPeripheralVisionAngle(60.0f);
 	AcceptanceRadius = 25.0f;
 	bRunAI = false;
 }

@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include "EndlessReachHD.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Management/AI/EnemyAI.h"
 #include "EnemyMaster.h"
 
@@ -30,6 +31,10 @@ AEnemyMaster::AEnemyMaster()
 
 	// Create Combat Text Component
 	CombatTextComponent = CreateDefaultSubobject<UCombatTextComponent>(TEXT("Combat Text Component"));
+
+	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTreeObject(TEXT("BehaviorTree'/Game/Enemies/EnemyBT.EnemyBT'"));
+	EnemyBehavior = BehaviorTreeObject.Object; // Set Behavior Tree
+	AIControllerClass = AEnemyAI::StaticClass();  // Set AI Class	
 
 	bIsDead = false;
 	bIsHit = false;
@@ -60,7 +65,9 @@ void AEnemyMaster::Tick(float DeltaTime)
 		{
 			if (bIsAggroed)  // if is aggroed to the player
 			{
-				if (GetDistanceTo(Target) > PawnSensing->SightRadius)  // if the player gets out of the enemy's sight radius
+				LookAtTarget();  // always face the player when chasing!
+
+				if (GetDistanceTo(Target) > PawnSensing->SightRadius)  // if the player gets out of the enemy's sight radius while chasing...
 				{
 					// Lost sight of player, disable aggro
 					bInRange = false;
@@ -189,6 +196,22 @@ void AEnemyMaster::RunToTarget()
 			bIsAggroed = true;
 			bIsAttacking = false;
 			bRunAI = true;  // Allow AI to be running
+		}
+	}
+}
+
+// Makes the enemy always face the target it's chasing
+void AEnemyMaster::LookAtTarget()
+{
+	if (!bIsDead)
+	{
+		if (!Target->bIsDead)
+		{
+			FVector EnemyLocation = GetActorLocation(); // Get actor rotation
+			FVector PlayerLocation = Target->GetActorLocation();  // get player location
+			FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(EnemyLocation, PlayerLocation);  // find look at rotation
+			FRotator CorrectedRot = FRotator(LookAtRot.Pitch, LookAtRot.Yaw, LookAtRot.Roll);  // correct rotation
+			SetActorRotation(CorrectedRot); // set rotation to the corrected rotation
 		}
 	}
 }
@@ -324,7 +347,7 @@ void AEnemyMaster::OnHearNoise(APawn* PawnInstigator, const FVector& Location, f
 	}
 }
 
-void AEnemyMaster::OnSeePawn(APawn* Pawn)
+void AEnemyMaster::OnSeePawn(APawn* PawnInstigator)
 {
 	if (!bIsDead)
 	{
@@ -332,11 +355,8 @@ void AEnemyMaster::OnSeePawn(APawn* Pawn)
 		{
 			//bIsAggroed = true;
 
-			// Delay Aggro in case we want to play an aggro animation
-			FTimerDelegate DelegateAggro;
-			DelegateAggro.BindUFunction(this, FName("Aggro"), Pawn);
-			FTimerHandle AggroTimer;
-			GetWorldTimerManager().SetTimer(AggroTimer, DelegateAggro, 2.5f, false);
+			Aggro(PawnInstigator);
+			RunToTarget();
 		}
 	}
 }
