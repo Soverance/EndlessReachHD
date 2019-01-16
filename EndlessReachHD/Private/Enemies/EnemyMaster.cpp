@@ -65,7 +65,7 @@ void AEnemyMaster::Tick(float DeltaTime)
 		{
 			if (bIsAggroed)  // if is aggroed to the player
 			{
-				LookAtTarget();  // always face the player when chasing!
+				//LookAtTarget();  // always face the player when chasing!
 
 				if (GetDistanceTo(Target) > PawnSensing->SightRadius)  // if the player gets out of the enemy's sight radius while chasing...
 				{
@@ -196,6 +196,7 @@ void AEnemyMaster::RunToTarget()
 			bIsAggroed = true;
 			bIsAttacking = false;
 			bRunAI = true;  // Allow AI to be running
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Homing in on target!")));
 		}
 	}
 }

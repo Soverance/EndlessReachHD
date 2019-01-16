@@ -52,6 +52,10 @@ public:
 	UParticleSystemComponent* ExplosionFX;
 	UParticleSystem* P_ExplosionFX;
 
+	// Suicide Flag
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat)
+	bool bSuicide;
+
 	// DEPRECATED - Enemy-Specific Aggro Function. 
 	UFUNCTION(BlueprintCallable, Category = Combat)
 	void DroneAggro();
@@ -64,18 +68,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Combat)
 	void DroneDeath();
 
-	// Animation Timeline.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Timeline)
-	UTimelineComponent* AnimTimeline;
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void DroneDeathEffects();
 
-	// Animation External Curve.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Timeline)
-	UCurveFloat* AnimCurve;
-
-	// Timeline Interp Function
-	FOnTimelineFloat InterpFunction{};
-
-	// Timeline Float Return
-	UFUNCTION(BlueprintCallable, Category = Timeline)
-	void TimelineFloatReturn(float val);
+	// Enemy-Specific Suicide Function. 
+	UFUNCTION(BlueprintCallable, Category = Combat)
+	void DroneSuicide();
 };

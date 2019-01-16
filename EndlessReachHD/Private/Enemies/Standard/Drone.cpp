@@ -71,26 +71,24 @@ ADrone::ADrone()
 	DeathFX->bAutoActivate = false;
 	DeathFX->SetRelativeLocation(FVector(0, 0, -90));
 	DeathFX->SetRelativeScale3D(FVector(0.5f, 0.5f, 0.5f));
-
-	static ConstructorHelpers::FObjectFinder<UCurveFloat> Curve(TEXT("/Game/Curves/DroneCurve.DroneCurve"));
-	AnimCurve = Curve.Object;
-	AnimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AnimTimeline"));
-	InterpFunction.BindUFunction(this, FName{ TEXT("TimelineFloatReturn") });
-
+	
 	// DEFAULTS
 	BattleType = EBattleTypes::BT_Standard;
 	NameText = LOCTEXT("Drone_NameText", "Drone");
 	AttackDelay = 0.75f;
+	BaseEyeHeight = 16;
 	GetCapsuleComponent()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
-	//GetCharacterMovement()->MaxAcceleration = 30;
+	GetCharacterMovement()->MaxAcceleration = 30;
+	GetCharacterMovement()->RotationRate = FRotator(0, 90, 0);
 
 	// Enemy A.I. Config
-	PawnSensing->HearingThreshold = 500;
-	PawnSensing->LOSHearingThreshold = 750;
+	PawnSensing->HearingThreshold = 1250;
+	PawnSensing->LOSHearingThreshold = 2000;
 	PawnSensing->SightRadius = 1500;
-	PawnSensing->SetPeripheralVisionAngle(60.0f);
-	AcceptanceRadius = 25.0f;
+	PawnSensing->SetPeripheralVisionAngle(120.0f);
+	AcceptanceRadius = 5.0f;
 	bRunAI = false;
+	bSuicide = false;
 }
 
 // Called when the game starts or when spawned
@@ -100,6 +98,7 @@ void ADrone::BeginPlay()
 	OnDeath.AddDynamic(this, &ADrone::DroneDeath);  // bind the death fuction to the OnDeath event
 	OnAggro.AddDynamic(this, &ADrone::DroneAggro);  // bind the aggro function to the OnAggro event
 	OnReachedTarget.AddDynamic(this, &ADrone::DroneAttack);  // bind the attack function to the OnReachedTarget event
+	
 }
 
 // Called every frame
@@ -111,26 +110,32 @@ void ADrone::Tick(float DeltaTime)
 void ADrone::DroneAttack()
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::Printf(TEXT("Drone attacking player!")));
+	bIsAttacking = true;
+	DroneSuicide();
 }
 
 void ADrone::DroneAggro()
 {
-	AnimTimeline->AddInterpFloat(AnimCurve, InterpFunction, FName{ TEXT("Float") });
-	AnimTimeline->PlayFromStart();  // start animation timeline
+	// do something else here, maybe.  A light, sort of like an eye that noticed you... or maybe a sound effect?
 }
 
-void ADrone::DroneDeath()
+void ADrone::DroneDeathEffects()
 {
 	HitFX->Deactivate();
 	ExplosionFX->Activate();
 	DeathAudio->Play();
 	GetMesh()->SetVisibility(false);
+}
+
+void ADrone::DroneDeath()
+{
+	DroneDeathEffects();
 
 	if (Target)
 	{
-		Target->GenerateDrops(true, GetActorLocation());  // reward drops for the kill
+		Target->GenerateDrops(true, GetActorLocation());  // reward drops for the kill		
 	}
-
+	
 	// wait a bit (delays the UI display for readability).
 	FTimerDelegate DelegateDeath;
 	DelegateDeath.BindUFunction(this, FName("FinalDeath"), true, false);
@@ -138,17 +143,25 @@ void ADrone::DroneDeath()
 	GetWorldTimerManager().SetTimer(DeathTimer, DelegateDeath, 1.0f, false);
 }
 
-// Animation Timeline
-void ADrone::TimelineFloatReturn(float val)
+void ADrone::DroneSuicide()
 {
-	if (Target)  // this variable should have been set when the enemy was initially aggroed
+	if (!bSuicide)
 	{
-		float NewX = FMath::Lerp(FMath::FloorToInt(GetActorLocation().X), FMath::FloorToInt(Target->GetActorLocation().X), val);  // create new X value
-		float NewY = FMath::Lerp(FMath::FloorToInt(GetActorLocation().Y), FMath::FloorToInt(Target->GetActorLocation().Y), val);  // create new Y value
-		float NewZ = GetActorLocation().Z;  // create new Z value
-		// lerp from the pickup's current X/Y location to player's current X/Y location
-		RootComponent->SetWorldLocation(FVector(NewX, NewY, NewZ));
-	}
+		bSuicide = true;
+		DroneDeathEffects();
+
+		if (Target)
+		{
+			float damage = Target->CurrentHP * 0.25f;  // deals 25% damage if a drone suicides on the player
+			Target->PlayerTakeDamage(damage);
+		}
+
+		// wait a bit (delays the UI display for readability).
+		FTimerDelegate DelegateDeath;
+		DelegateDeath.BindUFunction(this, FName("FinalDeath"), true, false);
+		FTimerHandle DeathTimer;
+		GetWorldTimerManager().SetTimer(DeathTimer, DelegateDeath, 1.0f, false);
+	}	
 }
 
 #undef LOCTEXT_NAMESPACE
