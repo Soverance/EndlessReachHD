@@ -34,7 +34,8 @@ AEnemyMaster::AEnemyMaster()
 
 	static ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTreeObject(TEXT("BehaviorTree'/Game/Enemies/EnemyBT.EnemyBT'"));
 	EnemyBehavior = BehaviorTreeObject.Object; // Set Behavior Tree
-	AIControllerClass = AEnemyAI::StaticClass();  // Set AI Class	
+	AIControllerClass = AEnemyAI::StaticClass();  // Set AI Class
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	bIsDead = false;
 	bIsHit = false;
@@ -70,8 +71,8 @@ void AEnemyMaster::Tick(float DeltaTime)
 				if (GetDistanceTo(Target) > PawnSensing->SightRadius)  // if the player gets out of the enemy's sight radius while chasing...
 				{
 					// Lost sight of player, disable aggro
-					bInRange = false;
-					Deaggro();
+					//bInRange = false;
+					//Deaggro();
 				}
 			}
 		}

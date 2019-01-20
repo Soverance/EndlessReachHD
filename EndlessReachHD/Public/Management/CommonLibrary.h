@@ -37,7 +37,6 @@ public:
 	//
 	// THE VARIABLES FOR CONSTRAINT PROPERTIES HAVE BEEN DEPRECATED WITHOUT DOCUMENTATION!
 	//
-	// Despite appearing correct, I'm not entirely certain these updated functions are being correctly used, so this function may change without warning
 	/////////////////////////////////////////////////
 	static FORCEINLINE void SetAngularLimits(
 		FConstraintInstance& Constraint,
@@ -93,7 +92,6 @@ public:
 	//
 	// THE VARIABLES FOR CONSTRAINT PROPERTIES HAVE BEEN DEPRECATED WITHOUT DOCUMENTATION!
 	//
-	// Despite appearing correct, I'm not entirely certain these updated functions are being correctly used, so this function may change without warning
 	/////////////////////////////////////////////////
 	static FORCEINLINE void SetLinearLimits(
 		FConstraintInstance& Constraint,

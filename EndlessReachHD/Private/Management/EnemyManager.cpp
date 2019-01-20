@@ -30,6 +30,9 @@ AEnemyManager::AEnemyManager()
 	// Creates a scene component and sets it as the root
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
+
+	// Disable tick on this actor to improve performance
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 // Called when the game starts or when spawned
@@ -43,7 +46,7 @@ void AEnemyManager::BeginPlay()
 // Called every frame
 void AEnemyManager::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+	//Super::Tick(DeltaTime);
 }
 
 // Destroy all enemies
@@ -73,21 +76,25 @@ void AEnemyManager::PopulateEnemyField()
 		FActorSpawnParameters Params;
 		Params.OverrideLevel = GetLevel();  // make enemies spawn within the streaming level so they can be properly unloaded along with the level
 
+		// instantiate enemy object
+		AEnemyMaster* Enemy = nullptr;
+
 		// spawn enemies based on current map
 		switch (GameMode->CurrentMap)
 		{
 			case 0:
 				break;
-			case 1:				
-				AEnemyMaster* Enemy = GetWorld()->SpawnActor<ADrone>(ADrone::StaticClass(), Settings, Params);  // Spawn procedurally generated Drones
-
-				if (Enemy)
-				{
-					Enemy->Level = GetEnemyLevel(GameMode);
-					Enemy->SetBaseStats();
-				}
+			case 1:
+				Enemy = GetWorld()->SpawnActor<ADrone>(ADrone::StaticClass(), Settings, Params);
 				break;
-		}		
+		}
+
+		if (Enemy)
+		{
+			Enemy->SpawnDefaultController();
+			Enemy->Level = GetEnemyLevel(GameMode);
+			Enemy->SetBaseStats();			
+		}
 	}
 }
 

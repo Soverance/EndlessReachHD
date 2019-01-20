@@ -80,6 +80,7 @@ ADrone::ADrone()
 	GetCapsuleComponent()->SetRelativeScale3D(FVector(1.0f, 1.0f, 1.0f));
 	GetCharacterMovement()->MaxAcceleration = 30;
 	GetCharacterMovement()->RotationRate = FRotator(0, 90, 0);
+	GetCharacterMovement()->GravityScale = 1.0f;
 
 	// Enemy A.I. Config
 	PawnSensing->HearingThreshold = 1250;
@@ -95,6 +96,7 @@ ADrone::ADrone()
 void ADrone::BeginPlay()
 {
 	Super::BeginPlay();
+
 	OnDeath.AddDynamic(this, &ADrone::DroneDeath);  // bind the death fuction to the OnDeath event
 	OnAggro.AddDynamic(this, &ADrone::DroneAggro);  // bind the aggro function to the OnAggro event
 	OnReachedTarget.AddDynamic(this, &ADrone::DroneAttack);  // bind the attack function to the OnReachedTarget event
@@ -124,7 +126,7 @@ void ADrone::DroneDeathEffects()
 	HitFX->Deactivate();
 	ExplosionFX->Activate();
 	DeathAudio->Play();
-	GetMesh()->SetVisibility(false);
+	Disappear();
 }
 
 void ADrone::DroneDeath()
@@ -152,7 +154,7 @@ void ADrone::DroneSuicide()
 
 		if (Target)
 		{
-			float damage = Target->CurrentHP * 0.25f;  // deals 25% damage if a drone suicides on the player
+			float damage = Target->CurrentHP * EnemyDealDamage(5); 
 			Target->PlayerTakeDamage(damage);
 		}
 
