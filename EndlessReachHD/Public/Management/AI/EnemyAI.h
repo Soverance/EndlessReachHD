@@ -34,7 +34,7 @@ public:
 	AEnemyAI();
 
 	// Called to initialize AI
-	virtual void Possess(APawn *InPawn) override;
+	virtual void PossessPawn(APawn *InPawn);
 
 	uint8 PlayerKeyID;
 };

@@ -27,7 +27,7 @@ AEnemyAI::AEnemyAI()
 	BehaviorComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorComponent"));
 }
 
-void AEnemyAI::Possess(APawn *InPawn)
+void AEnemyAI::PossessPawn(APawn *InPawn)
 {
 	Super::Possess(InPawn);
 
